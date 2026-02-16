@@ -1,0 +1,9 @@
+<section class="announcement-list" aria-label="Announcement feed">
+  <h2>Announcements</h2>
+
+  <article class="announcement-card" *ngFor="let announcement of announcements; trackBy: trackById">
+    <div class="card-meta">{{ announcement.postedAt }}</div>
+    <h3>{{ announcement.title }}</h3>
+    <p>{{ announcement.content }}</p>
+  </article>
+</section>
