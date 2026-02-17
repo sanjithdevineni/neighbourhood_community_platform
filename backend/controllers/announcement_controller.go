@@ -3,16 +3,26 @@ package controllers
 import (
 	"net/http"
 
-	"community-platform-backend/database"
 	"community-platform-backend/models"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
-func GetAnnouncements(c *gin.Context) {
+// Struct holding dependencies
+type AnnouncementController struct {
+	DB *gorm.DB
+}
+
+// Constructor
+func NewAnnouncementController(db *gorm.DB) *AnnouncementController {
+	return &AnnouncementController{DB: db}
+}
+
+func (ac *AnnouncementController) GetAnnouncements(c *gin.Context) {
 	var announcements []models.Announcement
 
-	if err := database.DB.Find(&announcements).Error; err != nil {
+	if err := ac.DB.Find(&announcements).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch"})
 		return
 	}
@@ -20,7 +30,7 @@ func GetAnnouncements(c *gin.Context) {
 	c.JSON(http.StatusOK, announcements)
 }
 
-func CreateAnnouncement(c *gin.Context) {
+func (ac *AnnouncementController) CreateAnnouncement(c *gin.Context) {
 	var announcement models.Announcement
 
 	if err := c.BindJSON(&announcement); err != nil {
@@ -34,7 +44,7 @@ func CreateAnnouncement(c *gin.Context) {
 		}
 	}
 
-	if err := database.DB.Create(&announcement).Error; err != nil {
+	if err := ac.DB.Create(&announcement).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create"})
 		return
 	}

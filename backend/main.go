@@ -6,6 +6,8 @@ import (
 	"community-platform-backend/middleware"
 	"community-platform-backend/models"
 	"community-platform-backend/routes"
+
+	"log"
 )
 
 func main() {
@@ -13,13 +15,16 @@ func main() {
 	config.LoadConfig()
 
 	// Initialize Database
-	database.InitDatabase(config.DBName)
+	db, err := database.InitDatabase(config.DBName)
+	if err != nil {
+		log.Fatal("Failed to connect to database:", err)
+	}
 
 	// Auto migrate models
-	database.DB.AutoMigrate(&models.Announcement{})
+	db.AutoMigrate(&models.Announcement{})
 
 	// Initialize router and register routes
-	router := routes.SetupRouter()
+	router := routes.SetupRouter(db)
 
 	// Apply middleware
 	router.Use(middleware.CORSMiddleware())
