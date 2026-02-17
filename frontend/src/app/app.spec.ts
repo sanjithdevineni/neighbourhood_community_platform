@@ -21,11 +21,11 @@ describe('App', () => {
     expect(compiled.querySelector('h1')?.textContent).toContain('Neighborhood Community');
   });
 
-  it('should render at least three announcement cards', async () => {
+  it('should render at least three post cards', async () => {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
-    const cards = compiled.querySelectorAll('.announcement-card');
+    const cards = compiled.querySelectorAll('.post-card');
     expect(cards.length).toBeGreaterThanOrEqual(3);
   });
 });

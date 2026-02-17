@@ -1,9 +1,15 @@
 <section class="announcement-list" aria-label="Announcement feed">
-  <h2>Announcements</h2>
+  <h2>Recent Activity</h2>
 
-  <article class="announcement-card" *ngFor="let announcement of announcements; trackBy: trackById">
-    <div class="card-meta">{{ announcement.postedAt }}</div>
-    <h3>{{ announcement.title }}</h3>
-    <p>{{ announcement.content }}</p>
-  </article>
+  <app-post-card
+    *ngFor="let announcement of announcements; trackBy: trackById"
+    [author]="announcement.author"
+    [timestamp]="announcement.timestamp"
+    [category]="announcement.category"
+    [content]="announcement.content"
+    [imageUrl]="announcement.imageUrl"
+    [imageAlt]="announcement.imageAlt || 'Announcement image'"
+    [likes]="announcement.likes"
+    [comments]="announcement.comments"
+  />
 </section>

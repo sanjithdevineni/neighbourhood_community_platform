@@ -1,26 +1,42 @@
 [
   {
     "id": 1,
-    "title": "Neighborhood Clean-Up Drive",
-    "content": "Join us this Saturday at 9:00 AM in the community park. Gloves and trash bags will be provided.",
-    "postedAt": "2h ago"
+    "author": "Sarah Jenkins",
+    "timestamp": "2h ago",
+    "category": "General",
+    "content": "Beautiful morning for a walk. Join our neighborhood clean-up this Saturday at 9:00 AM in the park.",
+    "imageUrl": "https://images.unsplash.com/photo-1482192505345-5655af888cc4?auto=format&fit=crop&w=1200&q=80",
+    "imageAlt": "Neighborhood street from above",
+    "likes": 24,
+    "comments": 8
   },
   {
     "id": 2,
-    "title": "Water Shutdown Notice",
-    "content": "Water service will be unavailable on March 3 from 10:00 AM to 1:00 PM due to pipeline maintenance.",
-    "postedAt": "5h ago"
+    "author": "Mike Thompson",
+    "timestamp": "5h ago",
+    "category": "Lost & Found",
+    "content": "Found a friendly golden retriever near Oak Ridge park around 6 PM. Please message if this is your dog.",
+    "likes": 17,
+    "comments": 5
   },
   {
     "id": 3,
-    "title": "Movie Night at the Clubhouse",
-    "content": "Family movie night starts at 7:30 PM this Friday. Bring your own snacks and folding chairs.",
-    "postedAt": "Yesterday"
+    "author": "Rita Gomez",
+    "timestamp": "Yesterday",
+    "category": "Event",
+    "content": "Community movie night starts Friday at 7:30 PM in the clubhouse. Bring your own snacks and chairs.",
+    "imageUrl": "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&w=1200&q=80",
+    "imageAlt": "Outdoor community event lights",
+    "likes": 31,
+    "comments": 12
   },
   {
     "id": 4,
-    "title": "Lost Dog Alert",
-    "content": "A small brown beagle named Bruno was last seen near Oak Street. Contact the office if found.",
-    "postedAt": "Yesterday"
+    "author": "Community Office",
+    "timestamp": "Yesterday",
+    "category": "Notice",
+    "content": "Water service will be unavailable on March 3 from 10:00 AM to 1:00 PM due to planned maintenance.",
+    "likes": 9,
+    "comments": 2
   }
 ]
