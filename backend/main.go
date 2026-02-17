@@ -36,6 +36,8 @@ import (
 )
 
 func main() {
+	// Load configuration from environment
+	config.LoadConfig()
 
 	// Initialize Database
 	database.InitDatabase(config.DBName)
