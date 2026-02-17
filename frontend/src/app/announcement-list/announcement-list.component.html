@@ -1,4 +1,25 @@
 <section class="announcement-list" aria-label="Announcement feed">
+  <form class="create-post-box" (ngSubmit)="createPost()">
+    <div class="composer-avatar" aria-hidden="true">YO</div>
+    <div class="composer-content">
+      <label class="composer-label" for="new-post">Create a post</label>
+      <textarea
+        id="new-post"
+        name="newPostContent"
+        [(ngModel)]="newPostContent"
+        (ngModelChange)="onContentChange()"
+        placeholder="Post an announcement or question to neighbors..."
+        rows="3"
+      ></textarea>
+      <p class="validation-error" *ngIf="showValidationError">
+        Post content cannot be empty.
+      </p>
+      <div class="composer-actions">
+        <button type="submit">Post</button>
+      </div>
+    </div>
+  </form>
+
   <h2>Recent Activity</h2>
 
   <app-post-card
