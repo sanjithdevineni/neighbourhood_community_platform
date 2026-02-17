@@ -27,6 +27,12 @@ func CreateAnnouncement(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON"})
 		return
 	}
+	// If middleware attached userID, prefer it as the author
+	if uid, exists := c.Get("userID"); exists {
+		if s, ok := uid.(string); ok && s != "" {
+			announcement.Author = s
+		}
+	}
 
 	if err := database.DB.Create(&announcement).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create"})
