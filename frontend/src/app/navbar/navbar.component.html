@@ -1,0 +1,22 @@
+<nav class="navbar">
+
+  <!-- App Title -->
+  <div class="title">
+    {{ appTitle }}
+  </div>
+
+  <!-- Search -->
+  <form (submit)="onSearch($event)" class="search-form">
+    <input
+      type="text"
+      placeholder="Search neighborhood..."
+      class="search-input"
+    />
+  </form>
+
+  <!-- Account Button -->
+  <button class="account-btn">
+    Account
+  </button>
+
+</nav>
