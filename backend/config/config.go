@@ -14,6 +14,7 @@ var (
 	DBName      string
 	JwtSecret   string
 	TokenExpiry time.Duration
+	FrontendURL string
 )
 
 // LoadConfig loads environment variables from .env and the environment.
@@ -54,4 +55,10 @@ func LoadConfig() {
 		}
 	}
 	TokenExpiry = d
+
+	FrontendURL = os.Getenv("FRONTEND_URL")
+	if FrontendURL == "" {
+		log.Println("Warning: FRONTEND_URL is not set. Using default localhost:4200.")
+		FrontendURL = "http://localhost:4200"
+	}
 }
