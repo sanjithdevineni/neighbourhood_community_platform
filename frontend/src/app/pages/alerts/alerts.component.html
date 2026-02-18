@@ -1,2 +1,54 @@
-<h2>Alerts</h2>
-<p>This is the alerts page.</p>
+<section class="alerts-page" aria-label="Neighborhood alerts page">
+  <div class="alerts-panel">
+    <header class="alerts-header">
+      <h1>Alerts in Point West</h1>
+      <span class="new-alert-pill">1 new alert</span>
+    </header>
+
+    <nav class="alert-tabs" aria-label="Alert categories">
+      <button
+        type="button"
+        *ngFor="let tab of tabs; let first = first"
+        [class.active]="first"
+      >
+        {{ tab }}
+      </button>
+    </nav>
+
+    <article
+      *ngFor="let alert of alerts; trackBy: trackById"
+      class="alert-card"
+      [ngClass]="'tone-' + alert.tone"
+    >
+      <div class="alert-top-row">
+        <div class="alert-icon" aria-hidden="true">!</div>
+
+        <div class="alert-main">
+          <h2>{{ alert.title }}</h2>
+          <p class="alert-meta">{{ alert.location }} · {{ alert.distance }} · {{ alert.timeAgo }}</p>
+        </div>
+
+        <span class="status-badge" [ngClass]="'status-' + alert.status.toLowerCase()">
+          {{ alert.status }}
+        </span>
+      </div>
+
+      <p class="alert-description">{{ alert.description }}</p>
+
+      <div class="alert-actions">
+        <button type="button">Read more</button>
+        <button type="button">Share</button>
+      </div>
+    </article>
+  </div>
+
+  <aside class="map-panel" aria-label="Alert area map">
+    <iframe
+      class="map-frame"
+      title="Neighborhood map view"
+      loading="lazy"
+      src="https://www.openstreetmap.org/export/embed.html?bbox=-82.345%2C29.642%2C-82.303%2C29.666&layer=mapnik&marker=29.6516%2C-82.3248"
+    ></iframe>
+    <span class="map-pin">Fire: 2249 Stadium Rd</span>
+  </aside>
+</section>
