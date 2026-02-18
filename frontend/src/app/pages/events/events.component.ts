@@ -26,6 +26,31 @@ export class EventsComponent {
 
   showCreateEventForm = false;
 
+  showOnlyUserEvents = false;
+
+  imagePreview: string | null = null;
+
+  onImageUpload(event: Event) {
+
+    const input = event.target as HTMLInputElement;
+
+    if (!input.files || input.files.length === 0) {
+      return;
+    }
+
+    const file = input.files[0];
+
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      this.imagePreview = reader.result as string;
+      this.newEvent.imageUrl = this.imagePreview;
+    };
+
+    reader.readAsDataURL(file);
+  }
+
+
   newEvent = {
     name: '',
     date: '',
@@ -33,7 +58,7 @@ export class EventsComponent {
     time: '',
     location: '',
     interested: 0,
-    imageUrl: 'https://images.unsplash.com/photo-1523580494863-6f3031224c94'
+    imageUrl: ''
   };
 
   openCreateEvent() {
@@ -47,8 +72,9 @@ export class EventsComponent {
   createEvent() {
 
     const newEventWithId = {
-      id: Date.now(),  // simple unique ID
-      ...this.newEvent
+      id: Date.now(),
+      ...this.newEvent,
+      createdByUser: true   // 👈 important
     };
 
     this.events = [
@@ -68,6 +94,16 @@ export class EventsComponent {
       imageUrl: 'https://images.unsplash.com/photo-1523580494863-6f3031224c94'
     };
   }
+
+  get displayedEvents(): EventItem[] {
+
+    if (this.showOnlyUserEvents) {
+      return this.events.filter(event => event.createdByUser);
+    }
+
+    return this.events;
+  }
+
 
 
 

@@ -10,7 +10,14 @@
       <button class="create-event-btn" (click)="openCreateEvent()">
         Create an event
       </button>
-      <span class="your-events">Your events</span>
+      <span class="your-events"
+            (click)="showOnlyUserEvents = !showOnlyUserEvents">
+        {{ showOnlyUserEvents ? 'All events' : 'Your events' }}
+      </span>
+      <p *ngIf="showOnlyUserEvents && displayedEvents.length === 0">
+        You haven't created any events yet.
+      </p>
+
     </div>
   </div>
 
@@ -62,6 +69,17 @@
           required
         />
 
+        <input
+          type="file"
+          accept="image/*"
+          (change)="onImageUpload($event)"
+        />
+
+        <div *ngIf="imagePreview" class="image-preview">
+          <img [src]="imagePreview" alt="Preview" />
+        </div>
+
+
         <div class="modal-actions">
           <button type="button" (click)="closeCreateEvent()">Cancel</button>
           <button type="submit">Create</button>
@@ -74,7 +92,7 @@
 
   <!-- EVENTS GRID -->
   <div class="events-grid">
-  <div class="event-card" *ngFor="let event of events">
+  <div class="event-card" *ngFor="let event of displayedEvents">
 
       <div class="image-wrapper">
         <img [src]="event.imageUrl" [alt]="event.name">
