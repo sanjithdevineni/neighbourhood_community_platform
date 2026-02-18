@@ -1,2 +1,21 @@
-<h2>Events</h2>
-<p>This is the events page.</p>
+<section class="events-page">
+  <h1>Events near you</h1>
+  <p class="subtitle">Discover what's happening in your community</p>
+
+  <div class="events-grid">
+    <div class="event-card" *ngFor="let event of events">
+
+      <div class="image-wrapper">
+        <img [src]="event.imageUrl" [alt]="event.name">
+        <div class="date-badge">{{ event.date }}</div>
+      </div>
+
+      <div class="event-content">
+        <h3>{{ event.name }}</h3>
+        <p class="time">{{ event.time }}</p>
+        <p class="location">{{ event.location }}</p>
+      </div>
+
+    </div>
+  </div>
+</section>
