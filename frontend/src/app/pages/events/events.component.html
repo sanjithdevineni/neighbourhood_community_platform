@@ -1,21 +1,52 @@
 <section class="events-page">
-  <h1>Events near you</h1>
-  <p class="subtitle">Discover what's happening in your community</p>
+
+  <div class="events-header">
+    <div>
+      <h1>Events near you</h1>
+      <p>Discover what's happening in your community</p>
+    </div>
+
+    <div class="header-actions">
+      <button class="create-btn">Create an event</button>
+      <span class="your-events">Your events</span>
+    </div>
+  </div>
 
   <div class="events-grid">
+
     <div class="event-card" *ngFor="let event of events">
 
       <div class="image-wrapper">
         <img [src]="event.imageUrl" [alt]="event.name">
-        <div class="date-badge">{{ event.date }}</div>
+
+        <div class="date-badge">
+          <span class="day">{{ event.date }}</span>
+          <span class="month">{{ event.month }}</span>
+        </div>
+
+        <div class="share-icon">⤴</div>
       </div>
 
       <div class="event-content">
         <h3>{{ event.name }}</h3>
         <p class="time">{{ event.time }}</p>
         <p class="location">{{ event.location }}</p>
+        <p class="interested">{{ event.interested }} neighbors interested</p>
+
+        <button class="interest-btn">+ Interested?</button>
       </div>
 
     </div>
+
+    <!-- Host Event Placeholder Card -->
+    <div class="event-card host-card">
+      <div class="host-content">
+        <div class="plus-icon">+</div>
+        <h3>Host an event</h3>
+        <p>Bring your neighbors together for something fun!</p>
+      </div>
+    </div>
+
   </div>
+
 </section>
