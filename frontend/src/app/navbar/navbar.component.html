@@ -1,21 +1,23 @@
 <nav class="navbar">
 
   <!-- App Title -->
-  <div class="title">
-    {{ appTitle }}
+  <div class="navbar-title">
+    {{ title }}
   </div>
 
   <!-- Search -->
-  <form (submit)="onSearch($event)" class="search-form">
+  <form class="search-form" (submit)="onSearchSubmit($event)">
     <input
       type="text"
-      placeholder="Search neighborhood..."
+      placeholder="Search ..."
+      [(ngModel)]="searchQuery"
+      name="search"
       class="search-input"
     />
   </form>
 
   <!-- Account Button -->
-  <button class="account-btn">
+  <button class="account-btn" (click)="onAccountClick()">
     Account
   </button>
 

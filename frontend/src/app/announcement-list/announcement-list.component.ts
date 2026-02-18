@@ -3,6 +3,7 @@ import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import announcementsData from './announcements.mock.json';
 import { PostCardComponent } from '../post-card/post-card.component';
+import { SearchService } from '../services/search.service';
 
 interface Announcement {
   id: number;
@@ -24,6 +25,9 @@ interface Announcement {
   styleUrl: './announcement-list.component.css'
 })
 export class AnnouncementListComponent {
+
+  constructor(private searchService: SearchService) {}
+
   announcements: Announcement[] = [...(announcementsData as Announcement[])];
   newPostContent = '';
   showValidationError = false;
@@ -68,4 +72,17 @@ export class AnnouncementListComponent {
     }, 0);
     return maxExistingId + 1;
   }
+
+  get filteredAnnouncements(): Announcement[] {
+    const query = this.searchService.searchQuery().toLowerCase();
+
+    if (!query) return this.announcements;
+
+    return this.announcements.filter(announcement =>
+      announcement.content.toLowerCase().includes(query) ||
+      announcement.author.toLowerCase().includes(query) ||
+      announcement.category.toLowerCase().includes(query)
+    );
+  }
+
 }
