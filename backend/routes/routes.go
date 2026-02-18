@@ -14,6 +14,7 @@ func RegisterRoutes(router *gin.Engine) {
 		api.POST("/login", controllers.Login)
 		api.GET("/announcements", controllers.GetAnnouncements)
 		api.POST("/announcements", middleware.AuthMiddleware(), controllers.CreateAnnouncement)
+		api.POST("/announcements/update", middleware.AuthMiddleware(), controllers.UpdateAnnouncement)
 		api.GET("/health", func(c *gin.Context) {
 			c.JSON(200, gin.H{"status": "ok"})
 		})
