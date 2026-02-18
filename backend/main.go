@@ -1,25 +1,29 @@
 package main
 
 import (
-    "log"
-    "net/http"
+	"community-platform-backend/config"
+	"community-platform-backend/database"
+	"community-platform-backend/middleware"
+	"community-platform-backend/models"
+	"community-platform-backend/routes"
 )
 
 func main() {
-    mux := http.NewServeMux()
+	// Load configuration from environment
+	config.LoadConfig()
 
-    // Placeholder endpoint to confirm server is running
-    mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-        w.WriteHeader(http.StatusOK)
-        _, _ = w.Write([]byte("Backend running"))
-    })
+	// Initialize Database
+	database.InitDatabase(config.DBName)
 
+	// Auto migrate models
+	database.DB.AutoMigrate(&models.User{}, &models.Announcement{})
 
-    server := &http.Server{
-        Addr:    ":8080",
-        Handler: mux,
-    }
+	// Initialize router and register routes
+	router := routes.SetupRouter()
 
-    log.Println("Backend listening")
-    log.Fatal(server.ListenAndServe())
+	// Apply middleware
+	router.Use(middleware.CORSMiddleware())
+
+	// Start server
+	router.Run(config.ServerPort)
 }
