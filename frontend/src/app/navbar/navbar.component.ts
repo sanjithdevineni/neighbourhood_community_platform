@@ -17,7 +17,9 @@ export class NavbarComponent {
 
   constructor(private searchService: SearchService) {}
 
-  onSearchSubmit() {
+  onSearchSubmit(event: Event) {
+    event.preventDefault();  // prevent page reload
+    console.log('Search submitted:', this.searchQuery);
     this.searchService.setSearchQuery(this.searchQuery);
   }
 
