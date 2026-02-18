@@ -11,6 +11,7 @@ func RegisterRoutes(router *gin.Engine) {
 	api := router.Group("/api")
 	{
 		api.POST("/signup", controllers.Signup)
+		api.POST("/login", controllers.Login)
 		api.GET("/announcements", controllers.GetAnnouncements)
 		api.POST("/announcements", middleware.AuthMiddleware(), controllers.CreateAnnouncement)
 		api.GET("/health", func(c *gin.Context) {
