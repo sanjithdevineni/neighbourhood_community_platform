@@ -7,14 +7,74 @@
     </div>
 
     <div class="header-actions">
-      <button class="create-btn">Create an event</button>
+      <button class="create-event-btn" (click)="openCreateEvent()">
+        Create an event
+      </button>
       <span class="your-events">Your events</span>
     </div>
   </div>
 
-  <div class="events-grid">
+  <!-- ✅ CREATE EVENT MODAL (ADD HERE) -->
+  <div class="event-modal-overlay" *ngIf="showCreateEventForm">
+    <div class="event-modal">
 
-    <div class="event-card" *ngFor="let event of events">
+      <h2>Create New Event</h2>
+
+      <form (ngSubmit)="createEvent()">
+
+        <input
+          type="text"
+          placeholder="Event name"
+          [(ngModel)]="newEvent.name"
+          name="name"
+          required
+        />
+
+        <input
+          type="text"
+          placeholder="Date (e.g., 25)"
+          [(ngModel)]="newEvent.date"
+          name="date"
+          required
+        />
+
+        <input
+          type="text"
+          placeholder="Month (e.g., MAR)"
+          [(ngModel)]="newEvent.month"
+          name="month"
+          required
+        />
+
+        <input
+          type="text"
+          placeholder="Time (e.g., 5:00 PM)"
+          [(ngModel)]="newEvent.time"
+          name="time"
+          required
+        />
+
+        <input
+          type="text"
+          placeholder="Location"
+          [(ngModel)]="newEvent.location"
+          name="location"
+          required
+        />
+
+        <div class="modal-actions">
+          <button type="button" (click)="closeCreateEvent()">Cancel</button>
+          <button type="submit">Create</button>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+  <!-- EVENTS GRID -->
+  <div class="events-grid">
+  <div class="event-card" *ngFor="let event of events">
 
       <div class="image-wrapper">
         <img [src]="event.imageUrl" [alt]="event.name">
@@ -39,7 +99,7 @@
     </div>
 
     <!-- Host Event Placeholder Card -->
-    <div class="event-card host-card">
+    <div class="event-card host-card" (click)="openCreateEvent()">
       <div class="host-content">
         <div class="plus-icon">+</div>
         <h3>Host an event</h3>

@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 interface EventItem {
   id: number;
@@ -10,16 +11,66 @@ interface EventItem {
   location: string;
   interested: number;
   imageUrl: string;
+  createdByUser?: boolean;
 }
 
 @Component({
   selector: 'app-events',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],  // 👈 ADD THIS
   templateUrl: './events.component.html',
   styleUrl: './events.component.css'
 })
+
 export class EventsComponent {
+
+  showCreateEventForm = false;
+
+  newEvent = {
+    name: '',
+    date: '',
+    month: '',
+    time: '',
+    location: '',
+    interested: 0,
+    imageUrl: 'https://images.unsplash.com/photo-1523580494863-6f3031224c94'
+  };
+
+  openCreateEvent() {
+    this.showCreateEventForm = true;
+  }
+
+  closeCreateEvent() {
+    this.showCreateEventForm = false;
+  }
+
+  createEvent() {
+
+    const newEventWithId = {
+      id: Date.now(),  // simple unique ID
+      ...this.newEvent
+    };
+
+    this.events = [
+      newEventWithId,
+      ...this.events
+    ];
+
+    this.closeCreateEvent();
+
+    this.newEvent = {
+      name: '',
+      date: '',
+      month: '',
+      time: '',
+      location: '',
+      interested: 0,
+      imageUrl: 'https://images.unsplash.com/photo-1523580494863-6f3031224c94'
+    };
+  }
+
+
+
 
   events: EventItem[] = [
     {

@@ -142,3 +142,109 @@
   font-size: 24px;
   margin-bottom: 10px;
 }
+
+.event-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.event-modal {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  width: 400px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+}
+
+.event-modal input {
+  width: 100%;
+  margin-bottom: 1rem;
+  padding: 0.7rem;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+/* Primary button (Create Event) */
+.create-event-btn {
+  background: #111827;
+  color: #ffffff;
+  border: none;
+  padding: 10px 22px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.create-event-btn:hover {
+  background: #1f2937;
+  transform: translateY(-2px);
+}
+
+/* Interested button */
+.interest-btn {
+  width: 100%;
+  margin-top: 14px;
+  padding: 10px;
+  border-radius: 12px;
+  border: none;
+  background: #f3f4f6;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.interest-btn:hover {
+  background: #e5e7eb;
+  transform: translateY(-1px);
+}
+
+/* Modal buttons */
+.modal-actions button {
+  padding: 8px 18px;
+  border-radius: 8px;
+  border: none;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.modal-actions button[type="submit"] {
+  background: #2e7d32;
+  color: white;
+}
+
+.modal-actions button[type="submit"]:hover {
+  background: #1b5e20;
+}
+
+.modal-actions button[type="button"] {
+  background: #e5e7eb;
+}
+
+.host-card {
+  border: 2px dashed #d1d5db;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.host-card:hover {
+  background: #f9fafb;
+  transform: translateY(-4px);
+}
