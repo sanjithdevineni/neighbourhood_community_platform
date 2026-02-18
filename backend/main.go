@@ -16,7 +16,7 @@ func main() {
 	database.InitDatabase(config.DBName)
 
 	// Auto migrate models
-	database.DB.AutoMigrate(&models.Announcement{})
+	database.DB.AutoMigrate(&models.User{}, &models.Announcement{})
 
 	// Initialize router and register routes
 	router := routes.SetupRouter()
