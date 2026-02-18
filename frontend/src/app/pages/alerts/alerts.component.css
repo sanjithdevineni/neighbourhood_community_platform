@@ -194,3 +194,73 @@
     min-height: 260px;
   }
 }
+
+@media (max-width: 768px) {
+  .alerts-page {
+    gap: 0.9rem;
+  }
+
+  .alerts-header {
+    padding: 0.85rem 0.8rem;
+  }
+
+  .alerts-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .new-alert-pill {
+    font-size: 0.75rem;
+  }
+
+  .alert-tabs {
+    overflow-x: auto;
+    padding: 0.6rem 0.75rem;
+    white-space: nowrap;
+  }
+
+  .alert-card {
+    padding: 0.85rem;
+  }
+
+  .alert-top-row {
+    grid-template-columns: auto 1fr;
+    align-items: start;
+  }
+
+  .status-badge {
+    grid-column: 2;
+    justify-self: start;
+    margin-top: 0.2rem;
+  }
+
+  .map-panel {
+    min-height: 300px;
+  }
+
+  .map-pin {
+    bottom: 10%;
+    font-size: 0.78rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .alerts-header h1 {
+    font-size: 1.3rem;
+  }
+
+  .alert-main h2 {
+    font-size: 1.05rem;
+  }
+
+  .alert-meta {
+    font-size: 0.78rem;
+  }
+
+  .alert-description {
+    font-size: 0.95rem;
+  }
+
+  .map-panel {
+    min-height: 240px;
+  }
+}
