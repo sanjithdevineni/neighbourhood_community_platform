@@ -11,6 +11,8 @@ The Neighborhood Community Platform is designed to allow residents to:
 
 Sprint 1 focused on establishing the foundational frontend structure using static mock data.
 
+Frontend demo video link - https://youtu.be/tRu94gelh-s?si=UENC51pflmIG9WHd
+
 ---
 
 # Full Product User Stories (Overall System Vision)
