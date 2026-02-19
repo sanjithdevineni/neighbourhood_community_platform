@@ -1,0 +1,24 @@
+<nav class="navbar">
+
+  <!-- App Title -->
+  <div class="navbar-title">
+    {{ title }}
+  </div>
+
+  <!-- Search -->
+  <form class="search-form" (submit)="onSearchSubmit($event)">
+    <input
+      type="text"
+      placeholder="Search ..."
+      [(ngModel)]="searchQuery"
+      name="search"
+      class="search-input"
+    />
+  </form>
+
+  <!-- Account Button -->
+  <button class="account-btn" (click)="onAccountClick()">
+    Account
+  </button>
+
+</nav>
