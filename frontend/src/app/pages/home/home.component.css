@@ -1,50 +1,113 @@
 .home-page {
   width: 100%;
-  max-width: 880px;
+  max-width: 1180px;
   margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 720px) minmax(240px, 320px);
+  gap: 1.2rem;
 }
 
-.home-header {
-  margin-bottom: 1.25rem;
+.feed-column {
+  min-width: 0;
 }
 
-.home-header h1 {
+.right-rail {
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+}
+
+.rail-card {
+  background: #ffffff;
+  border: 1px solid #dbe1e8;
+  border-radius: 14px;
+  padding: 1rem;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+
+.rail-card h2 {
   margin: 0;
-  font-size: 1.95rem;
-  line-height: 1.15;
-  color: #1f2937;
+  color: #101828;
+  font-size: 1.4rem;
 }
 
-.home-header p {
-  margin: 0.45rem 0 0;
-  color: #4b5563;
+.rail-item {
+  margin-top: 0.9rem;
 }
 
-.feed-container {
-  width: 100%;
-  max-width: 700px;
+.rail-item h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  color: #101828;
 }
 
-@media (max-width: 768px) {
-  .home-header h1 {
-    font-size: 1.6rem;
-  }
+.rail-item p {
+  margin: 0.2rem 0 0;
+  color: #667085;
+  font-size: 0.92rem;
+}
 
-  .home-header p {
-    font-size: 0.95rem;
-  }
+.rail-item.active {
+  border-left: 3px solid #12b76a;
+  padding-left: 0.6rem;
+}
+
+.rail-item.recommendation {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.place-badge {
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  color: #1560f0;
+  background: #dbeafe;
+}
+
+.rail-item.recommendation:nth-child(3) .place-badge {
+  color: #b54708;
+  background: #feecd6;
+}
+
+.place-meta {
+  min-width: 0;
+}
+
+.place-meta h3 {
+  margin: 0;
+}
+
+.place-meta p {
+  margin: 0.2rem 0 0;
 }
 
 @media (max-width: 480px) {
-  .home-header {
-    margin-bottom: 1rem;
+  .home-page {
+    grid-template-columns: 1fr;
   }
 
-  .home-header h1 {
-    font-size: 1.35rem;
+  .rail-card h2 {
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 1024px) {
+  .home-page {
+    grid-template-columns: 1fr;
   }
 
-  .home-header p {
-    font-size: 0.9rem;
+  .right-rail {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .right-rail {
+    grid-template-columns: 1fr;
   }
 }

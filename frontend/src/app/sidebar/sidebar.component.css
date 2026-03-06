@@ -27,6 +27,15 @@
   position: relative;
 }
 
+.menu-item.secondary {
+  width: 100%;
+  border: none;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
 .menu-item:hover {
   background-color: #f3f4f6;
   transform: translateX(3px);
@@ -54,6 +63,16 @@
 
 .material-icons {
   font-size: 20px;
+}
+
+.menu-section {
+  margin: 18px 0 6px;
+  padding: 0 16px;
+  color: #667085;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 @media (max-width: 1024px) {
