@@ -11,51 +11,46 @@
     <section class="signup-card" aria-labelledby="signup-title">
       <h1 id="signup-title">Create an account to join your neighborhood.</h1>
 
-      <button type="button" class="social-btn" disabled>
-        Continue with Google
-      </button>
-      <button type="button" class="social-btn" disabled>
-        Continue with Apple
-      </button>
-
-      <div class="divider" aria-hidden="true">
-        <span>or</span>
-      </div>
-
-      <form [formGroup]="signupForm" (ngSubmit)="onSubmit()" novalidate>
-        <label class="sr-only" for="name">Full name</label>
-        <input
-          id="name"
-          type="text"
-          formControlName="name"
-          placeholder="Full name"
-          [class.invalid]="!!getFieldError('name')"
-        />
-        <p class="field-error" *ngIf="getFieldError('name')">{{ getFieldError('name') }}</p>
-
-        <label class="sr-only" for="email">Email address</label>
-        <input
-          id="email"
-          type="email"
-          formControlName="email"
-          placeholder="Email address"
-          [class.invalid]="!!getFieldError('email')"
-        />
-        <p class="field-error" *ngIf="getFieldError('email')">{{ getFieldError('email') }}</p>
-
-        <label class="sr-only" for="password">Create a password</label>
-        <div class="password-row" [class.invalid]="!!getFieldError('password')">
+      <form class="signup-form" [formGroup]="signupForm" (ngSubmit)="onSubmit()" novalidate>
+        <div class="form-field">
+          <label class="sr-only" for="name">Full name</label>
           <input
-            id="password"
-            [type]="passwordVisible ? 'text' : 'password'"
-            formControlName="password"
-            placeholder="Create a password"
+            id="name"
+            type="text"
+            formControlName="name"
+            placeholder="Full name"
+            [class.invalid]="!!getFieldError('name')"
           />
-          <button type="button" class="toggle-password" (click)="togglePasswordVisibility()">
-            {{ passwordVisible ? 'Hide' : 'Show' }}
-          </button>
+          <p class="field-error" *ngIf="getFieldError('name')">{{ getFieldError('name') }}</p>
         </div>
-        <p class="field-error" *ngIf="getFieldError('password')">{{ getFieldError('password') }}</p>
+
+        <div class="form-field">
+          <label class="sr-only" for="email">Email address</label>
+          <input
+            id="email"
+            type="email"
+            formControlName="email"
+            placeholder="Email address"
+            [class.invalid]="!!getFieldError('email')"
+          />
+          <p class="field-error" *ngIf="getFieldError('email')">{{ getFieldError('email') }}</p>
+        </div>
+
+        <div class="form-field">
+          <label class="sr-only" for="password">Create a password</label>
+          <div class="password-row" [class.invalid]="!!getFieldError('password')">
+            <input
+              id="password"
+              [type]="passwordVisible ? 'text' : 'password'"
+              formControlName="password"
+              placeholder="Create a password"
+            />
+            <button type="button" class="toggle-password" (click)="togglePasswordVisibility()">
+              {{ passwordVisible ? 'Hide' : 'Show' }}
+            </button>
+          </div>
+          <p class="field-error" *ngIf="getFieldError('password')">{{ getFieldError('password') }}</p>
+        </div>
 
         <p class="terms-text">
           By continuing with sign up, you agree to our Privacy Policy, Cookie Policy, and Member
