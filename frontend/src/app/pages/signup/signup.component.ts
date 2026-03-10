@@ -3,7 +3,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, OnDestroy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { Subscription, timer } from 'rxjs';
+import { firstValueFrom, Subscription, timer, timeout, TimeoutError } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 
 interface ApiErrorResponse {
@@ -35,7 +35,11 @@ export class SignupComponent implements OnDestroy {
     password: ['', [Validators.required, Validators.minLength(8)]]
   });
 
-  onSubmit(): void {
+  async onSubmit(): Promise<void> {
+    if (this.isSubmitting) {
+      return;
+    }
+
     if (this.signupForm.invalid) {
       this.signupForm.markAllAsTouched();
       return;
@@ -47,22 +51,21 @@ export class SignupComponent implements OnDestroy {
 
     const payload = this.signupForm.getRawValue();
 
-    this.authService.signup(payload).subscribe({
-      next: () => {
-        this.isSubmitting = false;
-        this.successMessage = 'Account created successfully. Redirecting to login...';
-        this.signupForm.reset();
+    try {
+      await firstValueFrom(this.authService.signup(payload).pipe(timeout(15000)));
 
-        this.redirectSub?.unsubscribe();
-        this.redirectSub = timer(1200).subscribe(() => {
-          void this.router.navigate(['/login']);
-        });
-      },
-      error: (error: HttpErrorResponse) => {
-        this.isSubmitting = false;
-        this.errorMessage = this.getErrorMessage(error);
-      }
-    });
+      this.successMessage = 'Account created successfully. Redirecting to login...';
+      this.signupForm.reset();
+
+      this.redirectSub?.unsubscribe();
+      this.redirectSub = timer(1200).subscribe(() => {
+        void this.router.navigate(['/login']);
+      });
+    } catch (error: unknown) {
+      this.errorMessage = this.getErrorMessage(error);
+    } finally {
+      this.isSubmitting = false;
+    }
   }
 
   togglePasswordVisibility(): void {
@@ -97,9 +100,34 @@ export class SignupComponent implements OnDestroy {
     this.redirectSub?.unsubscribe();
   }
 
-  private getErrorMessage(error: HttpErrorResponse): string {
+  private getErrorMessage(error: unknown): string {
+    if (error instanceof TimeoutError) {
+      return 'Signup request timed out. Please try again.';
+    }
+
+    if (!(error instanceof HttpErrorResponse)) {
+      return 'Signup failed. Please try again.';
+    }
+
     if (error.status === 0) {
       return 'Unable to reach the backend. Make sure the API is running.';
+    }
+
+    if (error.status === 409) {
+      return 'Email already registered. Try logging in or use a different email.';
+    }
+
+    if (typeof error.error === 'string') {
+      try {
+        const parsed = JSON.parse(error.error) as ApiErrorResponse;
+        if (parsed?.error) {
+          return parsed.error;
+        }
+      } catch {
+        if (error.error.trim()) {
+          return error.error;
+        }
+      }
     }
 
     const response = error.error as ApiErrorResponse;
