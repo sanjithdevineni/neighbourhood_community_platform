@@ -3,13 +3,8 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, OnDestroy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { firstValueFrom, Subscription, timer, timeout, TimeoutError } from 'rxjs';
+import { finalize, Subscription, timer, timeout, TimeoutError } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
-
-interface ApiErrorResponse {
-  error?: string;
-  details?: string;
-}
 
 @Component({
   selector: 'app-signup',
@@ -28,6 +23,7 @@ export class SignupComponent implements OnDestroy {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private redirectSub?: Subscription;
+  private submitSafetyTimer?: ReturnType<typeof setTimeout>;
 
   readonly signupForm = this.formBuilder.nonNullable.group({
     name: ['', [Validators.required]],
@@ -35,7 +31,7 @@ export class SignupComponent implements OnDestroy {
     password: ['', [Validators.required, Validators.minLength(8)]]
   });
 
-  async onSubmit(): Promise<void> {
+  onSubmit(): void {
     if (this.isSubmitting) {
       return;
     }
@@ -48,24 +44,33 @@ export class SignupComponent implements OnDestroy {
     this.isSubmitting = true;
     this.errorMessage = '';
     this.successMessage = '';
+    this.startSubmitSafetyTimer();
 
     const payload = this.signupForm.getRawValue();
 
-    try {
-      await firstValueFrom(this.authService.signup(payload).pipe(timeout(15000)));
+    this.authService
+      .signup(payload)
+      .pipe(
+        timeout(15000),
+        finalize(() => {
+          this.clearSubmitSafetyTimer();
+          this.isSubmitting = false;
+        })
+      )
+      .subscribe({
+        next: () => {
+          this.successMessage = 'Account created successfully. Redirecting to login...';
+          this.signupForm.reset();
 
-      this.successMessage = 'Account created successfully. Redirecting to login...';
-      this.signupForm.reset();
-
-      this.redirectSub?.unsubscribe();
-      this.redirectSub = timer(1200).subscribe(() => {
-        void this.router.navigate(['/login']);
+          this.redirectSub?.unsubscribe();
+          this.redirectSub = timer(1200).subscribe(() => {
+            void this.router.navigate(['/login']);
+          });
+        },
+        error: (error: unknown) => {
+          this.errorMessage = this.getErrorMessage(error);
+        }
       });
-    } catch (error: unknown) {
-      this.errorMessage = this.getErrorMessage(error);
-    } finally {
-      this.isSubmitting = false;
-    }
   }
 
   togglePasswordVisibility(): void {
@@ -98,6 +103,7 @@ export class SignupComponent implements OnDestroy {
 
   ngOnDestroy(): void {
     this.redirectSub?.unsubscribe();
+    this.clearSubmitSafetyTimer();
   }
 
   private getErrorMessage(error: unknown): string {
@@ -117,11 +123,18 @@ export class SignupComponent implements OnDestroy {
       return 'Email already registered. Try logging in or use a different email.';
     }
 
+    if (error.status >= 500) {
+      return 'Server error during signup. Please try again in a moment.';
+    }
+
     if (typeof error.error === 'string') {
       try {
-        const parsed = JSON.parse(error.error) as ApiErrorResponse;
+        const parsed = JSON.parse(error.error) as { error?: string; details?: string };
         if (parsed?.error) {
           return parsed.error;
+        }
+        if (parsed?.details) {
+          return parsed.details;
         }
       } catch {
         if (error.error.trim()) {
@@ -130,15 +143,33 @@ export class SignupComponent implements OnDestroy {
       }
     }
 
-    const response = error.error as ApiErrorResponse;
-    if (response?.error) {
-      return response.error;
+    if (error.error?.error) {
+      return error.error.error;
     }
 
-    if (response?.details) {
-      return response.details;
+    if (error.error?.details) {
+      return error.error.details;
     }
 
     return 'Signup failed. Please try again.';
+  }
+
+  private startSubmitSafetyTimer(): void {
+    this.clearSubmitSafetyTimer();
+    this.submitSafetyTimer = setTimeout(() => {
+      if (!this.isSubmitting) {
+        return;
+      }
+      this.isSubmitting = false;
+      this.errorMessage = 'Signup request took too long. Please try again.';
+    }, 16000);
+  }
+
+  private clearSubmitSafetyTimer(): void {
+    if (!this.submitSafetyTimer) {
+      return;
+    }
+    clearTimeout(this.submitSafetyTimer);
+    this.submitSafetyTimer = undefined;
   }
 }
