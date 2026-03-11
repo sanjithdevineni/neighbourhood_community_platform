@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, inject, OnDestroy } from '@angular/core';
+import { ChangeDetectorRef, Component, inject, OnDestroy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { finalize, Subscription, timer, timeout, TimeoutError } from 'rxjs';
@@ -22,6 +22,7 @@ export class SignupComponent implements OnDestroy {
   private readonly formBuilder = inject(FormBuilder);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly cdr = inject(ChangeDetectorRef);
   private redirectSub?: Subscription;
   private submitSafetyTimer?: ReturnType<typeof setTimeout>;
 
@@ -45,6 +46,7 @@ export class SignupComponent implements OnDestroy {
     this.errorMessage = '';
     this.successMessage = '';
     this.startSubmitSafetyTimer();
+    this.cdr.detectChanges();
 
     const payload = this.signupForm.getRawValue();
 
@@ -55,12 +57,14 @@ export class SignupComponent implements OnDestroy {
         finalize(() => {
           this.clearSubmitSafetyTimer();
           this.isSubmitting = false;
+          this.cdr.detectChanges();
         })
       )
       .subscribe({
         next: () => {
           this.successMessage = 'Account created successfully. Redirecting to login...';
           this.signupForm.reset();
+          this.cdr.detectChanges();
 
           this.redirectSub?.unsubscribe();
           this.redirectSub = timer(1200).subscribe(() => {
@@ -69,6 +73,7 @@ export class SignupComponent implements OnDestroy {
         },
         error: (error: unknown) => {
           this.errorMessage = this.getErrorMessage(error);
+          this.cdr.detectChanges();
         }
       });
   }
@@ -162,6 +167,7 @@ export class SignupComponent implements OnDestroy {
       }
       this.isSubmitting = false;
       this.errorMessage = 'Signup request took too long. Please try again.';
+      this.cdr.detectChanges();
     }, 16000);
   }
 
