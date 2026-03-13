@@ -28,7 +28,7 @@ export class NavbarComponent {
   }
 
   onAccountClick() {
-    void this.router.navigate(['/signup']);
+    void this.router.navigate(['/login']);
   }
 
 }
