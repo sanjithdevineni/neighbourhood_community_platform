@@ -1,21 +1,9 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import announcementsData from './announcements.mock.json';
 import { PostCardComponent } from '../post-card/post-card.component';
 import { SearchService } from '../services/search.service';
-
-interface Announcement {
-  id: number;
-  author: string;
-  timestamp: string;
-  category: string;
-  content: string;
-  imageUrl?: string;
-  imageAlt?: string;
-  likes: number;
-  comments: number;
-}
+import { AnnouncementService, Announcement } from '../services/announcement.service';
 
 @Component({
   selector: 'app-announcement-list',
@@ -24,17 +12,42 @@ interface Announcement {
   templateUrl: './announcement-list.component.html',
   styleUrl: './announcement-list.component.css'
 })
-export class AnnouncementListComponent {
+export class AnnouncementListComponent implements OnInit {
 
-  constructor(private searchService: SearchService) {}
+  constructor(
+    private searchService: SearchService,
+    private announcementService: AnnouncementService
+  ) {}
 
-  announcements: Announcement[] = [...(announcementsData as Announcement[])];
+  announcements: Announcement[] = [];
+  isLoading = false;
+  errorMessage = '';
   newPostContent = '';
   showValidationError = false;
 
+  ngOnInit(): void {
+    this.fetchAnnouncements();
+  }
+
+  fetchAnnouncements(): void {
+    this.isLoading = true;
+
+    this.announcementService.getAnnouncements().subscribe({
+      next: (data) => {
+        this.announcements = data;
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error(error);
+        this.errorMessage = 'Failed to load announcements';
+        this.isLoading = false;
+      }
+    });
+  }
+
   private nextPostId = this.getNextPostId();
 
-  createPost(): void {
+  /* createPost(): void {
     const trimmedContent = this.newPostContent.trim();
     if (!trimmedContent) {
       this.showValidationError = true;
@@ -54,6 +67,10 @@ export class AnnouncementListComponent {
     this.announcements = [newPost, ...this.announcements];
     this.newPostContent = '';
     this.showValidationError = false;
+  } */
+
+  createPost(): void {
+      console.log('POST API will be implemented in FE-14');
   }
 
   onContentChange(): void {
@@ -81,7 +98,7 @@ export class AnnouncementListComponent {
     return this.announcements.filter(announcement =>
       announcement.content.toLowerCase().includes(query) ||
       announcement.author.toLowerCase().includes(query) ||
-      announcement.category.toLowerCase().includes(query)
+      (announcement.category?.toLowerCase().includes(query) ?? false)
     );
   }
 
