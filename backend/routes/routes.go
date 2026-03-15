@@ -4,6 +4,8 @@ import (
 	"community-platform-backend/controllers"
 	"community-platform-backend/middleware"
 
+	"github.com/gin-contrib/cors"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -25,6 +27,14 @@ func RegisterRoutes(router *gin.Engine) {
 // SetupRouter initializes the Gin engine and registers routes.
 func SetupRouter() *gin.Engine {
 	router := gin.Default()
+
+    router.Use(cors.New(cors.Config{
+        AllowOrigins:     []string{"http://localhost:4200"},
+        AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+        AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+        ExposeHeaders:    []string{"Content-Length"},
+        AllowCredentials: true,
+    }))
 	RegisterRoutes(router)
 	return router
 }
