@@ -26,4 +26,13 @@ export class AnnouncementService {
   getAnnouncements(): Observable<Announcement[]> {
     return this.http.get<Announcement[]>(this.apiUrl);
   }
+
+  createAnnouncement(data: { content: string; category: string }) {
+    return this.http.post(this.apiUrl, data, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`
+      }
+    });
+  }
+
 }

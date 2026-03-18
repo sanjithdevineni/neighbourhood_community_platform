@@ -47,30 +47,32 @@ export class AnnouncementListComponent implements OnInit {
 
   private nextPostId = this.getNextPostId();
 
-  /* createPost(): void {
+  createPost(): void {
     const trimmedContent = this.newPostContent.trim();
+
     if (!trimmedContent) {
       this.showValidationError = true;
       return;
     }
 
-    const newPost: Announcement = {
-      id: this.nextPostId++,
-      author: 'You',
-      timestamp: 'Just now',
-      category: 'General',
+    const payload = {
       content: trimmedContent,
-      likes: 0,
-      comments: 0
+      category: 'General'
     };
 
-    this.announcements = [newPost, ...this.announcements];
-    this.newPostContent = '';
-    this.showValidationError = false;
-  } */
+    this.announcementService.createAnnouncement(payload).subscribe({
+      next: () => {
+        this.newPostContent = '';
+        this.showValidationError = false;
 
-  createPost(): void {
-      console.log('POST API will be implemented in FE-14');
+        // Refresh list after successful creation
+        this.fetchAnnouncements();
+      },
+      error: (error) => {
+        console.error('Create failed:', error);
+        alert('Failed to create announcement');
+      }
+    });
   }
 
   onContentChange(): void {
