@@ -9,6 +9,7 @@ import (
 
 	"community-platform-backend/database"
 	"community-platform-backend/models"
+	"community-platform-backend/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
@@ -32,14 +33,14 @@ type LoginRequest struct {
 func Signup(c *gin.Context) {
 	var req SignupRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid input", "details": err.Error()})
+		utils.RespondWithError(c, utils.BadRequest("invalid input"))
 		return
 	}
 
 	// Hash password
 	hashed, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to process password"})
+		utils.RespondWithError(c, utils.InternalServerError("failed to process password"))
 		return
 	}
 
@@ -52,10 +53,10 @@ func Signup(c *gin.Context) {
 	if err := database.DB.Create(&user).Error; err != nil {
 		// handle duplicate email (unique constraint)
 		if strings.Contains(strings.ToLower(err.Error()), "unique") || strings.Contains(strings.ToLower(err.Error()), "constraint") {
-			c.JSON(http.StatusConflict, gin.H{"error": "email already registered"})
+			utils.RespondWithError(c, utils.Conflict("email already registered"))
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create user"})
+		utils.RespondWithError(c, utils.InternalServerError("failed to create user"))
 		return
 	}
 
@@ -72,24 +73,24 @@ func Signup(c *gin.Context) {
 func Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid input", "details": err.Error()})
+		utils.RespondWithError(c, utils.BadRequest("invalid input"))
 		return
 	}
 
 	var user models.User
 	if err := database.DB.Where("email = ?", strings.ToLower(req.Email)).First(&user).Error; err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
+		utils.RespondWithError(c, utils.Unauthorized("invalid credentials"))
 		return
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
+		utils.RespondWithError(c, utils.Unauthorized("invalid credentials"))
 		return
 	}
 
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "server configuration error"})
+		utils.RespondWithError(c, utils.InternalServerError("server configuration error"))
 		return
 	}
 
@@ -102,7 +103,7 @@ func Login(c *gin.Context) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	signed, err := token.SignedString([]byte(secret))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate token"})
+		utils.RespondWithError(c, utils.InternalServerError("failed to generate token"))
 		return
 	}
 
