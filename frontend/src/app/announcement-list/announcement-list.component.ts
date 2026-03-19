@@ -61,12 +61,15 @@ export class AnnouncementListComponent implements OnInit {
     };
 
     this.announcementService.createAnnouncement(payload).subscribe({
-      next: () => {
+      next: (createdAnnouncement) => {
         this.newPostContent = '';
         this.showValidationError = false;
 
-        // Refresh list after successful creation
-        this.fetchAnnouncements();
+        // 🔥 Add new item directly instead of refetching
+        this.announcements = [
+          createdAnnouncement,
+          ...this.announcements
+        ];
       },
       error: (error) => {
         console.error('Create failed:', error);
