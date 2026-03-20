@@ -2,14 +2,13 @@
   <form class="create-post-box" (ngSubmit)="createPost()">
     <div class="composer-avatar" aria-hidden="true">YO</div>
     <div class="composer-content">
-      <label class="composer-label" for="new-post">Create a post</label>
       <textarea
         id="new-post"
         name="newPostContent"
         [(ngModel)]="newPostContent"
         (ngModelChange)="onContentChange()"
         placeholder="Post an announcement or question to neighbors..."
-        rows="3"
+        rows="2"
       ></textarea>
       <p class="validation-error" *ngIf="showValidationError">
         Post content cannot be empty.
@@ -20,7 +19,13 @@
     </div>
   </form>
 
-  <h2>Recent Activity</h2>
+  <div class="feed-header">
+    <h2>Recent Activity</h2>
+    <div class="feed-filters">
+      <span class="filter active">Recent</span>
+      <span class="filter">Top</span>
+    </div>
+  </div>
 
   <app-post-card
     *ngFor="let announcement of filteredAnnouncements; trackBy: trackById"
