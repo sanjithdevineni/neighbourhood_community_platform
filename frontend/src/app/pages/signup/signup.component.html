@@ -1,0 +1,74 @@
+<div class="signup-page">
+  <header class="signup-topbar">
+    <div class="brand">
+      <span class="brand-badge" aria-hidden="true">N</span>
+      <span class="brand-text">Neighborhood</span>
+    </div>
+    <a class="login-link" routerLink="/login">Log in</a>
+  </header>
+
+  <main class="signup-main">
+    <section class="signup-card" aria-labelledby="signup-title">
+      <h1 id="signup-title">Create an account to join your neighborhood.</h1>
+
+      <button type="button" class="social-btn" disabled>
+        Continue with Google
+      </button>
+      <button type="button" class="social-btn" disabled>
+        Continue with Apple
+      </button>
+
+      <div class="divider" aria-hidden="true">
+        <span>or</span>
+      </div>
+
+      <form [formGroup]="signupForm" (ngSubmit)="onSubmit()" novalidate>
+        <label class="sr-only" for="name">Full name</label>
+        <input
+          id="name"
+          type="text"
+          formControlName="name"
+          placeholder="Full name"
+          [class.invalid]="!!getFieldError('name')"
+        />
+        <p class="field-error" *ngIf="getFieldError('name')">{{ getFieldError('name') }}</p>
+
+        <label class="sr-only" for="email">Email address</label>
+        <input
+          id="email"
+          type="email"
+          formControlName="email"
+          placeholder="Email address"
+          [class.invalid]="!!getFieldError('email')"
+        />
+        <p class="field-error" *ngIf="getFieldError('email')">{{ getFieldError('email') }}</p>
+
+        <label class="sr-only" for="password">Create a password</label>
+        <div class="password-row" [class.invalid]="!!getFieldError('password')">
+          <input
+            id="password"
+            [type]="passwordVisible ? 'text' : 'password'"
+            formControlName="password"
+            placeholder="Create a password"
+          />
+          <button type="button" class="toggle-password" (click)="togglePasswordVisibility()">
+            {{ passwordVisible ? 'Hide' : 'Show' }}
+          </button>
+        </div>
+        <p class="field-error" *ngIf="getFieldError('password')">{{ getFieldError('password') }}</p>
+
+        <p class="terms-text">
+          By continuing with sign up, you agree to our Privacy Policy, Cookie Policy, and Member
+          Agreement.
+        </p>
+
+        <p class="alert success" *ngIf="successMessage">{{ successMessage }}</p>
+        <p class="alert error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+        <button class="submit-btn" type="submit" [disabled]="isSubmitting">
+          {{ isSubmitting ? 'Creating account...' : 'Continue' }}
+        </button>
+      </form>
+    </section>
+  </main>
+</div>

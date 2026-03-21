@@ -1,8 +1,26 @@
-<main class="home-page">
-  <header class="home-header">
-    <h1>{{ title }}</h1>
-    <p>Latest announcements from your neighborhood.</p>
-  </header>
+<section class="home-page">
+  <div class="feed-column">
+    <app-announcement-list />
+  </div>
 
-  <app-announcement-list />
-</main>
+  <aside class="right-rail" aria-label="Neighborhood highlights">
+    <section class="rail-card">
+      <h2>Trending Nearby</h2>
+      <article class="rail-item" *ngFor="let trend of trends; let first = first" [class.active]="first">
+        <h3>{{ trend.topic }}</h3>
+        <p>{{ trend.activity }}</p>
+      </article>
+    </section>
+
+    <section class="rail-card">
+      <h2>Local Recommendations</h2>
+      <article class="rail-item recommendation" *ngFor="let recommendation of recommendations">
+        <div class="place-badge">{{ recommendation.badge }}</div>
+        <div class="place-meta">
+          <h3>{{ recommendation.name }}</h3>
+          <p>{{ recommendation.rating }} ★ ({{ recommendation.reviews }} reviews)</p>
+        </div>
+      </article>
+    </section>
+  </aside>
+</section>

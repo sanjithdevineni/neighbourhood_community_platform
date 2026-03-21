@@ -2,9 +2,21 @@ import { Routes } from '@angular/router';
 import { HomeComponent } from './pages/home/home.component';
 import { AlertsComponent } from './pages/alerts/alerts.component';
 import { EventsComponent } from './pages/events/events.component';
+import { LayoutComponent } from './layout/layout.component';
+import { SignupComponent } from './pages/signup/signup.component';
+import { LoginComponent } from './pages/login/login.component';
 
 export const routes: Routes = [
-  { path: '', component: HomeComponent },
-  { path: 'alerts', component: AlertsComponent },
-  { path: 'events', component: EventsComponent },
+  { path: 'signup', component: SignupComponent },
+  { path: 'login', component: LoginComponent },
+  {
+    path: '',
+    component: LayoutComponent,
+    children: [
+      { path: '', component: HomeComponent },
+      { path: 'alerts', component: AlertsComponent },
+      { path: 'events', component: EventsComponent }
+    ]
+  },
+  { path: '**', redirectTo: '' }
 ];
