@@ -3,14 +3,13 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 export interface Announcement {
-  id: number;
-  author: string;
+  ID: number;
+  title: string;
   content: string;
-  timestamp: string;
-  category?: string;
-  imageUrl?: string;
-  likes?: number;
-  comments?: number;
+  author: string;
+  CreatedAt: string;
+  UpdatedAt?: string;
+  DeletedAt?: string | null;
 }
 
 @Injectable({
@@ -18,7 +17,7 @@ export interface Announcement {
 })
 export class AnnouncementService {
 
-  private apiUrl = 'http://localhost:8080/api/announcements';
+  private apiUrl = '/api/announcements';
   // change port/path based on your Go backend
 
   constructor(private http: HttpClient) {}

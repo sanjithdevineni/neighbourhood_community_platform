@@ -9,14 +9,11 @@ import { Component, Input } from '@angular/core';
   styleUrl: './post-card.component.css'
 })
 export class PostCardComponent {
+
   @Input() author = '';
-  @Input() timestamp = '';
-  @Input() category = '';
+  @Input() timestamp: string | null = '';
+  @Input() title = '';
   @Input() content = '';
-  @Input() imageUrl?: string;
-  @Input() imageAlt = 'Post image';
-  @Input() likes = 0;
-  @Input() comments = 0;
 
   get authorInitials(): string {
     const names = this.author.trim().split(' ').filter(Boolean);
@@ -25,7 +22,7 @@ export class PostCardComponent {
     }
     return names
       .slice(0, 2)
-      .map((name) => name.charAt(0).toUpperCase())
+      .map(name => name.charAt(0).toUpperCase())
       .join('');
   }
 }

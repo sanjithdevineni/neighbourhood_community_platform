@@ -85,12 +85,12 @@ export class AnnouncementListComponent implements OnInit {
   }
 
   trackById(_index: number, announcement: Announcement): number {
-    return announcement.id;
+    return announcement.ID;
   }
 
   private getNextPostId(): number {
     const maxExistingId = this.announcements.reduce((maxId, announcement) => {
-      return announcement.id > maxId ? announcement.id : maxId;
+      return announcement.ID > maxId ? announcement.ID : maxId;
     }, 0);
     return maxExistingId + 1;
   }
@@ -103,7 +103,7 @@ export class AnnouncementListComponent implements OnInit {
     return this.announcements.filter(announcement =>
       announcement.content.toLowerCase().includes(query) ||
       announcement.author.toLowerCase().includes(query) ||
-      (announcement.category?.toLowerCase().includes(query) ?? false)
+      (announcement.title?.toLowerCase().includes(query) ?? false)
     );
   }
 
