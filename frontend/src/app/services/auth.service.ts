@@ -20,11 +20,34 @@ interface SignupApiResponse {
   data: SignupUser;
 }
 
+export interface LoginPayload {
+  email: string;
+  password: string;
+}
+
+export interface LoginUser {
+  id: number;
+  name: string;
+  email: string;
+  created_at: string;
+}
+
+export interface LoginResult {
+  token: string;
+  user: LoginUser;
+}
+
+interface LoginApiResponse {
+  data: LoginResult;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
   private readonly baseUrl = ApiConfig.baseUrl;
+  private readonly tokenKey = 'auth_token';
+  private readonly userKey = 'auth_user';
 
   constructor(private readonly http: HttpClient) {}
 
@@ -32,5 +55,21 @@ export class AuthService {
     return this.http
       .post<SignupApiResponse>(`${this.baseUrl}/signup`, payload)
       .pipe(map((response) => response.data));
+  }
+
+  login(payload: LoginPayload): Observable<LoginResult> {
+    return this.http
+      .post<LoginApiResponse>(`${this.baseUrl}/login`, payload)
+      .pipe(map((response) => response.data));
+  }
+
+  storeAuthSession(result: LoginResult): void {
+    localStorage.setItem(this.tokenKey, result.token);
+    localStorage.setItem(this.userKey, JSON.stringify(result.user));
+  }
+
+  clearAuthSession(): void {
+    localStorage.removeItem(this.tokenKey);
+    localStorage.removeItem(this.userKey);
   }
 }
