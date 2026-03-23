@@ -18,7 +18,6 @@ export interface Announcement {
 export class AnnouncementService {
 
   private apiUrl = '/api/announcements';
-  // change port/path based on your Go backend
 
   constructor(private http: HttpClient) {}
 

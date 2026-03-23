@@ -65,7 +65,6 @@ export class AnnouncementListComponent implements OnInit {
         this.newPostContent = '';
         this.showValidationError = false;
 
-        // 🔥 Add new item directly instead of refetching
         this.announcements = [
           createdAnnouncement,
           ...this.announcements
