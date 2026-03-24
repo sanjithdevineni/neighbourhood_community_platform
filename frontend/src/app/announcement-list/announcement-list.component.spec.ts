@@ -15,16 +15,19 @@ describe('AnnouncementListComponent', () => {
       deleted_at: null
     }
   ];
+  const announcementServiceStub = {
+    getAnnouncements: () => of(mockAnnouncements)
+  };
 
   beforeEach(async () => {
+    announcementServiceStub.getAnnouncements = () => of(mockAnnouncements);
+
     await TestBed.configureTestingModule({
       imports: [AnnouncementListComponent],
       providers: [
         {
           provide: AnnouncementService,
-          useValue: {
-            getAnnouncements: () => of(mockAnnouncements)
-          }
+          useValue: announcementServiceStub
         }
       ]
     }).compileComponents();
@@ -42,10 +45,8 @@ describe('AnnouncementListComponent', () => {
   });
 
   it('should set error state when service call fails', async () => {
-    const service = TestBed.inject(AnnouncementService);
-    spyOn(service, 'getAnnouncements').and.returnValue(
-      throwError(() => new Error('Network error'))
-    );
+    announcementServiceStub.getAnnouncements = () =>
+      throwError(() => new Error('Network error'));
 
     const fixture = TestBed.createComponent(AnnouncementListComponent);
     const component = fixture.componentInstance;
