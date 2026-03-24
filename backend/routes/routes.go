@@ -23,12 +23,8 @@ func RegisterRoutes(router *gin.Engine) {
 }
 
 // SetupRouter initializes the Gin engine and registers routes.
-// Uses gin.New() instead of gin.Default() to avoid the built-in logger,
-// since we use our own structured logging middleware.
 func SetupRouter() *gin.Engine {
-	router := gin.New()
-	router.Use(gin.Recovery())
-	router.Use(middleware.LoggerMiddleware())
+	router := gin.Default()
 	RegisterRoutes(router)
 	return router
 }
