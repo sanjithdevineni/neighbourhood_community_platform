@@ -174,4 +174,32 @@ describe('AnnouncementService', () => {
       deleted_at: null
     });
   });
+
+  it('deletes announcement with bearer token', async () => {
+    localStorage.setItem('auth_token', 'jwt-token-789');
+
+    let postedUrl = '';
+    let postedBody: unknown;
+    const postedHeaders: { Authorization?: string } = {};
+    const httpClientStub = {
+      get: () => of([]),
+      post: (url: string, body: unknown, options?: { headers?: { get(name: string): string | null } }) => {
+        postedUrl = url;
+        postedBody = body;
+        const auth = options?.headers?.get('Authorization');
+        if (auth) {
+          postedHeaders['Authorization'] = auth;
+        }
+        return of({ message: 'Announcement deleted successfully' });
+      }
+    } as unknown as HttpClient;
+
+    const service = new AnnouncementService(httpClientStub);
+    const response = await firstValueFrom(service.deleteAnnouncement({ id: 11 }));
+
+    expect(postedUrl).toBe('/api/announcements/delete');
+    expect(postedBody).toEqual({ id: 11 });
+    expect(postedHeaders['Authorization']).toBe('Bearer jwt-token-789');
+    expect(response.message).toBe('Announcement deleted successfully');
+  });
 });

@@ -20,7 +20,8 @@ describe('AnnouncementListComponent', () => {
   const announcementServiceStub = {
     getAnnouncements: () => of(mockAnnouncements),
     createAnnouncement: () => of(mockAnnouncements[0]),
-    updateAnnouncement: () => of(mockAnnouncements[0])
+    updateAnnouncement: () => of(mockAnnouncements[0]),
+    deleteAnnouncement: () => of({ message: 'Announcement deleted successfully' })
   };
   const authServiceStub = {
     getStoredUser: () => ({
@@ -35,6 +36,7 @@ describe('AnnouncementListComponent', () => {
     announcementServiceStub.getAnnouncements = () => of(mockAnnouncements);
     announcementServiceStub.createAnnouncement = () => of(mockAnnouncements[0]);
     announcementServiceStub.updateAnnouncement = () => of(mockAnnouncements[0]);
+    announcementServiceStub.deleteAnnouncement = () => of({ message: 'Announcement deleted successfully' });
 
     await TestBed.configureTestingModule({
       imports: [AnnouncementListComponent],
@@ -267,5 +269,57 @@ describe('AnnouncementListComponent', () => {
     expect(component.isEditModalOpen).toBe(false);
     expect(component.announcements[0].title).toBe('Updated title');
     expect(component.announcements[0].content).toBe('Updated content');
+  });
+
+  it('should delete owned announcement after confirmation', () => {
+    const originalConfirm = window.confirm;
+    window.confirm = () => true;
+
+    try {
+      const fixture = TestBed.createComponent(AnnouncementListComponent);
+      const component = fixture.componentInstance;
+      fixture.detectChanges();
+
+      component.announcements = component.announcements.map((announcement) => ({
+        ...announcement,
+        author: '1'
+      }));
+
+      component.deleteAnnouncement(component.announcements[0]);
+
+      expect(component.announcements.length).toBe(0);
+      expect(component.deleteErrorMessage).toBe('');
+    } finally {
+      window.confirm = originalConfirm;
+    }
+  });
+
+  it('should not delete when confirmation is canceled', () => {
+    const originalConfirm = window.confirm;
+    window.confirm = () => false;
+
+    try {
+      let deleteCalled = false;
+      announcementServiceStub.deleteAnnouncement = () => {
+        deleteCalled = true;
+        return of({ message: 'Announcement deleted successfully' });
+      };
+
+      const fixture = TestBed.createComponent(AnnouncementListComponent);
+      const component = fixture.componentInstance;
+      fixture.detectChanges();
+
+      component.announcements = component.announcements.map((announcement) => ({
+        ...announcement,
+        author: '1'
+      }));
+
+      component.deleteAnnouncement(component.announcements[0]);
+
+      expect(deleteCalled).toBe(false);
+      expect(component.announcements.length).toBe(1);
+    } finally {
+      window.confirm = originalConfirm;
+    }
   });
 });

@@ -19,7 +19,10 @@ export class PostCardComponent {
   @Input() likes = 0;
   @Input() comments = 0;
   @Input() canEdit = false;
+  @Input() canDelete = false;
+  @Input() isDeleting = false;
   @Output() editClicked = new EventEmitter<void>();
+  @Output() deleteClicked = new EventEmitter<void>();
 
   get authorInitials(): string {
     const names = this.author.trim().split(' ').filter(Boolean);
@@ -34,5 +37,9 @@ export class PostCardComponent {
 
   onEditClick(): void {
     this.editClicked.emit();
+  }
+
+  onDeleteClick(): void {
+    this.deleteClicked.emit();
   }
 }

@@ -29,6 +29,7 @@
 
   <p class="load-state" *ngIf="isLoading">Loading announcements...</p>
   <p class="error-state" *ngIf="errorMessage">{{ errorMessage }}</p>
+  <p class="error-state" *ngIf="deleteErrorMessage">{{ deleteErrorMessage }}</p>
 
   <app-post-card
     *ngFor="let announcement of filteredAnnouncements; trackBy: trackById"
@@ -41,7 +42,10 @@
     [imageAlt]="'Announcement image'"
     [content]="announcement.content"
     [canEdit]="isOwnedByCurrentUser(announcement)"
+    [canDelete]="isOwnedByCurrentUser(announcement)"
+    [isDeleting]="isDeletingAnnouncementId === announcement.id"
     (editClicked)="openEditModal(announcement)"
+    (deleteClicked)="deleteAnnouncement(announcement)"
   />
 
   <div class="edit-modal-backdrop" *ngIf="isEditModalOpen" (click)="closeEditModal()"></div>

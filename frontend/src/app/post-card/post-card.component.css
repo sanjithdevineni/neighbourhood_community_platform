@@ -42,7 +42,6 @@
 }
 
 .edit-btn {
-  margin-left: auto;
   border: 1px solid #bfd7c8;
   background: #f3faf6;
   color: #0f7a43;
@@ -57,8 +56,35 @@
   background: #e8f7ee;
 }
 
+.delete-btn {
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #b42318;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.3rem 0.72rem;
+  cursor: pointer;
+}
+
+.delete-btn:hover {
+  background: #fee2e2;
+}
+
+.delete-btn:disabled {
+  opacity: 0.8;
+  cursor: default;
+}
+
+.owner-actions {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
 .category-badge {
-  margin-left: 0.5rem;
+  margin-left: 0.35rem;
   background: #eef2f7;
   color: #4b5563;
   font-size: 0.75rem;
