@@ -41,8 +41,7 @@ func Signup(c *gin.Context) {
 	// Hash password
 	hashed, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
-		utils.RespondWithError(c, utils.InternalServerError("failed to process password"))
-		slog.Error("Failed to hash password", "error", err)
+		utils.RespondWithError(c, utils.InternalServerError("failed to process password"), "error", err)
 		return
 	}
 
@@ -55,12 +54,10 @@ func Signup(c *gin.Context) {
 	if err := database.DB.Create(&user).Error; err != nil {
 		// handle duplicate email (unique constraint)
 		if strings.Contains(strings.ToLower(err.Error()), "unique") || strings.Contains(strings.ToLower(err.Error()), "constraint") {
-			slog.Warn("Duplicate email registration attempt", "email", user.Email)
-			utils.RespondWithError(c, utils.Conflict("email already registered"))
+			utils.RespondWithError(c, utils.Conflict("email already registered"), "email", user.Email)
 			return
 		}
-		slog.Error("Failed to create user", "error", err, "email", user.Email)
-		utils.RespondWithError(c, utils.InternalServerError("failed to create user"))
+		utils.RespondWithError(c, utils.InternalServerError("failed to create user"), "error", err, "email", user.Email)
 		return
 	}
 
@@ -85,21 +82,18 @@ func Login(c *gin.Context) {
 
 	var user models.User
 	if err := database.DB.Where("email = ?", strings.ToLower(req.Email)).First(&user).Error; err != nil {
-		utils.RespondWithError(c, utils.Unauthorized("invalid credentials"))
-		slog.Warn("Login failed: user not found", "email", strings.ToLower(req.Email))
+		utils.RespondWithError(c, utils.Unauthorized("invalid credentials"), "detail", "user not found", "email", strings.ToLower(req.Email))
 		return
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
-		utils.RespondWithError(c, utils.Unauthorized("invalid credentials"))
-		slog.Warn("Login failed: invalid password", "email", strings.ToLower(req.Email), "user_id", user.ID)
+		utils.RespondWithError(c, utils.Unauthorized("invalid credentials"), "detail", "invalid password", "email", strings.ToLower(req.Email), "user_id", user.ID)
 		return
 	}
 
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
-		utils.RespondWithError(c, utils.InternalServerError("server configuration error"))
-		slog.Error("JWT_SECRET environment variable is not set")
+		utils.RespondWithError(c, utils.InternalServerError("server configuration error"), "detail", "JWT_SECRET not set")
 		return
 	}
 
@@ -112,8 +106,7 @@ func Login(c *gin.Context) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	signed, err := token.SignedString([]byte(secret))
 	if err != nil {
-		utils.RespondWithError(c, utils.InternalServerError("failed to generate token"))
-		slog.Error("Failed to generate JWT token", "error", err, "user_id", user.ID)
+		utils.RespondWithError(c, utils.InternalServerError("failed to generate token"), "error", err, "user_id", user.ID)
 		return
 	}
 

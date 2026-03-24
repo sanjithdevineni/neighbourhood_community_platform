@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"log"
+	"log/slog"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -55,12 +55,29 @@ func InternalServerError(message string) *AppError {
 	return NewAppError(message, "INTERNAL_SERVER_ERROR", http.StatusInternalServerError)
 }
 
-// RespondWithError sends the error as a JSON response
-func RespondWithError(c *gin.Context, err *AppError) {
-	// Log server errors for monitoring
-	if err.StatusCode >= 500 {
-		log.Printf("Error: %s (Code: %s, Status: %d), URL: %s, Method: %s", err.Message, err.Code, err.StatusCode, c.Request.URL.Path, c.Request.Method)
+// RespondWithError sends the error as a JSON response and logs it.
+// logAttrs are optional slog key/value pairs appended to the structured log entry.
+// The log message and JSON "error" field are always sourced from err.Message.
+func RespondWithError(c *gin.Context, err *AppError, logAttrs ...any) {
+	attrs := append(
+		[]any{
+			"code", err.Code,
+			"status", err.StatusCode,
+			"path", c.Request.URL.Path,
+			"method", c.Request.Method,
+		},
+		logAttrs...,
+	)
+
+	switch {
+	case err.StatusCode >= 500:
+		slog.Error(err.Message, attrs...)
+	case err.StatusCode >= 400:
+		if len(logAttrs) > 0 {
+			slog.Warn(err.Message, attrs...)
+		}
 	}
+
 	c.AbortWithStatusJSON(err.StatusCode, gin.H{
 		"error": err.Message,
 		"code":  err.Code,

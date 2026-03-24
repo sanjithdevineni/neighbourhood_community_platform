@@ -15,8 +15,7 @@ func GetAnnouncements(c *gin.Context) {
 	var announcements []models.Announcement
 
 	if err := database.DB.Find(&announcements).Error; err != nil {
-		utils.RespondWithError(c, utils.InternalServerError("Failed to fetch announcements"))
-		slog.Error("Failed to fetch announcements", "error", err)
+		utils.RespondWithError(c, utils.InternalServerError("Failed to fetch announcements"), "error", err)
 		return
 	}
 
@@ -39,8 +38,7 @@ func CreateAnnouncement(c *gin.Context) {
 	}
 
 	if err := database.DB.Create(&announcement).Error; err != nil {
-		utils.RespondWithError(c, utils.InternalServerError("Failed to create announcement"))
-		slog.Error("Failed to create announcement", "error", err, "author", announcement.Author)
+		utils.RespondWithError(c, utils.InternalServerError("Failed to create announcement"), "error", err, "author", announcement.Author)
 		return
 	}
 
@@ -63,8 +61,7 @@ func UpdateAnnouncement(c *gin.Context) {
 
 	var announcement models.Announcement
 	if err := database.DB.First(&announcement, req.ID).Error; err != nil {
-		utils.RespondWithError(c, utils.NotFound("Announcement not found"))
-		slog.Warn("Announcement not found for update", "id", req.ID)
+		utils.RespondWithError(c, utils.NotFound("Announcement not found"), "op", "update", "id", req.ID)
 		return
 	}
 
@@ -72,8 +69,7 @@ func UpdateAnnouncement(c *gin.Context) {
 	if uid, exists := c.Get("userID"); exists {
 		if s, ok := uid.(string); ok {
 			if s != announcement.Author {
-				utils.RespondWithError(c, utils.Forbidden("Not authorized to update this announcement"))
-				slog.Warn("Unauthorized update attempt", "announcement_id", req.ID, "user_id", s, "author", announcement.Author)
+				utils.RespondWithError(c, utils.Forbidden("Not authorized to update this announcement"), "op", "update", "user_id", s, "author", announcement.Author, "id", req.ID)
 				return
 			}
 		}
@@ -97,15 +93,13 @@ func UpdateAnnouncement(c *gin.Context) {
 	}
 
 	if err := database.DB.Model(&announcement).Updates(updated).Error; err != nil {
-		utils.RespondWithError(c, utils.InternalServerError("Failed to update announcement"))
-		slog.Error("Failed to update announcement", "error", err, "id", req.ID)
+		utils.RespondWithError(c, utils.InternalServerError("Failed to update announcement"), "error", err, "id", req.ID)
 		return
 	}
 
 	// Return the updated announcement
 	if err := database.DB.First(&announcement, req.ID).Error; err != nil {
-		utils.RespondWithError(c, utils.InternalServerError("Failed to fetch updated announcement"))
-		slog.Error("Failed to fetch updated announcement", "error", err, "id", req.ID)
+		utils.RespondWithError(c, utils.InternalServerError("Failed to fetch updated announcement"), "error", err, "id", req.ID)
 		return
 	}
 
@@ -126,8 +120,7 @@ func DeleteAnnouncement(c *gin.Context) {
 
 	var announcement models.Announcement
 	if err := database.DB.First(&announcement, req.ID).Error; err != nil {
-		utils.RespondWithError(c, utils.NotFound("Announcement not found"))
-		slog.Warn("Announcement not found for deletion", "id", req.ID)
+		utils.RespondWithError(c, utils.NotFound("Announcement not found"), "op", "delete", "id", req.ID)
 		return
 	}
 
@@ -135,8 +128,7 @@ func DeleteAnnouncement(c *gin.Context) {
 	if uid, exists := c.Get("userID"); exists {
 		if s, ok := uid.(string); ok {
 			if s != announcement.Author {
-				utils.RespondWithError(c, utils.Forbidden("Not authorized to delete this announcement"))
-				slog.Warn("Unauthorized delete attempt", "announcement_id", req.ID, "user_id", s, "author", announcement.Author)
+				utils.RespondWithError(c, utils.Forbidden("Not authorized to delete this announcement"), "op", "delete", "user_id", s, "author", announcement.Author, "id", req.ID)
 				return
 			}
 		}
@@ -146,8 +138,7 @@ func DeleteAnnouncement(c *gin.Context) {
 	}
 
 	if err := database.DB.Delete(&announcement).Error; err != nil {
-		utils.RespondWithError(c, utils.InternalServerError("Failed to delete announcement"))
-		slog.Error("Failed to delete announcement", "error", err, "id", req.ID)
+		utils.RespondWithError(c, utils.InternalServerError("Failed to delete announcement"), "error", err, "id", req.ID)
 		return
 	}
 
