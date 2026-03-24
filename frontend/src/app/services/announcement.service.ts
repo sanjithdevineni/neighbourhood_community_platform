@@ -41,6 +41,14 @@ export interface UpdateAnnouncementPayload {
   content?: string;
 }
 
+export interface DeleteAnnouncementPayload {
+  id: number;
+}
+
+export interface DeleteAnnouncementResponse {
+  message: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -93,5 +101,16 @@ export class AnnouncementService {
     return this.http
       .post<RawAnnouncement>(`${this.apiUrl}/update`, payload, { headers })
       .pipe(map((raw) => this.normalizeAnnouncement(raw)));
+  }
+
+  deleteAnnouncement(payload: DeleteAnnouncementPayload): Observable<DeleteAnnouncementResponse> {
+    const token = localStorage.getItem(this.tokenKey);
+    const headers = token
+      ? new HttpHeaders({
+          Authorization: `Bearer ${token}`
+        })
+      : undefined;
+
+    return this.http.post<DeleteAnnouncementResponse>(`${this.apiUrl}/delete`, payload, { headers });
   }
 }

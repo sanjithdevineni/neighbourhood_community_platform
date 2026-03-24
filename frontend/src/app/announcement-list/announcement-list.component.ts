@@ -43,7 +43,9 @@ export class AnnouncementListComponent implements OnInit, OnDestroy {
   currentUserName = '';
   isEditModalOpen = false;
   isUpdatingAnnouncement = false;
+  isDeletingAnnouncementId: number | null = null;
   editErrorMessage = '';
+  deleteErrorMessage = '';
   editingAnnouncementId: number | null = null;
   editTitle = '';
   editContent = '';
@@ -208,6 +210,47 @@ export class AnnouncementListComponent implements OnInit, OnDestroy {
       });
   }
 
+  deleteAnnouncement(announcement: Announcement): void {
+    if (!this.isOwnedByCurrentUser(announcement)) {
+      return;
+    }
+
+    if (this.isDeletingAnnouncementId === announcement.id) {
+      return;
+    }
+
+    const confirmed = window.confirm('Are you sure you want to delete this announcement?');
+    if (!confirmed) {
+      return;
+    }
+
+    this.isDeletingAnnouncementId = announcement.id;
+    this.deleteErrorMessage = '';
+
+    this.announcementService
+      .deleteAnnouncement({ id: announcement.id })
+      .pipe(
+        finalize(() => {
+          this.isDeletingAnnouncementId = null;
+          this.safeDetectChanges();
+        })
+      )
+      .subscribe({
+        next: () => {
+          this.announcements = this.announcements.filter((item) => item.id !== announcement.id);
+          if (this.editingAnnouncementId === announcement.id) {
+            this.closeEditModal();
+          }
+          this.safeDetectChanges();
+        },
+        error: (error: unknown) => {
+          console.error(error);
+          this.deleteErrorMessage = this.getDeleteErrorMessage(error);
+          this.safeDetectChanges();
+        }
+      });
+  }
+
   trackById(_index: number, announcement: Announcement): number {
     return announcement.id;
   }
@@ -329,6 +372,41 @@ export class AnnouncementListComponent implements OnInit, OnDestroy {
     }
 
     return 'Failed to update announcement. Please try again.';
+  }
+
+  private getDeleteErrorMessage(error: unknown): string {
+    if (!(error instanceof HttpErrorResponse)) {
+      return 'Failed to delete announcement. Please try again.';
+    }
+
+    if (error.status === 401) {
+      return 'You must be logged in to delete announcements.';
+    }
+
+    if (error.status === 403) {
+      return 'You can only delete your own announcements.';
+    }
+
+    if (error.status === 404) {
+      return 'Announcement not found.';
+    }
+
+    if (error.status === 0) {
+      return 'Unable to reach the backend. Make sure the API is running.';
+    }
+
+    if (typeof error.error === 'string') {
+      const trimmed = error.error.trim();
+      if (trimmed) {
+        return trimmed;
+      }
+    }
+
+    if (error.error?.error) {
+      return error.error.error;
+    }
+
+    return 'Failed to delete announcement. Please try again.';
   }
 
   private sortAnnouncements(announcements: Announcement[]): Announcement[] {
