@@ -1,8 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { finalize } from 'rxjs';
+import { finalize, retry } from 'rxjs';
 import { PostCardComponent } from '../post-card/post-card.component';
 import { SearchService } from '../services/search.service';
 import {
@@ -18,12 +18,15 @@ import {
   templateUrl: './announcement-list.component.html',
   styleUrl: './announcement-list.component.css'
 })
-export class AnnouncementListComponent implements OnInit {
+export class AnnouncementListComponent implements OnInit, OnDestroy {
 
   readonly fallbackAuthor = 'Community';
+  private fetchRequestId = 0;
+  private destroyed = false;
   constructor(
     private readonly searchService: SearchService,
-    private readonly announcementService: AnnouncementService
+    private readonly announcementService: AnnouncementService,
+    private readonly cdr: ChangeDetectorRef
   ) {}
 
   announcements: Announcement[] = [];
@@ -39,23 +42,36 @@ export class AnnouncementListComponent implements OnInit {
   }
 
   fetchAnnouncements(): void {
+    const requestId = ++this.fetchRequestId;
     this.isLoading = true;
     this.errorMessage = '';
 
     this.announcementService
       .getAnnouncements()
       .pipe(
+        retry({ count: 2, delay: 300 }),
         finalize(() => {
-          this.isLoading = false;
+          if (requestId === this.fetchRequestId) {
+            this.isLoading = false;
+            this.safeDetectChanges();
+          }
         })
       )
       .subscribe({
         next: (data) => {
-          this.announcements = data;
+          if (requestId !== this.fetchRequestId) {
+            return;
+          }
+          this.announcements = this.sortAnnouncements(data);
+          this.safeDetectChanges();
         },
         error: (error) => {
+          if (requestId !== this.fetchRequestId) {
+            return;
+          }
           console.error(error);
           this.errorMessage = 'Failed to load announcements.';
+          this.safeDetectChanges();
         }
       });
   }
@@ -83,17 +99,21 @@ export class AnnouncementListComponent implements OnInit {
       .pipe(
         finalize(() => {
           this.isSubmitting = false;
+          this.safeDetectChanges();
         })
       )
       .subscribe({
         next: (announcement) => {
-          this.announcements = [announcement, ...this.announcements];
+          this.announcements = this.sortAnnouncements([announcement, ...this.announcements]);
           this.newPostTitle = '';
           this.newPostContent = '';
+          this.safeDetectChanges();
+          this.fetchAnnouncements();
         },
         error: (error: unknown) => {
           console.error(error);
           this.submitErrorMessage = this.getCreateErrorMessage(error);
+          this.safeDetectChanges();
         }
       });
   }
@@ -152,6 +172,36 @@ export class AnnouncementListComponent implements OnInit {
     }
 
     return 'Failed to create announcement. Please try again.';
+  }
+
+  private sortAnnouncements(announcements: Announcement[]): Announcement[] {
+    return [...announcements].sort((a, b) => {
+      const timestampA = this.getTimestampValue(a.created_at);
+      const timestampB = this.getTimestampValue(b.created_at);
+      if (timestampA !== timestampB) {
+        return timestampB - timestampA;
+      }
+      return b.id - a.id;
+    });
+  }
+
+  private getTimestampValue(value: string): number {
+    const parsed = Date.parse(value);
+    if (Number.isNaN(parsed)) {
+      return 0;
+    }
+    return parsed;
+  }
+
+  ngOnDestroy(): void {
+    this.destroyed = true;
+  }
+
+  private safeDetectChanges(): void {
+    if (this.destroyed) {
+      return;
+    }
+    this.cdr.detectChanges();
   }
 
 }
