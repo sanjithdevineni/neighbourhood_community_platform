@@ -13,6 +13,7 @@ import { AuthService, LoginUser } from '../../services/auth.service';
 export class AccountComponent {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly bioPlaceholder = 'Tell us something about yourself!';
 
   readonly user: LoginUser | null = this.authService.getStoredUser();
 
@@ -34,8 +35,17 @@ export class AccountComponent {
     return 'Not provided';
   }
 
+  get hasBio(): boolean {
+    return !!this.user?.bio?.trim();
+  }
+
   get displayBio(): string {
-    return this.user?.bio?.trim() ?? '';
+    const bio = this.user?.bio?.trim();
+    if (bio) {
+      return bio;
+    }
+
+    return this.bioPlaceholder;
   }
 
   get initials(): string {

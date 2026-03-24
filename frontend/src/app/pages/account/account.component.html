@@ -33,11 +33,11 @@
             </div>
           </div>
 
-          <div class="field-grid" *ngIf="displayBio">
+          <div class="field-grid">
             <span class="material-icons field-icon" aria-hidden="true">description</span>
             <div>
               <p class="field-label">Bio</p>
-              <p class="field-value">{{ displayBio }}</p>
+              <p class="field-value" [class.field-placeholder]="!hasBio">{{ displayBio }}</p>
             </div>
           </div>
         </div>

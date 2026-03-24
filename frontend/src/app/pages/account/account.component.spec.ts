@@ -54,7 +54,7 @@ describe('AccountComponent', () => {
     expect(compiled.textContent).toContain('Community member since 2024.');
   });
 
-  it('should hide bio row when bio is missing', () => {
+  it('should show placeholder bio when bio is missing', () => {
     authServiceStub.getStoredUser = () => ({
       id: 1,
       name: 'John Doe',
@@ -66,7 +66,8 @@ describe('AccountComponent', () => {
     fixture.detectChanges();
 
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.textContent).not.toContain('Bio');
+    expect(compiled.textContent).toContain('Bio');
+    expect(compiled.textContent).toContain('Tell us something about yourself!');
   });
 
   it('should clear auth session and navigate to login on logout', async () => {
