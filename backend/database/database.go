@@ -4,6 +4,7 @@ import (
 	"community-platform-backend/config"
 	"fmt"
 	"log"
+	"log/slog"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -30,12 +31,14 @@ func InitDatabase(dbName string) error {
 	// Obtain the underlying *sql.DB to verify the connection is alive.
 	sqlDB, err := DB.DB()
 	if err != nil {
-		return fmt.Errorf("failed to get underlying sql.DB: %w", err)
+    slog.Error("Failed to connect to database", "error", err, "db_name", dbName)
+    return fmt.Errorf("failed to get underlying sql.DB: %w", err)
 	}
 	if err = sqlDB.Ping(); err != nil {
 		return fmt.Errorf("database ping failed: %w", err)
 	}
 
+  slog.Info("Database connected successfully", "db_name", dbName)
 	log.Println("Database connected successfully")
 	return nil
 }

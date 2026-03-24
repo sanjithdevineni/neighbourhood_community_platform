@@ -1,8 +1,11 @@
 package main
 
 import (
+	"log/slog"
+
 	"community-platform-backend/config"
 	"community-platform-backend/database"
+	applog "community-platform-backend/log"
 	"community-platform-backend/middleware"
 	"community-platform-backend/models"
 	"community-platform-backend/routes"
@@ -16,6 +19,9 @@ import (
 )
 
 func main() {
+	// Initialize structured logger first
+	applog.Init()
+
 	// Load configuration from environment
 	config.LoadConfig()
 
@@ -45,6 +51,7 @@ func main() {
 	// Run the server in a goroutine so the main goroutine can listen for signals
 	go func() {
 		log.Printf("Server listening on %s", config.ServerPort)
+    slog.Info("Server starting", "port", config.ServerPort)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Server error: %v", err)
 		}

@@ -1,0 +1,35 @@
+<article class="post-card">
+  <header class="post-header">
+    <div class="avatar" aria-hidden="true">{{ authorInitials }}</div>
+    <div class="meta">
+      <h3>{{ author }}</h3>
+      <p>{{ timestamp }}</p>
+    </div>
+    <span class="category-badge">{{ category }}</span>
+  </header>
+
+  <p class="post-content">{{ content }}</p>
+
+  <img
+    *ngIf="imageUrl"
+    class="post-image"
+    [src]="imageUrl"
+    [alt]="imageAlt"
+    loading="lazy"
+  />
+
+  <footer class="interaction-row" aria-label="Post interactions">
+    <button type="button" aria-label="Like post">
+      <span class="icon">&#9825;</span>
+      <span>{{ likes }}</span>
+    </button>
+    <button type="button" aria-label="Comment on post">
+      <span class="icon">&#128172;</span>
+      <span>{{ comments }}</span>
+    </button>
+    <button type="button" aria-label="Share post">
+      <span class="icon">&#10138;</span>
+      <span>Share</span>
+    </button>
+  </footer>
+</article>

@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"fmt"
+	"log/slog"
 	"net/http"
 	"os"
 	"strings"
@@ -9,6 +10,7 @@ import (
 
 	"community-platform-backend/database"
 	"community-platform-backend/models"
+	"community-platform-backend/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
@@ -32,14 +34,15 @@ type LoginRequest struct {
 func Signup(c *gin.Context) {
 	var req SignupRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid input", "details": err.Error()})
+		utils.RespondWithError(c, utils.BadRequest("invalid input"))
 		return
 	}
 
 	// Hash password
 	hashed, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to process password"})
+		utils.RespondWithError(c, utils.InternalServerError("failed to process password"))
+		slog.Error("Failed to hash password", "error", err)
 		return
 	}
 
@@ -52,12 +55,16 @@ func Signup(c *gin.Context) {
 	if err := database.DB.Create(&user).Error; err != nil {
 		// handle duplicate email (unique constraint)
 		if strings.Contains(strings.ToLower(err.Error()), "unique") || strings.Contains(strings.ToLower(err.Error()), "constraint") {
-			c.JSON(http.StatusConflict, gin.H{"error": "email already registered"})
+			slog.Warn("Duplicate email registration attempt", "email", user.Email)
+			utils.RespondWithError(c, utils.Conflict("email already registered"))
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create user"})
+		slog.Error("Failed to create user", "error", err, "email", user.Email)
+		utils.RespondWithError(c, utils.InternalServerError("failed to create user"))
 		return
 	}
+
+	slog.Info("User registered successfully", "user_id", user.ID, "email", user.Email)
 
 	// Structured response without password
 	c.JSON(http.StatusCreated, gin.H{"data": gin.H{
@@ -72,24 +79,27 @@ func Signup(c *gin.Context) {
 func Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid input", "details": err.Error()})
+		utils.RespondWithError(c, utils.BadRequest("invalid input"))
 		return
 	}
 
 	var user models.User
 	if err := database.DB.Where("email = ?", strings.ToLower(req.Email)).First(&user).Error; err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
+		utils.RespondWithError(c, utils.Unauthorized("invalid credentials"))
+		slog.Warn("Login failed: user not found", "email", strings.ToLower(req.Email))
 		return
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
+		utils.RespondWithError(c, utils.Unauthorized("invalid credentials"))
+		slog.Warn("Login failed: invalid password", "email", strings.ToLower(req.Email), "user_id", user.ID)
 		return
 	}
 
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "server configuration error"})
+		utils.RespondWithError(c, utils.InternalServerError("server configuration error"))
+		slog.Error("JWT_SECRET environment variable is not set")
 		return
 	}
 
@@ -102,9 +112,12 @@ func Login(c *gin.Context) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	signed, err := token.SignedString([]byte(secret))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate token"})
+		utils.RespondWithError(c, utils.InternalServerError("failed to generate token"))
+		slog.Error("Failed to generate JWT token", "error", err, "user_id", user.ID)
 		return
 	}
+
+	slog.Info("User logged in successfully", "user_id", user.ID, "email", user.Email)
 
 	c.JSON(http.StatusOK, gin.H{"data": gin.H{
 		"token": signed,

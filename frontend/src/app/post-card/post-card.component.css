@@ -1,0 +1,142 @@
+.post-card {
+  background: #ffffff;
+  border: 1px solid #dbe1e8;
+  border-radius: 14px;
+  padding: 1rem;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+
+.post-header {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.avatar {
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 50%;
+  background: #c9f2d8;
+  color: #0f7a43;
+  font-size: 0.9rem;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.meta {
+  min-width: 0;
+}
+
+.meta h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #1f2937;
+}
+
+.meta p {
+  margin: 0.1rem 0 0;
+  color: #6b7280;
+  font-size: 0.86rem;
+}
+
+.category-badge {
+  margin-left: auto;
+  background: #eef2f7;
+  color: #4b5563;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  border-radius: 999px;
+  padding: 0.25rem 0.55rem;
+}
+
+.post-content {
+  margin: 0.85rem 0 0;
+  color: #1f2937;
+  line-height: 1.5;
+}
+
+.post-image {
+  margin-top: 0.9rem;
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  object-fit: cover;
+  max-height: 340px;
+  display: block;
+}
+
+.interaction-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-top: 0.9rem;
+  border-top: 1px solid #edf1f5;
+  padding-top: 0.65rem;
+}
+
+.interaction-row button {
+  appearance: none;
+  border: none;
+  background: none;
+  color: #4b5563;
+  font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem;
+  cursor: default;
+}
+
+.icon {
+  color: #6b7280;
+  font-size: 1rem;
+}
+
+@media (max-width: 768px) {
+  .post-card {
+    padding: 0.85rem;
+  }
+
+  .post-header {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    row-gap: 0.5rem;
+  }
+
+  .meta h3 {
+    font-size: 1rem;
+  }
+
+  .category-badge {
+    margin-left: 0;
+  }
+
+  .interaction-row {
+    flex-wrap: wrap;
+    gap: 0.45rem 0.65rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .avatar {
+    width: 2.1rem;
+    height: 2.1rem;
+    font-size: 0.8rem;
+  }
+
+  .post-content {
+    font-size: 0.95rem;
+  }
+
+  .post-image {
+    max-height: 220px;
+  }
+
+  .interaction-row button {
+    font-size: 0.82rem;
+  }
+}
