@@ -5,10 +5,12 @@ import { FormsModule } from '@angular/forms';
 import { catchError, finalize, map, of, retry, switchMap } from 'rxjs';
 import { PostCardComponent } from '../post-card/post-card.component';
 import { SearchService } from '../services/search.service';
+import { AuthService } from '../services/auth.service';
 import {
   AnnouncementService,
   Announcement,
-  CreateAnnouncementPayload
+  CreateAnnouncementPayload,
+  UpdateAnnouncementPayload
 } from '../services/announcement.service';
 
 @Component({
@@ -25,6 +27,7 @@ export class AnnouncementListComponent implements OnInit, OnDestroy {
   private destroyed = false;
   constructor(
     private readonly searchService: SearchService,
+    private readonly authService: AuthService,
     private readonly announcementService: AnnouncementService,
     private readonly cdr: ChangeDetectorRef
   ) {}
@@ -36,8 +39,17 @@ export class AnnouncementListComponent implements OnInit, OnDestroy {
   submitErrorMessage = '';
   newPostTitle = '';
   newPostContent = '';
+  currentUserId = '';
+  currentUserName = '';
+  isEditModalOpen = false;
+  isUpdatingAnnouncement = false;
+  editErrorMessage = '';
+  editingAnnouncementId: number | null = null;
+  editTitle = '';
+  editContent = '';
 
   ngOnInit(): void {
+    this.loadCurrentUserContext();
     this.fetchAnnouncements();
   }
 
@@ -129,8 +141,107 @@ export class AnnouncementListComponent implements OnInit, OnDestroy {
       });
   }
 
+  openEditModal(announcement: Announcement): void {
+    if (!this.isOwnedByCurrentUser(announcement)) {
+      return;
+    }
+
+    this.editingAnnouncementId = announcement.id;
+    this.editTitle = announcement.title;
+    this.editContent = announcement.content;
+    this.editErrorMessage = '';
+    this.isEditModalOpen = true;
+  }
+
+  closeEditModal(): void {
+    this.isEditModalOpen = false;
+    this.isUpdatingAnnouncement = false;
+    this.editErrorMessage = '';
+    this.editingAnnouncementId = null;
+    this.editTitle = '';
+    this.editContent = '';
+  }
+
+  saveEdit(): void {
+    if (!this.editingAnnouncementId || this.isUpdatingAnnouncement) {
+      return;
+    }
+
+    const payload: UpdateAnnouncementPayload = {
+      id: this.editingAnnouncementId,
+      title: this.editTitle.trim(),
+      content: this.editContent.trim()
+    };
+
+    if (!payload.title || !payload.content) {
+      this.editErrorMessage = 'Title and content are required.';
+      this.safeDetectChanges();
+      return;
+    }
+
+    this.isUpdatingAnnouncement = true;
+    this.editErrorMessage = '';
+
+    this.announcementService
+      .updateAnnouncement(payload)
+      .pipe(
+        finalize(() => {
+          this.isUpdatingAnnouncement = false;
+          this.safeDetectChanges();
+        })
+      )
+      .subscribe({
+        next: (updated) => {
+          this.announcements = this.sortAnnouncements(
+            this.announcements.map((announcement) =>
+              announcement.id === updated.id ? updated : announcement
+            )
+          );
+          this.closeEditModal();
+          this.safeDetectChanges();
+        },
+        error: (error: unknown) => {
+          console.error(error);
+          this.editErrorMessage = this.getUpdateErrorMessage(error);
+          this.safeDetectChanges();
+        }
+      });
+  }
+
   trackById(_index: number, announcement: Announcement): number {
     return announcement.id;
+  }
+
+  isOwnedByCurrentUser(announcement: Announcement): boolean {
+    if (!this.currentUserId) {
+      return false;
+    }
+    return announcement.author === this.currentUserId;
+  }
+
+  getAuthorDisplayName(announcement: Announcement): string {
+    if (!announcement.author) {
+      return this.fallbackAuthor;
+    }
+
+    if (announcement.author === this.currentUserId && this.currentUserName) {
+      return this.currentUserName;
+    }
+
+    if (/^\d+$/.test(announcement.author)) {
+      return `User ${announcement.author}`;
+    }
+
+    return announcement.author;
+  }
+
+  get composerInitials(): string {
+    const source = this.currentUserName.trim() || this.fallbackAuthor;
+    const names = source.split(' ').filter(Boolean);
+    return names
+      .slice(0, 2)
+      .map((name) => name.charAt(0).toUpperCase())
+      .join('');
   }
 
   get filteredAnnouncements(): Announcement[] {
@@ -141,7 +252,7 @@ export class AnnouncementListComponent implements OnInit, OnDestroy {
     return this.announcements.filter(announcement =>
       announcement.title.toLowerCase().includes(query) ||
       announcement.content.toLowerCase().includes(query) ||
-      announcement.author.toLowerCase().includes(query)
+      this.getAuthorDisplayName(announcement).toLowerCase().includes(query)
     );
   }
 
@@ -185,6 +296,41 @@ export class AnnouncementListComponent implements OnInit, OnDestroy {
     return 'Failed to create announcement. Please try again.';
   }
 
+  private getUpdateErrorMessage(error: unknown): string {
+    if (!(error instanceof HttpErrorResponse)) {
+      return 'Failed to update announcement. Please try again.';
+    }
+
+    if (error.status === 401) {
+      return 'You must be logged in to edit announcements.';
+    }
+
+    if (error.status === 403) {
+      return 'You can only edit your own announcements.';
+    }
+
+    if (error.status === 404) {
+      return 'Announcement not found.';
+    }
+
+    if (error.status === 0) {
+      return 'Unable to reach the backend. Make sure the API is running.';
+    }
+
+    if (typeof error.error === 'string') {
+      const trimmed = error.error.trim();
+      if (trimmed) {
+        return trimmed;
+      }
+    }
+
+    if (error.error?.error) {
+      return error.error.error;
+    }
+
+    return 'Failed to update announcement. Please try again.';
+  }
+
   private sortAnnouncements(announcements: Announcement[]): Announcement[] {
     return [...announcements].sort((a, b) => {
       const timestampA = this.getTimestampValue(a.created_at);
@@ -202,6 +348,18 @@ export class AnnouncementListComponent implements OnInit, OnDestroy {
       return 0;
     }
     return parsed;
+  }
+
+  private loadCurrentUserContext(): void {
+    const user = this.authService.getStoredUser();
+    if (!user) {
+      this.currentUserId = '';
+      this.currentUserName = '';
+      return;
+    }
+
+    this.currentUserId = `${user.id}`;
+    this.currentUserName = user.name?.trim() ?? '';
   }
 
   ngOnDestroy(): void {

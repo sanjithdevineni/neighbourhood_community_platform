@@ -3,6 +3,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { of, Subject, throwError } from 'rxjs';
 import { AnnouncementListComponent } from './announcement-list.component';
 import { AnnouncementService } from '../services/announcement.service';
+import { AuthService } from '../services/auth.service';
 
 describe('AnnouncementListComponent', () => {
   const mockAnnouncements = [
@@ -18,12 +19,22 @@ describe('AnnouncementListComponent', () => {
   ];
   const announcementServiceStub = {
     getAnnouncements: () => of(mockAnnouncements),
-    createAnnouncement: () => of(mockAnnouncements[0])
+    createAnnouncement: () => of(mockAnnouncements[0]),
+    updateAnnouncement: () => of(mockAnnouncements[0])
+  };
+  const authServiceStub = {
+    getStoredUser: () => ({
+      id: 1,
+      name: 'Yash O',
+      email: 'yash@example.com',
+      created_at: '2026-03-03T20:50:00Z'
+    })
   };
 
   beforeEach(async () => {
     announcementServiceStub.getAnnouncements = () => of(mockAnnouncements);
     announcementServiceStub.createAnnouncement = () => of(mockAnnouncements[0]);
+    announcementServiceStub.updateAnnouncement = () => of(mockAnnouncements[0]);
 
     await TestBed.configureTestingModule({
       imports: [AnnouncementListComponent],
@@ -31,6 +42,10 @@ describe('AnnouncementListComponent', () => {
         {
           provide: AnnouncementService,
           useValue: announcementServiceStub
+        },
+        {
+          provide: AuthService,
+          useValue: authServiceStub
         }
       ]
     }).compileComponents();
@@ -198,5 +213,59 @@ describe('AnnouncementListComponent', () => {
 
     expect(component.isSubmitting).toBe(false);
     expect(component.submitErrorMessage).toBe('You must be logged in to post an announcement.');
+  });
+
+  it('should map current user id author to current user display name', () => {
+    const fixture = TestBed.createComponent(AnnouncementListComponent);
+    const component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    const displayName = component.getAuthorDisplayName({
+      id: 8,
+      title: 'Test',
+      content: 'Test',
+      author: '1',
+      created_at: '2026-03-03T20:50:00Z'
+    });
+
+    expect(displayName).toBe('Yash O');
+    expect(component.isOwnedByCurrentUser({
+      id: 8,
+      title: 'Test',
+      content: 'Test',
+      author: '1',
+      created_at: '2026-03-03T20:50:00Z'
+    })).toBe(true);
+  });
+
+  it('should open edit modal and update announcement on save', () => {
+    const updatedAnnouncement = {
+      id: 1,
+      title: 'Updated title',
+      author: '1',
+      content: 'Updated content',
+      created_at: '2026-03-03T20:50:00Z',
+      updated_at: '2026-03-24T20:50:00Z',
+      deleted_at: null
+    };
+    announcementServiceStub.updateAnnouncement = () => of(updatedAnnouncement);
+
+    const fixture = TestBed.createComponent(AnnouncementListComponent);
+    const component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    component.announcements = component.announcements.map((announcement) => ({
+      ...announcement,
+      author: '1'
+    }));
+
+    component.openEditModal(component.announcements[0]);
+    component.editTitle = 'Updated title';
+    component.editContent = 'Updated content';
+    component.saveEdit();
+
+    expect(component.isEditModalOpen).toBe(false);
+    expect(component.announcements[0].title).toBe('Updated title');
+    expect(component.announcements[0].content).toBe('Updated content');
   });
 });
