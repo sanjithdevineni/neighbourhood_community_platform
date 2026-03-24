@@ -1,0 +1,206 @@
+.account-page {
+  min-height: 100vh;
+  background: #eceef2;
+}
+
+.account-topbar {
+  height: 64px;
+  padding: 0 2rem;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #d9dce1;
+  background: #ffffff;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  text-decoration: none;
+}
+
+.brand-badge {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #0b8b3d;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.brand-text {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #04753a;
+  line-height: 1;
+}
+
+.account-main {
+  min-height: calc(100vh - 64px);
+  display: flex;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+.account-shell {
+  width: min(100%, 640px);
+}
+
+.account-shell h1 {
+  margin: 0;
+  color: #101828;
+  font-size: 2.2rem;
+  line-height: 1.15;
+}
+
+.subheading {
+  margin: 0.4rem 0 1.5rem;
+  color: #475467;
+}
+
+.card {
+  background: #ffffff;
+  border: 1px solid #d6dae0;
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+
+.profile-card {
+  padding: 1.4rem;
+  display: flex;
+  gap: 1.2rem;
+}
+
+.avatar {
+  flex-shrink: 0;
+  width: 5.2rem;
+  height: 5.2rem;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #d1fae5;
+  border: 2px solid #a7f3d0;
+  color: #067647;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.profile-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.profile-content h2 {
+  margin: 0 0 0.9rem;
+  color: #101828;
+  font-size: 2rem;
+}
+
+.field-grid {
+  display: grid;
+  grid-template-columns: 1.4rem 1fr;
+  align-items: start;
+  gap: 0.5rem;
+  margin-bottom: 0.85rem;
+}
+
+.field-grid:last-child {
+  margin-bottom: 0;
+}
+
+.field-icon {
+  color: #98a2b3;
+  font-size: 1.2rem;
+  margin-top: 0.18rem;
+}
+
+.field-label {
+  margin: 0;
+  color: #667085;
+}
+
+.field-value {
+  margin: 0.15rem 0 0;
+  color: #101828;
+  font-size: 1.2rem;
+  font-weight: 500;
+}
+
+.logout-card {
+  margin-top: 1.1rem;
+  padding: 1.25rem 1.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.logout-card h2 {
+  margin: 0;
+  color: #101828;
+  font-size: 1.9rem;
+}
+
+.logout-card p {
+  margin: 0.45rem 0 0;
+  color: #475467;
+}
+
+.logout-btn {
+  flex-shrink: 0;
+  height: 2.4rem;
+  padding: 0 1rem;
+  border-radius: 10px;
+  border: 1px solid #fda29b;
+  color: #d92d20;
+  background: #fff5f5;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.logout-btn .material-icons {
+  font-size: 1rem;
+}
+
+.logout-btn:hover {
+  background: #ffe9e8;
+}
+
+@media (max-width: 768px) {
+  .account-topbar {
+    padding: 0 1rem;
+  }
+
+  .brand-text {
+    font-size: 1.5rem;
+  }
+
+  .account-shell h1 {
+    font-size: 1.7rem;
+  }
+
+  .profile-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .profile-content h2,
+  .logout-card h2 {
+    font-size: 1.4rem;
+  }
+
+  .field-value {
+    font-size: 1.05rem;
+  }
+
+  .logout-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
