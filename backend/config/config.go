@@ -15,6 +15,7 @@ var (
 	JwtSecret   string
 	TokenExpiry time.Duration
 	FrontendURL string
+	DevMode     bool
 )
 
 // LoadConfig loads environment variables from .env and the environment.
@@ -32,6 +33,9 @@ func LoadConfig() {
 	if DBName == "" {
 		DBName = "community.db"
 	}
+
+	appEnv := os.Getenv("APP_ENV")
+	DevMode = appEnv == "development" || appEnv == "dev"
 
 	JwtSecret = os.Getenv("JWT_SECRET")
 	if JwtSecret == "" {
