@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"log/slog"
 	"net/http"
 
 	"community-platform-backend/database"
@@ -13,10 +14,12 @@ func GetAnnouncements(c *gin.Context) {
 	var announcements []models.Announcement
 
 	if err := database.DB.Find(&announcements).Error; err != nil {
+		slog.Error("Failed to fetch announcements", "error", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch"})
 		return
 	}
 
+	slog.Info("Announcements fetched", "count", len(announcements))
 	c.JSON(http.StatusOK, announcements)
 }
 
@@ -35,10 +38,12 @@ func CreateAnnouncement(c *gin.Context) {
 	}
 
 	if err := database.DB.Create(&announcement).Error; err != nil {
+		slog.Error("Failed to create announcement", "error", err, "author", announcement.Author)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create"})
 		return
 	}
 
+	slog.Info("Announcement created", "id", announcement.ID, "author", announcement.Author, "title", announcement.Title)
 	c.JSON(http.StatusCreated, announcement)
 }
 
@@ -57,6 +62,7 @@ func UpdateAnnouncement(c *gin.Context) {
 
 	var announcement models.Announcement
 	if err := database.DB.First(&announcement, req.ID).Error; err != nil {
+		slog.Warn("Announcement not found for update", "id", req.ID)
 		c.JSON(http.StatusNotFound, gin.H{"error": "Announcement not found"})
 		return
 	}
@@ -65,6 +71,7 @@ func UpdateAnnouncement(c *gin.Context) {
 	if uid, exists := c.Get("userID"); exists {
 		if s, ok := uid.(string); ok {
 			if s != announcement.Author {
+				slog.Warn("Unauthorized update attempt", "announcement_id", req.ID, "user_id", s, "author", announcement.Author)
 				c.JSON(http.StatusForbidden, gin.H{"error": "Not authorized to update this announcement"})
 				return
 			}
@@ -89,16 +96,19 @@ func UpdateAnnouncement(c *gin.Context) {
 	}
 
 	if err := database.DB.Model(&announcement).Updates(updated).Error; err != nil {
+		slog.Error("Failed to update announcement", "error", err, "id", req.ID)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update"})
 		return
 	}
 
 	// Return the updated announcement
 	if err := database.DB.First(&announcement, req.ID).Error; err != nil {
+		slog.Error("Failed to fetch updated announcement", "error", err, "id", req.ID)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch updated announcement"})
 		return
 	}
 
+	slog.Info("Announcement updated", "id", req.ID)
 	c.JSON(http.StatusOK, announcement)
 }
 
@@ -115,6 +125,7 @@ func DeleteAnnouncement(c *gin.Context) {
 
 	var announcement models.Announcement
 	if err := database.DB.First(&announcement, req.ID).Error; err != nil {
+		slog.Warn("Announcement not found for deletion", "id", req.ID)
 		c.JSON(http.StatusNotFound, gin.H{"error": "Announcement not found"})
 		return
 	}
@@ -123,6 +134,7 @@ func DeleteAnnouncement(c *gin.Context) {
 	if uid, exists := c.Get("userID"); exists {
 		if s, ok := uid.(string); ok {
 			if s != announcement.Author {
+				slog.Warn("Unauthorized delete attempt", "announcement_id", req.ID, "user_id", s, "author", announcement.Author)
 				c.JSON(http.StatusForbidden, gin.H{"error": "Not authorized to delete this announcement"})
 				return
 			}
@@ -133,9 +145,11 @@ func DeleteAnnouncement(c *gin.Context) {
 	}
 
 	if err := database.DB.Delete(&announcement).Error; err != nil {
+		slog.Error("Failed to delete announcement", "error", err, "id", req.ID)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete"})
 		return
 	}
 
+	slog.Info("Announcement deleted", "id", req.ID)
 	c.JSON(http.StatusOK, gin.H{"message": "Announcement deleted successfully"})
 }
