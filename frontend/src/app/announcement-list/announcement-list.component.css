@@ -49,12 +49,6 @@
   border-color: #60a575;
 }
 
-.validation-error {
-  color: #b42318;
-  margin: 0.4rem 0 0;
-  font-size: 0.85rem;
-}
-
 .composer-actions {
   margin-top: 0.7rem;
   display: flex;

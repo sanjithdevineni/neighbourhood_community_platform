@@ -6,13 +6,9 @@
         id="new-post"
         name="newPostContent"
         [(ngModel)]="newPostContent"
-        (ngModelChange)="onContentChange()"
         placeholder="Post an announcement or question to neighbors..."
         rows="2"
       ></textarea>
-      <p class="validation-error" *ngIf="showValidationError">
-        Post content cannot be empty.
-      </p>
       <div class="composer-actions">
         <button type="submit">Post</button>
       </div>

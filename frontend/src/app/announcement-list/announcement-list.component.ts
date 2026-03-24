@@ -25,7 +25,6 @@ export class AnnouncementListComponent implements OnInit {
   isLoading = false;
   errorMessage = '';
   newPostContent = '';
-  showValidationError = false;
 
   ngOnInit(): void {
     this.fetchAnnouncements();
@@ -45,7 +44,6 @@ export class AnnouncementListComponent implements OnInit {
       .subscribe({
         next: (data) => {
           this.announcements = data;
-          this.nextPostId = this.getNextPostId();
         },
         error: (error) => {
           console.error(error);
@@ -54,45 +52,12 @@ export class AnnouncementListComponent implements OnInit {
       });
   }
 
-  private nextPostId = this.getNextPostId();
-
   createPost(): void {
-    const trimmedContent = this.newPostContent.trim();
-    if (!trimmedContent) {
-      this.showValidationError = true;
-      return;
-    }
-
-    const newPost: Announcement = {
-      id: this.nextPostId++,
-      title: 'Community Update',
-      author: 'You',
-      content: trimmedContent,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      deleted_at: null
-    };
-
-    this.announcements = [newPost, ...this.announcements];
-    this.newPostContent = '';
-    this.showValidationError = false;
-  }
-
-  onContentChange(): void {
-    if (this.showValidationError && this.newPostContent.trim()) {
-      this.showValidationError = false;
-    }
+    console.log('POST API will be implemented in FE-14');
   }
 
   trackById(_index: number, announcement: Announcement): number {
     return announcement.id;
-  }
-
-  private getNextPostId(): number {
-    const maxExistingId = this.announcements.reduce((maxId, announcement) => {
-      return announcement.id > maxId ? announcement.id : maxId;
-    }, 0);
-    return maxExistingId + 1;
   }
 
   get filteredAnnouncements(): Announcement[] {
