@@ -1,11 +1,13 @@
 package database
 
 import (
+	"community-platform-backend/config"
 	"fmt"
 	"log"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 var DB *gorm.DB
@@ -14,8 +16,13 @@ var DB *gorm.DB
 // Returns an error so the caller can decide how to handle failures.
 func InitDatabase(dbName string) error {
 	var err error
+	gormConfig := &gorm.Config{}
 
-	DB, err = gorm.Open(sqlite.Open(dbName), &gorm.Config{})
+	if config.DevMode {
+		gormConfig.Logger = logger.Default.LogMode(logger.Info)
+	}
+
+	DB, err = gorm.Open(sqlite.Open(dbName), gormConfig)
 	if err != nil {
 		return fmt.Errorf("failed to open database %q: %w", dbName, err)
 	}
