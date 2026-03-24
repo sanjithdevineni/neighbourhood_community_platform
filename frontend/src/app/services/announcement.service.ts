@@ -1,16 +1,16 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
+import { ApiConfig } from '../config/api.config';
 
 export interface Announcement {
   id: number;
+  title: string;
   author: string;
   content: string;
-  timestamp: string;
-  category?: string;
-  imageUrl?: string;
-  likes?: number;
-  comments?: number;
+  created_at: string;
+  updated_at?: string;
+  deleted_at?: string | null;
 }
 
 @Injectable({
@@ -18,12 +18,20 @@ export interface Announcement {
 })
 export class AnnouncementService {
 
-  private apiUrl = 'http://localhost:8080/api/announcements';
-  // change port/path based on your Go backend
+  private readonly apiUrl = `${ApiConfig.baseUrl}/announcements`;
 
   constructor(private http: HttpClient) {}
 
   getAnnouncements(): Observable<Announcement[]> {
-    return this.http.get<Announcement[]>(this.apiUrl);
+    return this.http
+      .get<Announcement[]>(this.apiUrl)
+      .pipe(
+        map((announcements) =>
+          announcements.map((announcement) => ({
+            ...announcement,
+            title: announcement.title?.trim() || 'Announcement'
+          }))
+        )
+      );
   }
 }

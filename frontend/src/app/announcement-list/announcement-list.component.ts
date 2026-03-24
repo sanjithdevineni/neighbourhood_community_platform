@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { finalize } from 'rxjs';
 import { PostCardComponent } from '../post-card/post-card.component';
 import { SearchService } from '../services/search.service';
 import { AnnouncementService, Announcement } from '../services/announcement.service';
@@ -14,9 +15,10 @@ import { AnnouncementService, Announcement } from '../services/announcement.serv
 })
 export class AnnouncementListComponent implements OnInit {
 
+  readonly fallbackAuthor = 'Community';
   constructor(
-    private searchService: SearchService,
-    private announcementService: AnnouncementService
+    private readonly searchService: SearchService,
+    private readonly announcementService: AnnouncementService
   ) {}
 
   announcements: Announcement[] = [];
@@ -31,23 +33,30 @@ export class AnnouncementListComponent implements OnInit {
 
   fetchAnnouncements(): void {
     this.isLoading = true;
+    this.errorMessage = '';
 
-    this.announcementService.getAnnouncements().subscribe({
-      next: (data) => {
-        this.announcements = data;
-        this.isLoading = false;
-      },
-      error: (error) => {
-        console.error(error);
-        this.errorMessage = 'Failed to load announcements';
-        this.isLoading = false;
-      }
-    });
+    this.announcementService
+      .getAnnouncements()
+      .pipe(
+        finalize(() => {
+          this.isLoading = false;
+        })
+      )
+      .subscribe({
+        next: (data) => {
+          this.announcements = data;
+          this.nextPostId = this.getNextPostId();
+        },
+        error: (error) => {
+          console.error(error);
+          this.errorMessage = 'Failed to load announcements.';
+        }
+      });
   }
 
   private nextPostId = this.getNextPostId();
 
-  /* createPost(): void {
+  createPost(): void {
     const trimmedContent = this.newPostContent.trim();
     if (!trimmedContent) {
       this.showValidationError = true;
@@ -56,21 +65,17 @@ export class AnnouncementListComponent implements OnInit {
 
     const newPost: Announcement = {
       id: this.nextPostId++,
+      title: 'Community Update',
       author: 'You',
-      timestamp: 'Just now',
-      category: 'General',
       content: trimmedContent,
-      likes: 0,
-      comments: 0
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      deleted_at: null
     };
 
     this.announcements = [newPost, ...this.announcements];
     this.newPostContent = '';
     this.showValidationError = false;
-  } */
-
-  createPost(): void {
-      console.log('POST API will be implemented in FE-14');
   }
 
   onContentChange(): void {
@@ -96,10 +101,23 @@ export class AnnouncementListComponent implements OnInit {
     if (!query) return this.announcements;
 
     return this.announcements.filter(announcement =>
+      announcement.title.toLowerCase().includes(query) ||
       announcement.content.toLowerCase().includes(query) ||
-      announcement.author.toLowerCase().includes(query) ||
-      (announcement.category?.toLowerCase().includes(query) ?? false)
+      announcement.author.toLowerCase().includes(query)
     );
+  }
+
+  formatTimestamp(createdAt: string): string {
+    if (!createdAt) {
+      return 'Recently';
+    }
+
+    const date = new Date(createdAt);
+    if (Number.isNaN(date.getTime())) {
+      return createdAt;
+    }
+
+    return date.toLocaleString();
   }
 
 }

@@ -1,10 +1,20 @@
 import { TestBed } from '@angular/core/testing';
+import { of } from 'rxjs';
 import { AnnouncementListComponent } from './announcement-list.component';
+import { AnnouncementService } from '../services/announcement.service';
 
 describe('AnnouncementListComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [AnnouncementListComponent]
+      imports: [AnnouncementListComponent],
+      providers: [
+        {
+          provide: AnnouncementService,
+          useValue: {
+            getAnnouncements: () => of([])
+          }
+        }
+      ]
     }).compileComponents();
   });
 
@@ -29,8 +39,9 @@ describe('AnnouncementListComponent', () => {
     component.createPost();
 
     expect(component.announcements.length).toBe(initialCount + 1);
+    expect(component.announcements[0].title).toBe('Community Update');
     expect(component.announcements[0].content).toBe('New neighborhood update!');
-    expect(component.announcements[0].timestamp).toBe('Just now');
+    expect(component.announcements[0].created_at).toBeTruthy();
     expect(component.newPostContent).toBe('');
     expect(component.showValidationError).toBe(false);
   });
