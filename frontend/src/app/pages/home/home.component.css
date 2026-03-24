@@ -1,0 +1,50 @@
+.home-page {
+  width: 100%;
+  max-width: 880px;
+  margin: 0 auto;
+}
+
+.home-header {
+  margin-bottom: 1.25rem;
+}
+
+.home-header h1 {
+  margin: 0;
+  font-size: 1.95rem;
+  line-height: 1.15;
+  color: #1f2937;
+}
+
+.home-header p {
+  margin: 0.45rem 0 0;
+  color: #4b5563;
+}
+
+.feed-container {
+  width: 100%;
+  max-width: 700px;
+}
+
+@media (max-width: 768px) {
+  .home-header h1 {
+    font-size: 1.6rem;
+  }
+
+  .home-header p {
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .home-header {
+    margin-bottom: 1rem;
+  }
+
+  .home-header h1 {
+    font-size: 1.35rem;
+  }
+
+  .home-header p {
+    font-size: 0.9rem;
+  }
+}

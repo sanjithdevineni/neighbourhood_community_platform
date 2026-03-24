@@ -1,14 +1,20 @@
 package main
 
 import (
+	"log/slog"
+
 	"community-platform-backend/config"
 	"community-platform-backend/database"
+	applog "community-platform-backend/log"
 	"community-platform-backend/middleware"
 	"community-platform-backend/models"
 	"community-platform-backend/routes"
 )
 
 func main() {
+	// Initialize structured logger first
+	applog.Init()
+
 	// Load configuration from environment
 	config.LoadConfig()
 
@@ -23,6 +29,8 @@ func main() {
 
 	// Apply middleware
 	router.Use(middleware.CORSMiddleware())
+
+	slog.Info("Server starting", "port", config.ServerPort)
 
 	// Start server
 	router.Run(config.ServerPort)

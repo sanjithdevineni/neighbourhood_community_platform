@@ -1,0 +1,129 @@
+.announcement-list {
+  display: grid;
+  gap: 1.1rem;
+}
+
+.create-post-box {
+  display: flex;
+  gap: 0.8rem;
+  align-items: flex-start;
+  background: #ffffff;
+  border: 1px solid #dbe1e8;
+  border-radius: 14px;
+  padding: 1rem;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+
+.composer-avatar {
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 50%;
+  background: #c9f2d8;
+  color: #0f7a43;
+  font-size: 0.78rem;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.composer-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.composer-label {
+  display: inline-block;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+  color: #1f2937;
+}
+
+.composer-content textarea {
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  padding: 0.7rem;
+  font: inherit;
+  color: #1f2937;
+  resize: vertical;
+  min-height: 92px;
+  box-sizing: border-box;
+}
+
+.composer-content textarea:focus {
+  outline: 2px solid #c9f2d8;
+  border-color: #60a575;
+}
+
+.validation-error {
+  color: #b42318;
+  margin: 0.4rem 0 0;
+  font-size: 0.85rem;
+}
+
+.composer-actions {
+  margin-top: 0.7rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.composer-actions button {
+  border: none;
+  border-radius: 999px;
+  background: #2e7d32;
+  color: #ffffff;
+  padding: 0.45rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.composer-actions button:hover {
+  background: #1b5e20;
+}
+
+.announcement-list h2 {
+  margin: 0;
+  font-size: 2rem;
+  line-height: 1.1;
+  color: #1f2937;
+}
+
+@media (max-width: 768px) {
+  .create-post-box {
+    padding: 0.85rem;
+    gap: 0.65rem;
+  }
+
+  .announcement-list h2 {
+    font-size: 1.6rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .create-post-box {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .composer-avatar {
+    width: 2.1rem;
+    height: 2.1rem;
+    font-size: 0.72rem;
+  }
+
+  .composer-label {
+    font-size: 0.84rem;
+  }
+
+  .composer-content textarea {
+    min-height: 84px;
+    padding: 0.6rem;
+  }
+
+  .announcement-list h2 {
+    font-size: 1.35rem;
+  }
+}

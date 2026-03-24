@@ -1,0 +1,33 @@
+<aside class="sidebar">
+  <nav class="menu">
+
+    <a
+            routerLink="/"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: true }"
+            class="menu-item"
+    >
+      <span class="material-icons">home</span>
+      <span>Home</span>
+    </a>
+
+    <a
+            routerLink="/alerts"
+            routerLinkActive="active"
+            class="menu-item"
+    >
+      <span class="material-icons">warning</span>
+      <span>Alerts</span>
+    </a>
+
+    <a
+            routerLink="/events"
+            routerLinkActive="active"
+            class="menu-item"
+    >
+      <span class="material-icons">event</span>
+      <span>Events</span>
+    </a>
+
+  </nav>
+</aside>
