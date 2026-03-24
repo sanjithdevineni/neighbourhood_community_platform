@@ -1,0 +1,11 @@
+{"time":"2026-03-23T17:39:37.6207884-07:00","level":"INFO","msg":"Logger initialized","log_file":"logs\\app.log"}
+{"time":"2026-03-23T17:39:37.6224361-07:00","level":"INFO","msg":"Configuration loaded","port":":8080","db_name":"community.db","token_expiry":"24h0m0s","frontend_url":"http://localhost:4200"}
+{"time":"2026-03-23T17:39:37.6240567-07:00","level":"INFO","msg":"Database connected successfully","db_name":"community.db"}
+{"time":"2026-03-23T17:39:37.6267106-07:00","level":"INFO","msg":"Server starting","port":":8080"}
+{"time":"2026-03-23T17:49:18.7658068-07:00","level":"WARN","msg":"HTTP Request","method":"POST","path":"/api/signup","status":400,"latency_ms":0,"client_ip":"::1","user_agent":"curl/8.18.0"}
+{"time":"2026-03-23T17:49:28.3356096-07:00","level":"WARN","msg":"Duplicate email registration attempt","email":"haswanth@gmail.com"}
+{"time":"2026-03-23T17:49:28.3366131-07:00","level":"WARN","msg":"HTTP Request","method":"POST","path":"/api/signup","status":409,"latency_ms":64,"client_ip":"::1","user_agent":"Mozilla/5.0 (Windows NT; Windows NT 10.0; en-IN) WindowsPowerShell/5.1.26100.7920"}
+{"time":"2026-03-23T17:49:41.3956618-07:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/health","status":200,"latency_ms":0,"client_ip":"::1","user_agent":"Mozilla/5.0 (Windows NT; Windows NT 10.0; en-IN) WindowsPowerShell/5.1.26100.7920"}
+{"time":"2026-03-23T17:49:55.9165176-07:00","level":"INFO","msg":"User logged in successfully","user_id":1,"email":"haswanth@gmail.com"}
+{"time":"2026-03-23T17:49:55.917621-07:00","level":"INFO","msg":"HTTP Request","method":"POST","path":"/api/login","status":200,"latency_ms":60,"client_ip":"::1","user_agent":"Mozilla/5.0 (Windows NT; Windows NT 10.0; en-IN) WindowsPowerShell/5.1.26100.7920"}
+{"time":"2026-03-23T17:58:09.238196-07:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/health","status":200,"latency_ms":0,"client_ip":"::1","user_agent":"Mozilla/5.0 (Windows NT; Windows NT 10.0; en-IN) WindowsPowerShell/5.1.26100.7920"}

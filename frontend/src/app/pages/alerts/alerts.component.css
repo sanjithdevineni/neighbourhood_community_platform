@@ -1,0 +1,266 @@
+.alerts-page {
+  width: 100%;
+  max-width: 1220px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, 1fr);
+  gap: 1.25rem;
+}
+
+.alerts-panel {
+  background: #ffffff;
+  border: 1px solid #dbe1e8;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+
+.alerts-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.05rem 1rem;
+  border-bottom: 1px solid #edf1f5;
+}
+
+.alerts-header h1 {
+  margin: 0;
+  font-size: 1.8rem;
+  color: #1f2937;
+}
+
+.new-alert-pill {
+  background: #e5edff;
+  color: #2f5fd6;
+  font-size: 0.82rem;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 0.35rem 0.65rem;
+}
+
+.alert-tabs {
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 1px solid #edf1f5;
+  padding: 0.75rem 1rem;
+}
+
+.alert-tabs button {
+  border: none;
+  border-radius: 999px;
+  background: #f3f4f6;
+  color: #4b5563;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.35rem 0.8rem;
+}
+
+.alert-tabs button.active {
+  background: #e9edf3;
+  color: #1f2937;
+}
+
+.alert-card {
+  border-top: 1px solid #edf1f5;
+  padding: 1rem;
+}
+
+.alert-top-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.alert-icon {
+  width: 1.8rem;
+  height: 1.8rem;
+  border-radius: 999px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  font-size: 0.95rem;
+}
+
+.tone-danger .alert-icon {
+  background: #fee2e2;
+  color: #b42318;
+}
+
+.tone-caution .alert-icon {
+  background: #fff3d4;
+  color: #b06f00;
+}
+
+.tone-notice .alert-icon {
+  background: #e6f0ff;
+  color: #2358bc;
+}
+
+.alert-main h2 {
+  margin: 0;
+  font-size: 1.15rem;
+  color: #1f2937;
+}
+
+.alert-meta {
+  margin: 0.15rem 0 0;
+  font-size: 0.82rem;
+  color: #6b7280;
+}
+
+.status-badge {
+  border-radius: 6px;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.status-live {
+  background: #f10019;
+  color: #ffffff;
+}
+
+.status-closed {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.status-upcoming {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.alert-description {
+  margin: 0.75rem 0 0;
+  color: #374151;
+  line-height: 1.45;
+}
+
+.alert-actions {
+  margin-top: 0.8rem;
+  display: flex;
+  gap: 0.75rem;
+}
+
+.alert-actions button {
+  border: none;
+  background: none;
+  color: #0f7a43;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 0;
+}
+
+.map-panel {
+  background: #ffffff;
+  border: 1px solid #dbe1e8;
+  border-radius: 14px;
+  overflow: hidden;
+  min-height: 420px;
+  position: relative;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+
+.map-frame {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+
+.map-pin {
+  position: absolute;
+  left: 50%;
+  bottom: 30%;
+  transform: translateX(-50%);
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1f2937;
+  white-space: nowrap;
+}
+
+@media (max-width: 1080px) {
+  .alerts-page {
+    grid-template-columns: 1fr;
+  }
+
+  .map-panel {
+    min-height: 260px;
+  }
+}
+
+@media (max-width: 768px) {
+  .alerts-page {
+    gap: 0.9rem;
+  }
+
+  .alerts-header {
+    padding: 0.85rem 0.8rem;
+  }
+
+  .alerts-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .new-alert-pill {
+    font-size: 0.75rem;
+  }
+
+  .alert-tabs {
+    overflow-x: auto;
+    padding: 0.6rem 0.75rem;
+    white-space: nowrap;
+  }
+
+  .alert-card {
+    padding: 0.85rem;
+  }
+
+  .alert-top-row {
+    grid-template-columns: auto 1fr;
+    align-items: start;
+  }
+
+  .status-badge {
+    grid-column: 2;
+    justify-self: start;
+    margin-top: 0.2rem;
+  }
+
+  .map-panel {
+    min-height: 300px;
+  }
+
+  .map-pin {
+    bottom: 10%;
+    font-size: 0.78rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .alerts-header h1 {
+    font-size: 1.3rem;
+  }
+
+  .alert-main h2 {
+    font-size: 1.05rem;
+  }
+
+  .alert-meta {
+    font-size: 0.78rem;
+  }
+
+  .alert-description {
+    font-size: 0.95rem;
+  }
+
+  .map-panel {
+    min-height: 240px;
+  }
+}

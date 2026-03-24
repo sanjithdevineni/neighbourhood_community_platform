@@ -1,7 +1,7 @@
 package config
 
 import (
-	"log"
+	"log/slog"
 	"os"
 	"strconv"
 	"time"
@@ -35,7 +35,7 @@ func LoadConfig() {
 
 	JwtSecret = os.Getenv("JWT_SECRET")
 	if JwtSecret == "" {
-		log.Println("Warning: JWT_SECRET is not set. Using default insecure secret.")
+		slog.Warn("JWT_SECRET is not set, using default insecure secret")
 		JwtSecret = "insecure-default-secret"
 	}
 
@@ -50,7 +50,7 @@ func LoadConfig() {
 		if i, err2 := strconv.Atoi(expiry); err2 == nil {
 			d = time.Duration(i) * time.Hour
 		} else {
-			log.Printf("Invalid TOKEN_EXPIRY %s, defaulting to 24h\n", expiry)
+			slog.Warn("Invalid TOKEN_EXPIRY, defaulting to 24h", "value", expiry)
 			d = 24 * time.Hour
 		}
 	}
@@ -58,7 +58,14 @@ func LoadConfig() {
 
 	FrontendURL = os.Getenv("FRONTEND_URL")
 	if FrontendURL == "" {
-		log.Println("Warning: FRONTEND_URL is not set. Using default localhost:4200.")
+		slog.Warn("FRONTEND_URL is not set, using default localhost:4200")
 		FrontendURL = "http://localhost:4200"
 	}
+
+	slog.Info("Configuration loaded",
+		"port", ServerPort,
+		"db_name", DBName,
+		"token_expiry", TokenExpiry.String(),
+		"frontend_url", FrontendURL,
+	)
 }
