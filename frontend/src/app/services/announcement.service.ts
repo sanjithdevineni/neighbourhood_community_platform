@@ -1,15 +1,38 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { map, Observable } from 'rxjs';
+import { ApiConfig } from '../config/api.config';
+
+interface RawAnnouncement {
+  id?: number;
+  ID?: number;
+  title?: string;
+  Title?: string;
+  content?: string;
+  Content?: string;
+  author?: string;
+  Author?: string;
+  created_at?: string;
+  CreatedAt?: string;
+  updated_at?: string;
+  UpdatedAt?: string;
+  deleted_at?: string | null;
+  DeletedAt?: string | null;
+}
 
 export interface Announcement {
-  ID: number;
+  id: number;
+  title: string;
+  author: string;
+  content: string;
+  created_at: string;
+  updated_at?: string;
+  deleted_at?: string | null;
+}
+
+export interface CreateAnnouncementPayload {
   title: string;
   content: string;
-  author: string;
-  CreatedAt: string;
-  UpdatedAt?: string;
-  DeletedAt?: string | null;
 }
 
 @Injectable({
@@ -17,20 +40,39 @@ export interface Announcement {
 })
 export class AnnouncementService {
 
-  private apiUrl = '/api/announcements';
+  private readonly apiUrl = `${ApiConfig.baseUrl}/announcements`;
+  private readonly tokenKey = 'auth_token';
 
-  constructor(private http: HttpClient) {}
+  constructor(private readonly http: HttpClient) {}
+
+  private normalizeAnnouncement(raw: RawAnnouncement): Announcement {
+    return {
+      id: raw.id ?? raw.ID ?? 0,
+      title: (raw.title ?? raw.Title ?? '').trim() || 'Announcement',
+      content: raw.content ?? raw.Content ?? '',
+      author: raw.author ?? raw.Author ?? '',
+      created_at: raw.created_at ?? raw.CreatedAt ?? '',
+      updated_at: raw.updated_at ?? raw.UpdatedAt,
+      deleted_at: raw.deleted_at ?? raw.DeletedAt ?? null
+    };
+  }
 
   getAnnouncements(): Observable<Announcement[]> {
-    return this.http.get<Announcement[]>(this.apiUrl);
+    return this.http
+      .get<RawAnnouncement[]>(this.apiUrl)
+      .pipe(map((announcements) => announcements.map((raw) => this.normalizeAnnouncement(raw))));
   }
 
-  createAnnouncement(data: { content: string; category: string }): Observable<Announcement> {
-    return this.http.post<Announcement>(this.apiUrl, data, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`
-      }
-    });
-  }
+  createAnnouncement(payload: CreateAnnouncementPayload): Observable<Announcement> {
+    const token = localStorage.getItem(this.tokenKey);
+    const headers = token
+      ? new HttpHeaders({
+          Authorization: `Bearer ${token}`
+        })
+      : undefined;
 
+    return this.http
+      .post<RawAnnouncement>(this.apiUrl, payload, { headers })
+      .pipe(map((raw) => this.normalizeAnnouncement(raw)));
+  }
 }

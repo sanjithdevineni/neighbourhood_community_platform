@@ -54,9 +54,15 @@
 }
 
 .post-content {
-  margin: 0.85rem 0 0;
+  margin: 0.5rem 0 0;
   color: #1f2937;
   line-height: 1.5;
+}
+
+.post-title {
+  margin: 0.85rem 0 0;
+  font-size: 1.08rem;
+  color: #101828;
 }
 
 .post-image {

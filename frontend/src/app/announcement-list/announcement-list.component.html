@@ -2,40 +2,43 @@
   <form class="create-post-box" (ngSubmit)="createPost()">
     <div class="composer-avatar" aria-hidden="true">YO</div>
     <div class="composer-content">
-      <label class="composer-label" for="new-post">Create a post</label>
+      <input
+        id="new-post-title"
+        name="newPostTitle"
+        [(ngModel)]="newPostTitle"
+        placeholder="Announcement title"
+        maxlength="120"
+      />
       <textarea
         id="new-post"
         name="newPostContent"
         [(ngModel)]="newPostContent"
-        (ngModelChange)="onContentChange()"
         placeholder="Post an announcement or question to neighbors..."
-        rows="3"
+        rows="2"
       ></textarea>
-      <p class="validation-error" *ngIf="showValidationError">
-        Post content cannot be empty.
-      </p>
       <div class="composer-actions">
-        <button type="submit">Post</button>
+        <button type="submit" [disabled]="isSubmitting">
+          {{ isSubmitting ? 'Posting...' : 'Post' }}
+        </button>
       </div>
+      <p class="error-state submit-error" *ngIf="submitErrorMessage">{{ submitErrorMessage }}</p>
     </div>
   </form>
 
-  <div class="feed-header">
-    <h2>Recent Activity</h2>
-    <div class="feed-filters">
-      <span class="filter active">Recent</span>
-      <span class="filter">Top</span>
-    </div>
-  </div>
+  <h2>Recent Activity</h2>
 
-  <p *ngIf="isLoading">Loading announcements...</p>
-  <p *ngIf="errorMessage">{{ errorMessage }}</p>
+  <p class="load-state" *ngIf="isLoading">Loading announcements...</p>
+  <p class="error-state" *ngIf="errorMessage">{{ errorMessage }}</p>
 
   <app-post-card
     *ngFor="let announcement of filteredAnnouncements; trackBy: trackById"
-    [author]="announcement.author"
-    [timestamp]="announcement.CreatedAt | date:'short'"
+    [author]="announcement.author || fallbackAuthor"
+    [timestamp]="formatTimestamp(announcement.created_at)"
+    [title]="announcement.title"
+    [category]="'General'"
+    [likes]="0"
+    [comments]="0"
+    [imageAlt]="'Announcement image'"
     [content]="announcement.content"
-    [title]="announcement.title">
-  </app-post-card>
+  />
 </section>
