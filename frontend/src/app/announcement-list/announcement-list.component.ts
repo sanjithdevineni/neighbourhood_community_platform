@@ -1,8 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, NgZone, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { finalize, retry } from 'rxjs';
+import { catchError, finalize, map, of, retry, switchMap } from 'rxjs';
 import { PostCardComponent } from '../post-card/post-card.component';
 import { SearchService } from '../services/search.service';
 import {
@@ -18,15 +18,14 @@ import {
   templateUrl: './announcement-list.component.html',
   styleUrl: './announcement-list.component.css'
 })
-export class AnnouncementListComponent implements OnInit, OnDestroy {
+export class AnnouncementListComponent implements OnInit {
 
   readonly fallbackAuthor = 'Community';
   private fetchRequestId = 0;
-  private destroyed = false;
   constructor(
     private readonly searchService: SearchService,
     private readonly announcementService: AnnouncementService,
-    private readonly cdr: ChangeDetectorRef
+    private readonly ngZone: NgZone
   ) {}
 
   announcements: Announcement[] = [];
@@ -51,27 +50,30 @@ export class AnnouncementListComponent implements OnInit, OnDestroy {
       .pipe(
         retry({ count: 2, delay: 300 }),
         finalize(() => {
-          if (requestId === this.fetchRequestId) {
-            this.isLoading = false;
-            this.safeDetectChanges();
-          }
+          this.ngZone.run(() => {
+            if (requestId === this.fetchRequestId) {
+              this.isLoading = false;
+            }
+          });
         })
       )
       .subscribe({
         next: (data) => {
-          if (requestId !== this.fetchRequestId) {
-            return;
-          }
-          this.announcements = this.sortAnnouncements(data);
-          this.safeDetectChanges();
+          this.ngZone.run(() => {
+            if (requestId !== this.fetchRequestId) {
+              return;
+            }
+            this.announcements = this.sortAnnouncements(data);
+          });
         },
         error: (error) => {
-          if (requestId !== this.fetchRequestId) {
-            return;
-          }
-          console.error(error);
-          this.errorMessage = 'Failed to load announcements.';
-          this.safeDetectChanges();
+          this.ngZone.run(() => {
+            if (requestId !== this.fetchRequestId) {
+              return;
+            }
+            console.error(error);
+            this.errorMessage = 'Failed to load announcements.';
+          });
         }
       });
   }
@@ -97,23 +99,37 @@ export class AnnouncementListComponent implements OnInit, OnDestroy {
     this.announcementService
       .createAnnouncement(payload)
       .pipe(
+        switchMap((createdAnnouncement) =>
+          this.announcementService
+            .getAnnouncements()
+            .pipe(
+              retry({ count: 2, delay: 300 }),
+              map((announcements) => this.sortAnnouncements(announcements)),
+              catchError((refreshError) => {
+                console.error(refreshError);
+                return of(this.sortAnnouncements([createdAnnouncement, ...this.announcements]));
+              })
+            )
+        ),
         finalize(() => {
-          this.isSubmitting = false;
-          this.safeDetectChanges();
+          this.ngZone.run(() => {
+            this.isSubmitting = false;
+          });
         })
       )
       .subscribe({
-        next: (announcement) => {
-          this.announcements = this.sortAnnouncements([announcement, ...this.announcements]);
-          this.newPostTitle = '';
-          this.newPostContent = '';
-          this.safeDetectChanges();
-          this.fetchAnnouncements();
+        next: (announcements) => {
+          this.ngZone.run(() => {
+            this.announcements = announcements;
+            this.newPostTitle = '';
+            this.newPostContent = '';
+          });
         },
         error: (error: unknown) => {
-          console.error(error);
-          this.submitErrorMessage = this.getCreateErrorMessage(error);
-          this.safeDetectChanges();
+          this.ngZone.run(() => {
+            console.error(error);
+            this.submitErrorMessage = this.getCreateErrorMessage(error);
+          });
         }
       });
   }
@@ -192,16 +208,4 @@ export class AnnouncementListComponent implements OnInit, OnDestroy {
     }
     return parsed;
   }
-
-  ngOnDestroy(): void {
-    this.destroyed = true;
-  }
-
-  private safeDetectChanges(): void {
-    if (this.destroyed) {
-      return;
-    }
-    this.cdr.detectChanges();
-  }
-
 }
