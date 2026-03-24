@@ -1,37 +1,59 @@
 import { TestBed } from '@angular/core/testing';
+import { of, throwError } from 'rxjs';
 import { AnnouncementListComponent } from './announcement-list.component';
+import { AnnouncementService } from '../services/announcement.service';
 
 describe('AnnouncementListComponent', () => {
+  const mockAnnouncements = [
+    {
+      id: 1,
+      title: 'Community Meeting',
+      author: 'Admin',
+      content: 'Town hall this Friday.',
+      created_at: '2026-03-03T20:50:00Z',
+      updated_at: '2026-03-03T20:50:00Z',
+      deleted_at: null
+    }
+  ];
+  const announcementServiceStub = {
+    getAnnouncements: () => of(mockAnnouncements)
+  };
+
   beforeEach(async () => {
+    announcementServiceStub.getAnnouncements = () => of(mockAnnouncements);
+
     await TestBed.configureTestingModule({
-      imports: [AnnouncementListComponent]
+      imports: [AnnouncementListComponent],
+      providers: [
+        {
+          provide: AnnouncementService,
+          useValue: announcementServiceStub
+        }
+      ]
     }).compileComponents();
   });
 
-  it('should block empty post submissions', () => {
+  it('should load announcements from service on init', () => {
     const fixture = TestBed.createComponent(AnnouncementListComponent);
     const component = fixture.componentInstance;
-    const initialCount = component.announcements.length;
+    fixture.detectChanges();
 
-    component.newPostContent = '   ';
-    component.createPost();
-
-    expect(component.announcements.length).toBe(initialCount);
-    expect(component.showValidationError).toBe(true);
+    expect(component.announcements.length).toBe(1);
+    expect(component.announcements[0].title).toBe('Community Meeting');
+    expect(component.isLoading).toBe(false);
+    expect(component.errorMessage).toBe('');
   });
 
-  it('should prepend new post and clear input after submit', () => {
+  it('should set error state when service call fails', async () => {
+    announcementServiceStub.getAnnouncements = () =>
+      throwError(() => new Error('Network error'));
+
     const fixture = TestBed.createComponent(AnnouncementListComponent);
     const component = fixture.componentInstance;
-    const initialCount = component.announcements.length;
+    fixture.detectChanges();
+    await fixture.whenStable();
 
-    component.newPostContent = '  New neighborhood update!  ';
-    component.createPost();
-
-    expect(component.announcements.length).toBe(initialCount + 1);
-    expect(component.announcements[0].content).toBe('New neighborhood update!');
-    expect(component.announcements[0].timestamp).toBe('Just now');
-    expect(component.newPostContent).toBe('');
-    expect(component.showValidationError).toBe(false);
+    expect(component.isLoading).toBe(false);
+    expect(component.errorMessage).toBe('Failed to load announcements.');
   });
 });

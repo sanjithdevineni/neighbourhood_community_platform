@@ -1,21 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import announcementsData from './announcements.mock.json';
+import { finalize } from 'rxjs';
 import { PostCardComponent } from '../post-card/post-card.component';
 import { SearchService } from '../services/search.service';
-
-interface Announcement {
-  id: number;
-  author: string;
-  timestamp: string;
-  category: string;
-  content: string;
-  imageUrl?: string;
-  imageAlt?: string;
-  likes: number;
-  comments: number;
-}
+import { AnnouncementService, Announcement } from '../services/announcement.service';
 
 @Component({
   selector: 'app-announcement-list',
@@ -24,53 +13,51 @@ interface Announcement {
   templateUrl: './announcement-list.component.html',
   styleUrl: './announcement-list.component.css'
 })
-export class AnnouncementListComponent {
+export class AnnouncementListComponent implements OnInit {
 
-  constructor(private searchService: SearchService) {}
+  readonly fallbackAuthor = 'Community';
+  constructor(
+    private readonly searchService: SearchService,
+    private readonly announcementService: AnnouncementService
+  ) {}
 
-  announcements: Announcement[] = [...(announcementsData as Announcement[])];
+  announcements: Announcement[] = [];
+  isLoading = false;
+  errorMessage = '';
   newPostContent = '';
-  showValidationError = false;
 
-  private nextPostId = this.getNextPostId();
-
-  createPost(): void {
-    const trimmedContent = this.newPostContent.trim();
-    if (!trimmedContent) {
-      this.showValidationError = true;
-      return;
-    }
-
-    const newPost: Announcement = {
-      id: this.nextPostId++,
-      author: 'You',
-      timestamp: 'Just now',
-      category: 'General',
-      content: trimmedContent,
-      likes: 0,
-      comments: 0
-    };
-
-    this.announcements = [newPost, ...this.announcements];
-    this.newPostContent = '';
-    this.showValidationError = false;
+  ngOnInit(): void {
+    this.fetchAnnouncements();
   }
 
-  onContentChange(): void {
-    if (this.showValidationError && this.newPostContent.trim()) {
-      this.showValidationError = false;
-    }
+  fetchAnnouncements(): void {
+    this.isLoading = true;
+    this.errorMessage = '';
+
+    this.announcementService
+      .getAnnouncements()
+      .pipe(
+        finalize(() => {
+          this.isLoading = false;
+        })
+      )
+      .subscribe({
+        next: (data) => {
+          this.announcements = data;
+        },
+        error: (error) => {
+          console.error(error);
+          this.errorMessage = 'Failed to load announcements.';
+        }
+      });
+  }
+
+  createPost(): void {
+    console.log('POST API will be implemented in FE-14');
   }
 
   trackById(_index: number, announcement: Announcement): number {
     return announcement.id;
-  }
-
-  private getNextPostId(): number {
-    const maxExistingId = this.announcements.reduce((maxId, announcement) => {
-      return announcement.id > maxId ? announcement.id : maxId;
-    }, 0);
-    return maxExistingId + 1;
   }
 
   get filteredAnnouncements(): Announcement[] {
@@ -79,10 +66,23 @@ export class AnnouncementListComponent {
     if (!query) return this.announcements;
 
     return this.announcements.filter(announcement =>
+      announcement.title.toLowerCase().includes(query) ||
       announcement.content.toLowerCase().includes(query) ||
-      announcement.author.toLowerCase().includes(query) ||
-      announcement.category.toLowerCase().includes(query)
+      announcement.author.toLowerCase().includes(query)
     );
+  }
+
+  formatTimestamp(createdAt: string): string {
+    if (!createdAt) {
+      return 'Recently';
+    }
+
+    const date = new Date(createdAt);
+    if (Number.isNaN(date.getTime())) {
+      return createdAt;
+    }
+
+    return date.toLocaleString();
   }
 
 }

@@ -49,12 +49,6 @@
   border-color: #60a575;
 }
 
-.validation-error {
-  color: #b42318;
-  margin: 0.4rem 0 0;
-  font-size: 0.85rem;
-}
-
 .composer-actions {
   margin-top: 0.7rem;
   display: flex;
@@ -109,6 +103,18 @@
   background: #eaf8ef;
   color: #04753a;
   border-color: #b7ebcf;
+}
+
+.load-state {
+  margin: 0;
+  color: #475467;
+  font-weight: 600;
+}
+
+.error-state {
+  margin: 0;
+  color: #b42318;
+  font-weight: 600;
 }
 
 @media (max-width: 768px) {

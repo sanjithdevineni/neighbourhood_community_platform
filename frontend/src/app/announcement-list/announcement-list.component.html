@@ -6,13 +6,9 @@
         id="new-post"
         name="newPostContent"
         [(ngModel)]="newPostContent"
-        (ngModelChange)="onContentChange()"
         placeholder="Post an announcement or question to neighbors..."
         rows="2"
       ></textarea>
-      <p class="validation-error" *ngIf="showValidationError">
-        Post content cannot be empty.
-      </p>
       <div class="composer-actions">
         <button type="submit">Post</button>
       </div>
@@ -27,15 +23,18 @@
     </div>
   </div>
 
+  <p class="load-state" *ngIf="isLoading">Loading announcements...</p>
+  <p class="error-state" *ngIf="errorMessage">{{ errorMessage }}</p>
+
   <app-post-card
     *ngFor="let announcement of filteredAnnouncements; trackBy: trackById"
-    [author]="announcement.author"
-    [timestamp]="announcement.timestamp"
-    [category]="announcement.category"
+    [author]="announcement.author || fallbackAuthor"
+    [timestamp]="formatTimestamp(announcement.created_at)"
+    [title]="announcement.title"
+    [category]="'General'"
+    [likes]="0"
+    [comments]="0"
+    [imageAlt]="'Announcement image'"
     [content]="announcement.content"
-    [imageUrl]="announcement.imageUrl"
-    [imageAlt]="announcement.imageAlt || 'Announcement image'"
-    [likes]="announcement.likes"
-    [comments]="announcement.comments"
   />
 </section>

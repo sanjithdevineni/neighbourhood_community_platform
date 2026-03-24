@@ -11,6 +11,7 @@ import { Component, Input } from '@angular/core';
 export class PostCardComponent {
   @Input() author = '';
   @Input() timestamp = '';
+  @Input() title = '';
   @Input() category = '';
   @Input() content = '';
   @Input() imageUrl?: string;
