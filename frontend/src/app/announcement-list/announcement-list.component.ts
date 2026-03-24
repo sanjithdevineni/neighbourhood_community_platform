@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, NgZone, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { catchError, finalize, map, of, retry, switchMap } from 'rxjs';
 import { PostCardComponent } from '../post-card/post-card.component';
@@ -18,14 +18,15 @@ import {
   templateUrl: './announcement-list.component.html',
   styleUrl: './announcement-list.component.css'
 })
-export class AnnouncementListComponent implements OnInit {
+export class AnnouncementListComponent implements OnInit, OnDestroy {
 
   readonly fallbackAuthor = 'Community';
   private fetchRequestId = 0;
+  private destroyed = false;
   constructor(
     private readonly searchService: SearchService,
     private readonly announcementService: AnnouncementService,
-    private readonly ngZone: NgZone
+    private readonly cdr: ChangeDetectorRef
   ) {}
 
   announcements: Announcement[] = [];
@@ -50,30 +51,27 @@ export class AnnouncementListComponent implements OnInit {
       .pipe(
         retry({ count: 2, delay: 300 }),
         finalize(() => {
-          this.ngZone.run(() => {
-            if (requestId === this.fetchRequestId) {
-              this.isLoading = false;
-            }
-          });
+          if (requestId === this.fetchRequestId) {
+            this.isLoading = false;
+            this.safeDetectChanges();
+          }
         })
       )
       .subscribe({
         next: (data) => {
-          this.ngZone.run(() => {
-            if (requestId !== this.fetchRequestId) {
-              return;
-            }
-            this.announcements = this.sortAnnouncements(data);
-          });
+          if (requestId !== this.fetchRequestId) {
+            return;
+          }
+          this.announcements = this.sortAnnouncements(data);
+          this.safeDetectChanges();
         },
         error: (error) => {
-          this.ngZone.run(() => {
-            if (requestId !== this.fetchRequestId) {
-              return;
-            }
-            console.error(error);
-            this.errorMessage = 'Failed to load announcements.';
-          });
+          if (requestId !== this.fetchRequestId) {
+            return;
+          }
+          console.error(error);
+          this.errorMessage = 'Failed to load announcements.';
+          this.safeDetectChanges();
         }
       });
   }
@@ -112,24 +110,21 @@ export class AnnouncementListComponent implements OnInit {
             )
         ),
         finalize(() => {
-          this.ngZone.run(() => {
-            this.isSubmitting = false;
-          });
+          this.isSubmitting = false;
+          this.safeDetectChanges();
         })
       )
       .subscribe({
         next: (announcements) => {
-          this.ngZone.run(() => {
-            this.announcements = announcements;
-            this.newPostTitle = '';
-            this.newPostContent = '';
-          });
+          this.announcements = announcements;
+          this.newPostTitle = '';
+          this.newPostContent = '';
+          this.safeDetectChanges();
         },
         error: (error: unknown) => {
-          this.ngZone.run(() => {
-            console.error(error);
-            this.submitErrorMessage = this.getCreateErrorMessage(error);
-          });
+          console.error(error);
+          this.submitErrorMessage = this.getCreateErrorMessage(error);
+          this.safeDetectChanges();
         }
       });
   }
@@ -207,5 +202,16 @@ export class AnnouncementListComponent implements OnInit {
       return 0;
     }
     return parsed;
+  }
+
+  ngOnDestroy(): void {
+    this.destroyed = true;
+  }
+
+  private safeDetectChanges(): void {
+    if (this.destroyed) {
+      return;
+    }
+    this.cdr.detectChanges();
   }
 }
