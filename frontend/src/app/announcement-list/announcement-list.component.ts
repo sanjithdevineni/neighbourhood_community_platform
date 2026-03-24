@@ -1,10 +1,15 @@
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { PostCardComponent } from '../post-card/post-card.component';
 import { SearchService } from '../services/search.service';
-import { AnnouncementService, Announcement } from '../services/announcement.service';
+import {
+  AnnouncementService,
+  Announcement,
+  CreateAnnouncementPayload
+} from '../services/announcement.service';
 
 @Component({
   selector: 'app-announcement-list',
@@ -23,7 +28,10 @@ export class AnnouncementListComponent implements OnInit {
 
   announcements: Announcement[] = [];
   isLoading = false;
+  isSubmitting = false;
   errorMessage = '';
+  submitErrorMessage = '';
+  newPostTitle = '';
   newPostContent = '';
 
   ngOnInit(): void {
@@ -53,7 +61,41 @@ export class AnnouncementListComponent implements OnInit {
   }
 
   createPost(): void {
-    console.log('POST API will be implemented in FE-14');
+    if (this.isSubmitting) {
+      return;
+    }
+
+    const payload: CreateAnnouncementPayload = {
+      title: this.newPostTitle.trim(),
+      content: this.newPostContent.trim()
+    };
+
+    if (!payload.title || !payload.content) {
+      this.submitErrorMessage = 'Title and content are required.';
+      return;
+    }
+
+    this.isSubmitting = true;
+    this.submitErrorMessage = '';
+
+    this.announcementService
+      .createAnnouncement(payload)
+      .pipe(
+        finalize(() => {
+          this.isSubmitting = false;
+        })
+      )
+      .subscribe({
+        next: (announcement) => {
+          this.announcements = [announcement, ...this.announcements];
+          this.newPostTitle = '';
+          this.newPostContent = '';
+        },
+        error: (error: unknown) => {
+          console.error(error);
+          this.submitErrorMessage = this.getCreateErrorMessage(error);
+        }
+      });
   }
 
   trackById(_index: number, announcement: Announcement): number {
@@ -83,6 +125,33 @@ export class AnnouncementListComponent implements OnInit {
     }
 
     return date.toLocaleString();
+  }
+
+  private getCreateErrorMessage(error: unknown): string {
+    if (!(error instanceof HttpErrorResponse)) {
+      return 'Failed to create announcement. Please try again.';
+    }
+
+    if (error.status === 401) {
+      return 'You must be logged in to post an announcement.';
+    }
+
+    if (error.status === 0) {
+      return 'Unable to reach the backend. Make sure the API is running.';
+    }
+
+    if (typeof error.error === 'string') {
+      const trimmed = error.error.trim();
+      if (trimmed) {
+        return trimmed;
+      }
+    }
+
+    if (error.error?.error) {
+      return error.error.error;
+    }
+
+    return 'Failed to create announcement. Please try again.';
   }
 
 }

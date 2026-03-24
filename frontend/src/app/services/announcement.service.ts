@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
 import { ApiConfig } from '../config/api.config';
 
@@ -30,12 +30,18 @@ export interface Announcement {
   deleted_at?: string | null;
 }
 
+export interface CreateAnnouncementPayload {
+  title: string;
+  content: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class AnnouncementService {
 
   private readonly apiUrl = `${ApiConfig.baseUrl}/announcements`;
+  private readonly tokenKey = 'auth_token';
 
   constructor(private readonly http: HttpClient) {}
 
@@ -55,5 +61,18 @@ export class AnnouncementService {
     return this.http
       .get<RawAnnouncement[]>(this.apiUrl)
       .pipe(map((announcements) => announcements.map((raw) => this.normalizeAnnouncement(raw))));
+  }
+
+  createAnnouncement(payload: CreateAnnouncementPayload): Observable<Announcement> {
+    const token = localStorage.getItem(this.tokenKey);
+    const headers = token
+      ? new HttpHeaders({
+          Authorization: `Bearer ${token}`
+        })
+      : undefined;
+
+    return this.http
+      .post<RawAnnouncement>(this.apiUrl, payload, { headers })
+      .pipe(map((raw) => this.normalizeAnnouncement(raw)));
   }
 }

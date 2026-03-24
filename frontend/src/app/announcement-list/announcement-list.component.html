@@ -2,6 +2,13 @@
   <form class="create-post-box" (ngSubmit)="createPost()">
     <div class="composer-avatar" aria-hidden="true">YO</div>
     <div class="composer-content">
+      <input
+        id="new-post-title"
+        name="newPostTitle"
+        [(ngModel)]="newPostTitle"
+        placeholder="Announcement title"
+        maxlength="120"
+      />
       <textarea
         id="new-post"
         name="newPostContent"
@@ -10,8 +17,11 @@
         rows="2"
       ></textarea>
       <div class="composer-actions">
-        <button type="submit">Post</button>
+        <button type="submit" [disabled]="isSubmitting">
+          {{ isSubmitting ? 'Posting...' : 'Post' }}
+        </button>
       </div>
+      <p class="error-state submit-error" *ngIf="submitErrorMessage">{{ submitErrorMessage }}</p>
     </div>
   </form>
 
