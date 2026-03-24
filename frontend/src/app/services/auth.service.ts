@@ -72,4 +72,25 @@ export class AuthService {
     localStorage.removeItem(this.tokenKey);
     localStorage.removeItem(this.userKey);
   }
+
+  getAuthToken(): string | null {
+    return localStorage.getItem(this.tokenKey);
+  }
+
+  getStoredUser(): LoginUser | null {
+    const raw = localStorage.getItem(this.userKey);
+    if (!raw) {
+      return null;
+    }
+
+    try {
+      return JSON.parse(raw) as LoginUser;
+    } catch {
+      return null;
+    }
+  }
+
+  isAuthenticated(): boolean {
+    return !!this.getAuthToken();
+  }
 }

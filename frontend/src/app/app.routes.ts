@@ -5,6 +5,7 @@ import { EventsComponent } from './pages/events/events.component';
 import { LayoutComponent } from './layout/layout.component';
 import { SignupComponent } from './pages/signup/signup.component';
 import { LoginComponent } from './pages/login/login.component';
+import { authGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
   { path: 'signup', component: SignupComponent },
@@ -12,6 +13,7 @@ export const routes: Routes = [
   {
     path: '',
     component: LayoutComponent,
+    canActivate: [authGuard],
     children: [
       { path: '', component: HomeComponent },
       { path: 'alerts', component: AlertsComponent },

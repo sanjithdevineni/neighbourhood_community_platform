@@ -120,4 +120,58 @@ describe('AnnouncementService', () => {
       deleted_at: null
     });
   });
+
+  it('updates announcement with bearer token and normalizes response payload', async () => {
+    localStorage.setItem('auth_token', 'jwt-token-456');
+
+    let postedUrl = '';
+    let postedBody: unknown;
+    const postedHeaders: { Authorization?: string } = {};
+    const httpClientStub = {
+      get: () => of([]),
+      post: (url: string, body: unknown, options?: { headers?: { get(name: string): string | null } }) => {
+        postedUrl = url;
+        postedBody = body;
+        const auth = options?.headers?.get('Authorization');
+        if (auth) {
+          postedHeaders['Authorization'] = auth;
+        }
+        return of({
+          ID: 11,
+          Title: 'UPDATED: Community Meeting Friday',
+          Content: 'The meeting time has moved to 7 PM.',
+          Author: '1',
+          CreatedAt: '2026-03-03T20:50:00Z',
+          UpdatedAt: '2026-03-24T12:20:00Z',
+          DeletedAt: null
+        });
+      }
+    } as unknown as HttpClient;
+
+    const service = new AnnouncementService(httpClientStub);
+    const updated = await firstValueFrom(
+      service.updateAnnouncement({
+        id: 11,
+        title: 'UPDATED: Community Meeting Friday',
+        content: 'The meeting time has moved to 7 PM.'
+      })
+    );
+
+    expect(postedUrl).toBe('/api/announcements/update');
+    expect(postedBody).toEqual({
+      id: 11,
+      title: 'UPDATED: Community Meeting Friday',
+      content: 'The meeting time has moved to 7 PM.'
+    });
+    expect(postedHeaders['Authorization']).toBe('Bearer jwt-token-456');
+    expect(updated).toEqual({
+      id: 11,
+      title: 'UPDATED: Community Meeting Friday',
+      content: 'The meeting time has moved to 7 PM.',
+      author: '1',
+      created_at: '2026-03-03T20:50:00Z',
+      updated_at: '2026-03-24T12:20:00Z',
+      deleted_at: null
+    });
+  });
 });

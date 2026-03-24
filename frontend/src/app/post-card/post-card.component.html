@@ -5,6 +5,15 @@
       <h3>{{ author }}</h3>
       <p>{{ timestamp }}</p>
     </div>
+    <button
+      *ngIf="canEdit"
+      type="button"
+      class="edit-btn"
+      aria-label="Edit your announcement"
+      (click)="onEditClick()"
+    >
+      Edit
+    </button>
     <span class="category-badge">{{ category }}</span>
   </header>
 

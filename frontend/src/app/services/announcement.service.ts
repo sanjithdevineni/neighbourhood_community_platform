@@ -35,6 +35,12 @@ export interface CreateAnnouncementPayload {
   content: string;
 }
 
+export interface UpdateAnnouncementPayload {
+  id: number;
+  title?: string;
+  content?: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -73,6 +79,19 @@ export class AnnouncementService {
 
     return this.http
       .post<RawAnnouncement>(this.apiUrl, payload, { headers })
+      .pipe(map((raw) => this.normalizeAnnouncement(raw)));
+  }
+
+  updateAnnouncement(payload: UpdateAnnouncementPayload): Observable<Announcement> {
+    const token = localStorage.getItem(this.tokenKey);
+    const headers = token
+      ? new HttpHeaders({
+          Authorization: `Bearer ${token}`
+        })
+      : undefined;
+
+    return this.http
+      .post<RawAnnouncement>(`${this.apiUrl}/update`, payload, { headers })
       .pipe(map((raw) => this.normalizeAnnouncement(raw)));
   }
 }

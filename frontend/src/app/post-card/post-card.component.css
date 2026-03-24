@@ -41,8 +41,24 @@
   font-size: 0.86rem;
 }
 
-.category-badge {
+.edit-btn {
   margin-left: auto;
+  border: 1px solid #bfd7c8;
+  background: #f3faf6;
+  color: #0f7a43;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.3rem 0.72rem;
+  cursor: pointer;
+}
+
+.edit-btn:hover {
+  background: #e8f7ee;
+}
+
+.category-badge {
+  margin-left: 0.5rem;
   background: #eef2f7;
   color: #4b5563;
   font-size: 0.75rem;
