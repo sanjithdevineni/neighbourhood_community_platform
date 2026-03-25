@@ -5,9 +5,31 @@
       <h3>{{ author }}</h3>
       <p>{{ timestamp }}</p>
     </div>
+    <div class="owner-actions" *ngIf="canEdit || canDelete">
+      <button
+        *ngIf="canEdit"
+        type="button"
+        class="edit-btn"
+        aria-label="Edit your announcement"
+        (click)="onEditClick()"
+      >
+        Edit
+      </button>
+      <button
+        *ngIf="canDelete"
+        type="button"
+        class="delete-btn"
+        aria-label="Delete your announcement"
+        [disabled]="isDeleting"
+        (click)="onDeleteClick()"
+      >
+        {{ isDeleting ? 'Deleting...' : 'Delete' }}
+      </button>
+    </div>
     <span class="category-badge">{{ category }}</span>
   </header>
 
+  <h4 class="post-title" *ngIf="title">{{ title }}</h4>
   <p class="post-content">{{ content }}</p>
 
   <img

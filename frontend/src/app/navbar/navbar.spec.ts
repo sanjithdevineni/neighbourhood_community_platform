@@ -1,23 +1,33 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter, Router } from '@angular/router';
+import { vi } from 'vitest';
+import { NavbarComponent } from './navbar.component';
 
-import { Navbar } from './navbar';
-
-describe('Navbar', () => {
-  let component: Navbar;
-  let fixture: ComponentFixture<Navbar>;
+describe('NavbarComponent', () => {
+  let component: NavbarComponent;
+  let fixture: ComponentFixture<NavbarComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [Navbar]
-    })
-    .compileComponents();
+      imports: [NavbarComponent],
+      providers: [provideRouter([])]
+    }).compileComponents();
 
-    fixture = TestBed.createComponent(Navbar);
+    fixture = TestBed.createComponent(NavbarComponent);
     component = fixture.componentInstance;
-    await fixture.whenStable();
+    fixture.detectChanges();
   });
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('should navigate to account page when account button is clicked', () => {
+    const router = TestBed.inject(Router);
+    const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+
+    component.onAccountClick();
+
+    expect(navigateSpy).toHaveBeenCalledWith(['/account']);
   });
 });

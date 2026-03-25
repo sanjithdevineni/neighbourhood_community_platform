@@ -1,0 +1,59 @@
+<div class="account-page">
+  <header class="account-topbar">
+    <a class="brand" routerLink="/">
+      <span class="brand-badge" aria-hidden="true">N</span>
+      <span class="brand-text">Neighborhood</span>
+    </a>
+  </header>
+
+  <main class="account-main">
+    <section class="account-shell" aria-labelledby="account-title">
+      <h1 id="account-title">Account Settings</h1>
+      <p class="subheading">Manage your account details and preferences</p>
+
+      <section class="card profile-card">
+        <div class="avatar" aria-label="User initials">{{ initials }}</div>
+
+        <div class="profile-content">
+          <h2>Profile Information</h2>
+
+          <div class="field-grid">
+            <span class="material-icons field-icon" aria-hidden="true">person</span>
+            <div>
+              <p class="field-label">Name</p>
+              <p class="field-value">{{ displayName }}</p>
+            </div>
+          </div>
+
+          <div class="field-grid">
+            <span class="material-icons field-icon" aria-hidden="true">mail</span>
+            <div>
+              <p class="field-label">Email</p>
+              <p class="field-value">{{ displayEmail }}</p>
+            </div>
+          </div>
+
+          <div class="field-grid">
+            <span class="material-icons field-icon" aria-hidden="true">description</span>
+            <div>
+              <p class="field-label">Bio</p>
+              <p class="field-value" [class.field-placeholder]="!hasBio">{{ displayBio }}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card logout-card">
+        <div>
+          <h2>Sign out of your account</h2>
+          <p>You'll need to log back in to access your neighborhood</p>
+        </div>
+
+        <button type="button" class="logout-btn" (click)="onLogout()">
+          <span class="material-icons" aria-hidden="true">logout</span>
+          Log out
+        </button>
+      </section>
+    </section>
+  </main>
+</div>

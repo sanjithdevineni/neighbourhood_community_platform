@@ -1,10 +1,13 @@
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { App } from './app';
+import { routes } from './app.routes';
 
 describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [App],
+      providers: [provideRouter(routes)]
     }).compileComponents();
   });
 
@@ -14,18 +17,11 @@ describe('App', () => {
     expect(app).toBeTruthy();
   });
 
-  it('should render the page title', async () => {
+  it('should render router outlet', () => {
     const fixture = TestBed.createComponent(App);
-    await fixture.whenStable();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Neighborhood Community');
-  });
+    fixture.detectChanges();
 
-  it('should render at least three post cards', async () => {
-    const fixture = TestBed.createComponent(App);
-    await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
-    const cards = compiled.querySelectorAll('.post-card');
-    expect(cards.length).toBeGreaterThanOrEqual(3);
+    expect(compiled.querySelector('router-outlet')).not.toBeNull();
   });
 });

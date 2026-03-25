@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { AppConfig } from '../config/app.config';
 import { SearchService } from '../services/search.service';
 
@@ -15,7 +16,10 @@ export class NavbarComponent {
   title = AppConfig.title;
   searchQuery = '';
 
-  constructor(private searchService: SearchService) {}
+  constructor(
+    private readonly searchService: SearchService,
+    private readonly router: Router
+  ) {}
 
   onSearchSubmit(event: Event) {
     event.preventDefault();  // prevent page reload
@@ -24,7 +28,7 @@ export class NavbarComponent {
   }
 
   onAccountClick() {
-    console.log('Account button clicked');
+    void this.router.navigate(['/account']);
   }
 
 }
