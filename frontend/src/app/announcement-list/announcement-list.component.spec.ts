@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
 import { of, Subject, throwError } from 'rxjs';
+import { vi } from 'vitest';
 import { AnnouncementListComponent } from './announcement-list.component';
 import { AnnouncementService } from '../services/announcement.service';
 import { AuthService } from '../services/auth.service';
@@ -96,6 +97,7 @@ describe('AnnouncementListComponent', () => {
   });
 
   it('should set error state when service call fails', async () => {
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     announcementServiceStub.getAnnouncements = () =>
       throwError(() => new Error('Network error'));
 
@@ -106,6 +108,8 @@ describe('AnnouncementListComponent', () => {
 
     expect(component.isLoading).toBe(false);
     expect(component.errorMessage).toBe('Failed to load announcements.');
+
+    consoleErrorSpy.mockRestore();
   });
 
   it('should create announcement, update feed, and clear form', () => {
@@ -196,6 +200,7 @@ describe('AnnouncementListComponent', () => {
   });
 
   it('should set submit error when create call fails with auth error', () => {
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     announcementServiceStub.createAnnouncement = () =>
       throwError(
         () =>
@@ -215,6 +220,8 @@ describe('AnnouncementListComponent', () => {
 
     expect(component.isSubmitting).toBe(false);
     expect(component.submitErrorMessage).toBe('You must be logged in to post an announcement.');
+
+    consoleErrorSpy.mockRestore();
   });
 
   it('should map current user id author to current user display name', () => {
