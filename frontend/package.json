@@ -6,7 +6,10 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "test:unit": "ng test --watch=false --progress=false",
+    "test:cypress": "npx cypress run",
+    "test:cypress:open": "npx cypress open"
   },
   "prettier": {
     "printWidth": 100,
