@@ -6,7 +6,10 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "test:unit": "ng test --watch=false --progress=false",
+    "test:cypress": "env -u ELECTRON_RUN_AS_NODE cypress run",
+    "test:cypress:open": "env -u ELECTRON_RUN_AS_NODE cypress open"
   },
   "prettier": {
     "printWidth": 100,
@@ -36,6 +39,7 @@
     "@angular/build": "^21.1.3",
     "@angular/cli": "^21.1.3",
     "@angular/compiler-cli": "^21.1.0",
+    "cypress": "^15.13.0",
     "jsdom": "^27.1.0",
     "typescript": "~5.9.2",
     "vitest": "^4.0.8"
