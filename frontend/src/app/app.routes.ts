@@ -6,10 +6,12 @@ import { LayoutComponent } from './layout/layout.component';
 import { SignupComponent } from './pages/signup/signup.component';
 import { LoginComponent } from './pages/login/login.component';
 import { authGuard } from './guards/auth.guard';
+import { AccountComponent } from './pages/account/account.component';
 
 export const routes: Routes = [
   { path: 'signup', component: SignupComponent },
   { path: 'login', component: LoginComponent },
+  { path: 'account', component: AccountComponent, canActivate: [authGuard] },
   {
     path: '',
     component: LayoutComponent,
