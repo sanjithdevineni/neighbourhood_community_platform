@@ -1,5 +1,57 @@
 # Sprint 2
 
+## Frontend – Sprint 2 Completed Work
+
+### 1. Announcement API Integration
+
+Completed full backend integration for announcements:
+
+- Replaced static mock data with real backend API calls.
+- Implemented `GET /api/announcements` to fetch announcements dynamically.
+- Implemented `POST /api/announcements` to create new announcements using authenticated requests.
+- Implemented `POST /api/announcements/update` to update announcements using authenticated requests.
+- Implemented `POST /api/announcements/delete` to delete announcements using authenticated requests.
+- Implemented delete functionality connected to backend delete API.
+- Added loading and error states for fetch/create/update/delete API calls.
+- Ensured UI updates immediately after create/update/delete operations without page refresh.
+
+### 2. Authentication Integration
+
+- Integrated JWT-based authentication with backend.
+- Stored authentication token in `localStorage` after login.
+- Attached `Authorization: Bearer <token>` header for protected API requests.
+- Resolved 401 Unauthorized issues through proper header handling.
+- Implemented logout functionality clearing stored token.
+- Protected app routes with auth guard and redirected unauthenticated users to `/login`.
+
+### 3. Model & UI Refactoring
+
+- Updated `Announcement` interface to match backend schema (`id`, `title`, `content`, `author`, `created_at`, `updated_at`, `deleted_at`).
+- Removed legacy mock-only fields (likes, category, comments, imageUrl).
+- Refactored `PostCard` component to align with backend response structure.
+- Standardized usage of `ID` instead of `id` across components.
+- Formatted timestamps for display using component helper logic.
+- UI still uses placeholders for `category`, `likes`, and `comments` until backend supports those values.
+
+### 4. API Configuration & Environment Setup
+
+- Removed hardcoded backend URLs.
+- Configured Angular proxy to route `/api` requests to backend.
+- Integrated backend CORS middleware to allow frontend communication.
+- Verified API connectivity using browser DevTools and curl testing.
+
+### 5. Validation & UX Improvements
+
+- Prevented empty announcement submissions.
+- Improved error handling for create and fetch failures.
+- Maintained consistent UI state after API operations.
+
+### 6. Testing
+
+- Implemented unit tests for major components and services.
+- Added Cypress E2E validation for login form behavior.
+- Verified announcement create, fetch, and delete flows through testing.
+
 ## Frontend Unit Tests (Angular/Vitest)
 
 Unit tests currently implemented in `frontend/src/app`:
