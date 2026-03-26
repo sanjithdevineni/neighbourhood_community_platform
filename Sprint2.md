@@ -1,5 +1,9 @@
 # Sprint 2
 
+# Sprint 2 Demo Video
+
+Sprint 2 Demo Video Link - https://youtu.be/k-QDBiq7naI
+
 # Frontend – Sprint 2 Completed Work
 
 **Frontend:**  
@@ -18,6 +22,7 @@ Completed full backend integration for announcements:
 - Implemented `POST /api/announcements/update` to update announcements using authenticated requests.
 - Implemented `POST /api/announcements/delete` to delete announcements using authenticated requests.
 - Implemented delete functionality connected to backend delete API.
+- Added confirmation dialog before delete operations.
 - Added loading and error states for fetch/create/update/delete API calls.
 - Ensured UI updates immediately after create/update/delete operations without page refresh.
 
@@ -51,6 +56,7 @@ Completed full backend integration for announcements:
 - Prevented empty announcement submissions.
 - Improved error handling for create and fetch failures.
 - Maintained consistent UI state after API operations.
+- Added confirmation dialog before delete operations.
 
 ### 6. Testing
 
