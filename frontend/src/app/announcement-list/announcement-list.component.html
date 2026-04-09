@@ -1,36 +1,80 @@
 <section class="announcement-list" aria-label="Announcement feed">
   <form class="create-post-box" (ngSubmit)="createPost()">
-    <div class="composer-avatar" aria-hidden="true">YO</div>
+    <div class="composer-avatar" aria-hidden="true">{{ composerInitials }}</div>
     <div class="composer-content">
-      <label class="composer-label" for="new-post">Create a post</label>
+      <input
+        id="new-post-title"
+        name="newPostTitle"
+        [(ngModel)]="newPostTitle"
+        placeholder="Announcement title"
+        maxlength="120"
+      />
       <textarea
         id="new-post"
         name="newPostContent"
         [(ngModel)]="newPostContent"
-        (ngModelChange)="onContentChange()"
         placeholder="Post an announcement or question to neighbors..."
-        rows="3"
+        rows="2"
       ></textarea>
-      <p class="validation-error" *ngIf="showValidationError">
-        Post content cannot be empty.
-      </p>
       <div class="composer-actions">
-        <button type="submit">Post</button>
+        <button type="submit" [disabled]="isSubmitting">
+          {{ isSubmitting ? 'Posting...' : 'Post' }}
+        </button>
       </div>
+      <p class="error-state submit-error" *ngIf="submitErrorMessage">{{ submitErrorMessage }}</p>
     </div>
   </form>
 
   <h2>Recent Activity</h2>
 
+  <p class="load-state" *ngIf="isLoading">Loading announcements...</p>
+  <p class="error-state" *ngIf="errorMessage">{{ errorMessage }}</p>
+  <p class="error-state" *ngIf="deleteErrorMessage">{{ deleteErrorMessage }}</p>
+
   <app-post-card
     *ngFor="let announcement of filteredAnnouncements; trackBy: trackById"
-    [author]="announcement.author"
-    [timestamp]="announcement.timestamp"
-    [category]="announcement.category"
+    [author]="getAuthorDisplayName(announcement)"
+    [timestamp]="formatTimestamp(announcement.created_at)"
+    [title]="announcement.title"
+    [category]="'General'"
+    [likes]="0"
+    [comments]="0"
+    [imageAlt]="'Announcement image'"
     [content]="announcement.content"
-    [imageUrl]="announcement.imageUrl"
-    [imageAlt]="announcement.imageAlt || 'Announcement image'"
-    [likes]="announcement.likes"
-    [comments]="announcement.comments"
+    [canEdit]="isOwnedByCurrentUser(announcement)"
+    [canDelete]="isOwnedByCurrentUser(announcement)"
+    [isDeleting]="isDeletingAnnouncementId === announcement.id"
+    (editClicked)="openEditModal(announcement)"
+    (deleteClicked)="deleteAnnouncement(announcement)"
   />
+
+  <div class="edit-modal-backdrop" *ngIf="isEditModalOpen" (click)="closeEditModal()"></div>
+  <section class="edit-modal" *ngIf="isEditModalOpen" aria-label="Edit announcement">
+    <h3>Edit Announcement</h3>
+    <input
+      id="edit-post-title"
+      name="editPostTitle"
+      [(ngModel)]="editTitle"
+      placeholder="Announcement title"
+      maxlength="120"
+    />
+    <textarea
+      id="edit-post-content"
+      name="editPostContent"
+      [(ngModel)]="editContent"
+      rows="5"
+      placeholder="Edit announcement details"
+    ></textarea>
+
+    <p class="error-state submit-error" *ngIf="editErrorMessage">{{ editErrorMessage }}</p>
+
+    <div class="edit-modal-actions">
+      <button type="button" class="secondary" (click)="closeEditModal()" [disabled]="isUpdatingAnnouncement">
+        Cancel
+      </button>
+      <button type="button" (click)="saveEdit()" [disabled]="isUpdatingAnnouncement">
+        {{ isUpdatingAnnouncement ? 'Saving...' : 'Save Changes' }}
+      </button>
+    </div>
+  </section>
 </section>

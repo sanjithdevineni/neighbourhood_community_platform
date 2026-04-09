@@ -1,0 +1,59 @@
+<div class="login-page">
+  <header class="login-topbar">
+    <div class="brand">
+      <span class="brand-badge" aria-hidden="true">N</span>
+      <span class="brand-text">Neighborhood</span>
+    </div>
+    <a class="signup-link" routerLink="/signup">Sign up</a>
+  </header>
+
+  <main class="login-main">
+    <section class="login-card" aria-labelledby="login-title">
+      <h1 id="login-title">Welcome back to your neighborhood.</h1>
+
+      <form class="login-form" [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
+        <div class="form-field">
+          <label class="sr-only" for="email">Email address</label>
+          <input
+            id="email"
+            type="email"
+            formControlName="email"
+            placeholder="Email address"
+            [class.invalid]="!!getFieldError('email')"
+          />
+          <p class="field-error" *ngIf="getFieldError('email')">{{ getFieldError('email') }}</p>
+        </div>
+
+        <div class="form-field">
+          <label class="sr-only" for="password">Password</label>
+          <div class="password-row" [class.invalid]="!!getFieldError('password')">
+            <input
+              id="password"
+              [type]="passwordVisible ? 'text' : 'password'"
+              formControlName="password"
+              placeholder="Password"
+            />
+            <button type="button" class="toggle-password" (click)="togglePasswordVisibility()">
+              {{ passwordVisible ? 'Hide' : 'Show' }}
+            </button>
+          </div>
+          <p class="field-error" *ngIf="getFieldError('password')">{{ getFieldError('password') }}</p>
+        </div>
+
+        <p class="forgot-password">Forgot password?</p>
+
+        <p class="alert success" *ngIf="successMessage">{{ successMessage }}</p>
+        <p class="alert error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+        <button class="submit-btn" type="submit" [disabled]="isSubmitting">
+          {{ isSubmitting ? 'Logging in...' : 'Log in' }}
+        </button>
+      </form>
+
+      <p class="signup-prompt">
+        Don't have an account?
+        <a routerLink="/signup">Sign up</a>
+      </p>
+    </section>
+  </main>
+</div>

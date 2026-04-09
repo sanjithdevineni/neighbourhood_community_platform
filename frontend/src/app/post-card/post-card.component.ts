@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 
 @Component({
   selector: 'app-post-card',
@@ -11,12 +11,18 @@ import { Component, Input } from '@angular/core';
 export class PostCardComponent {
   @Input() author = '';
   @Input() timestamp = '';
+  @Input() title = '';
   @Input() category = '';
   @Input() content = '';
   @Input() imageUrl?: string;
   @Input() imageAlt = 'Post image';
   @Input() likes = 0;
   @Input() comments = 0;
+  @Input() canEdit = false;
+  @Input() canDelete = false;
+  @Input() isDeleting = false;
+  @Output() editClicked = new EventEmitter<void>();
+  @Output() deleteClicked = new EventEmitter<void>();
 
   get authorInitials(): string {
     const names = this.author.trim().split(' ').filter(Boolean);
@@ -27,5 +33,13 @@ export class PostCardComponent {
       .slice(0, 2)
       .map((name) => name.charAt(0).toUpperCase())
       .join('');
+  }
+
+  onEditClick(): void {
+    this.editClicked.emit();
+  }
+
+  onDeleteClick(): void {
+    this.deleteClicked.emit();
   }
 }
