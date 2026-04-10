@@ -67,6 +67,24 @@ export class NeighborhoodComponent implements AfterViewInit, OnDestroy {
         description: 'Downtown restaurant with a local crowd.',
         lat: 29.6512,
         lng: -82.3244
+      },
+      {
+        name: '4 Rivers Smokehouse',
+        description: 'Barbecue restaurant near SW 34th St.',
+        lat: 29.6298,
+        lng: -82.3729
+      },
+      {
+        name: 'Embers Wood Grill',
+        description: 'Steak and seafood restaurant in northwest Gainesville.',
+        lat: 29.6768,
+        lng: -82.3375
+      },
+      {
+        name: 'Blue Gill Quality Foods',
+        description: 'Local spot with Southern-inspired plates.',
+        lat: 29.651,
+        lng: -82.3336
       }
     ],
     Shopping: [
@@ -107,7 +125,9 @@ export class NeighborhoodComponent implements AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit(): void {
-    this.initializeMap();
+    requestAnimationFrame(() => {
+      this.initializeMap();
+    });
   }
 
   ngOnDestroy(): void {
@@ -157,7 +177,13 @@ export class NeighborhoodComponent implements AfterViewInit, OnDestroy {
       return;
     }
 
-    this.map = L.map(this.mapContainer.nativeElement, {
+    const container = this.mapContainer.nativeElement as HTMLDivElement & { _leaflet_id?: number };
+    if (container._leaflet_id) {
+      container._leaflet_id = undefined;
+      container.innerHTML = '';
+    }
+
+    this.map = L.map(container, {
       center: this.gainesvilleCenter,
       zoom: 13,
       minZoom: 11,
@@ -187,6 +213,7 @@ export class NeighborhoodComponent implements AfterViewInit, OnDestroy {
 
     this.markerLayer.clearLayers();
     this.categoryMarkers.clear();
+    const points: L.LatLngTuple[] = [];
 
     for (const item of this.visibleItems) {
       const marker = L.circleMarker([item.lat, item.lng], {
@@ -204,6 +231,11 @@ export class NeighborhoodComponent implements AfterViewInit, OnDestroy {
 
       marker.addTo(this.markerLayer);
       this.categoryMarkers.set(item.name, marker);
+      points.push([item.lat, item.lng]);
+    }
+
+    if (points.length > 0) {
+      this.map.fitBounds(points, { padding: [28, 28], maxZoom: 14 });
     }
   }
 }
