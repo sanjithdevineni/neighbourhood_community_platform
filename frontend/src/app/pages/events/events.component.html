@@ -7,17 +7,17 @@
     </div>
 
     <div class="header-actions">
-      <button class="create-event-btn" (click)="openCreateEvent()">
+      <button
+        class="create-event-btn"
+        *ngIf="displayedEvents.length > 0"
+        (click)="openCreateEvent()">
         Create an event
       </button>
+
       <span class="your-events"
             (click)="showOnlyUserEvents = !showOnlyUserEvents">
-        {{ showOnlyUserEvents ? 'All events' : 'Your events' }}
-      </span>
-      <!--<p *ngIf="showOnlyUserEvents && displayedEvents.length === 0">
-        You haven't created any events yet.
-      </p>-->
-
+    {{ showOnlyUserEvents ? 'All events' : 'Your events' }}
+  </span>
     </div>
   </div>
 
