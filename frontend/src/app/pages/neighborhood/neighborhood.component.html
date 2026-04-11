@@ -1,0 +1,58 @@
+<section class="neighborhood-page" aria-label="Neighborhood map page">
+  <header class="page-header">
+    <h1>Neighborhood Map</h1>
+    <p>Explore nearby streets and landmarks around Gainesville.</p>
+  </header>
+
+  <div class="map-layout">
+    <article class="map-card">
+      <div class="map-toolbar" aria-label="Map controls">
+        <button type="button" class="control-button" (click)="zoomIn()">
+          <span class="material-icons" aria-hidden="true">add</span>
+          Zoom in
+        </button>
+        <button type="button" class="control-button" (click)="zoomOut()">
+          <span class="material-icons" aria-hidden="true">remove</span>
+          Zoom out
+        </button>
+        <button type="button" class="control-button primary" (click)="recenterMap()">
+          <span class="material-icons" aria-hidden="true">my_location</span>
+          Recenter Gainesville
+        </button>
+      </div>
+
+      <div
+        #mapContainer
+        class="map-canvas"
+        role="application"
+        aria-label="Interactive map of Gainesville, Florida"
+      ></div>
+    </article>
+
+    <aside class="landmark-card" aria-label="Neighborhood places">
+      <h2>Explore Nearby</h2>
+      <p>Select a category, then click an item to focus it on the map.</p>
+
+      <div class="category-switcher" aria-label="Map categories">
+        <button
+          type="button"
+          *ngFor="let category of categories"
+          class="category-button"
+          [class.active]="selectedCategory === category"
+          (click)="selectCategory(category)"
+        >
+          {{ category }}
+        </button>
+      </div>
+
+      <ul>
+        <li *ngFor="let item of visibleItems" [class.active]="activeItemName === item.name">
+          <button type="button" class="landmark-button" (click)="focusItem(item)">
+            <h3>{{ item.name }}</h3>
+            <p>{{ item.description }}</p>
+          </button>
+        </li>
+      </ul>
+    </aside>
+  </div>
+</section>

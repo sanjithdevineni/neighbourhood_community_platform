@@ -7,6 +7,7 @@ import { SignupComponent } from './pages/signup/signup.component';
 import { LoginComponent } from './pages/login/login.component';
 import { authGuard } from './guards/auth.guard';
 import { AccountComponent } from './pages/account/account.component';
+import { NeighborhoodComponent } from './pages/neighborhood/neighborhood.component';
 
 export const routes: Routes = [
   { path: 'signup', component: SignupComponent },
@@ -19,7 +20,8 @@ export const routes: Routes = [
     children: [
       { path: '', component: HomeComponent },
       { path: 'alerts', component: AlertsComponent },
-      { path: 'events', component: EventsComponent }
+      { path: 'events', component: EventsComponent },
+      { path: 'neighborhood', component: NeighborhoodComponent }
     ]
   },
   { path: '**', redirectTo: '' }
