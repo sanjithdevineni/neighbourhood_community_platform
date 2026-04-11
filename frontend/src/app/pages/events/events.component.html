@@ -7,17 +7,17 @@
     </div>
 
     <div class="header-actions">
-      <button class="create-event-btn" (click)="openCreateEvent()">
+      <button
+        class="create-event-btn"
+        *ngIf="displayedEvents.length > 0"
+        (click)="openCreateEvent()">
         Create an event
       </button>
+
       <span class="your-events"
-            (click)="showOnlyUserEvents = !showOnlyUserEvents">
+                (click)="showOnlyUserEvents = !showOnlyUserEvents">
         {{ showOnlyUserEvents ? 'All events' : 'Your events' }}
       </span>
-      <p *ngIf="showOnlyUserEvents && displayedEvents.length === 0">
-        You haven't created any events yet.
-      </p>
-
     </div>
   </div>
 
@@ -91,7 +91,7 @@
   </div>
 
   <!-- EVENTS GRID -->
-  <div class="events-grid">
+  <!--<div class="events-grid">
   <div class="event-card" *ngFor="let event of displayedEvents">
 
       <div class="image-wrapper">
@@ -116,7 +116,7 @@
 
     </div>
 
-    <!-- Host Event Placeholder Card -->
+    &lt;!&ndash; Host Event Placeholder Card &ndash;&gt;
     <div class="event-card host-card" (click)="openCreateEvent()">
       <div class="host-content">
         <div class="plus-icon">+</div>
@@ -125,6 +125,67 @@
       </div>
     </div>
 
+  </div>-->
+
+  <!-- EVENTS GRID WITH EMPTY STATE -->
+  <div *ngIf="displayedEvents.length > 0; else emptyState">
+
+    <div class="events-grid">
+
+      <div class="event-card" *ngFor="let event of displayedEvents">
+
+        <div class="image-wrapper">
+          <img [src]="event.imageUrl" [alt]="event.name">
+
+          <div class="date-badge">
+            <span class="day">{{ event.date }}</span>
+            <span class="month">{{ event.month }}</span>
+          </div>
+
+          <div class="share-icon">⤴</div>
+        </div>
+
+        <div class="event-content">
+          <h3>{{ event.name }}</h3>
+          <p class="time">{{ event.time }}</p>
+          <p class="location">{{ event.location }}</p>
+          <p class="interested">{{ event.interested }} neighbors interested</p>
+
+          <button class="interest-btn">+ Interested?</button>
+        </div>
+
+      </div>
+
+      <!-- Host Event Card -->
+      <div class="event-card host-card" (click)="openCreateEvent()">
+        <div class="host-content">
+          <div class="plus-icon">+</div>
+          <h3>Host an event</h3>
+          <p>Bring your neighbors together for something fun!</p>
+        </div>
+      </div>
+
+    </div>
+
   </div>
+
+  <!-- EMPTY STATE -->
+  <ng-template #emptyState>
+    <div class="empty-state">
+      <h3>
+        {{ showOnlyUserEvents ? 'No events created yet' : 'No events available' }}
+      </h3>
+
+      <p>
+        {{ showOnlyUserEvents
+        ? "You haven't created any events yet. Start by creating one."
+        : "There are no events to display right now." }}
+      </p>
+
+      <button class="create-event-btn" (click)="openCreateEvent()">
+        Create an event
+      </button>
+    </div>
+  </ng-template>
 
 </section>

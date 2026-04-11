@@ -93,6 +93,7 @@ export class EventsComponent {
       interested: 0,
       imageUrl: 'https://images.unsplash.com/photo-1523580494863-6f3031224c94'
     };
+    this.imagePreview = null;
   }
 
   get displayedEvents(): EventItem[] {
@@ -109,7 +110,7 @@ export class EventsComponent {
 
 
   events: EventItem[] = [
-    {
+     {
       id: 1,
       name: 'Block Party & BBQ',
       date: '19',
