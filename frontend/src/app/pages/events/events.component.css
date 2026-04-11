@@ -183,11 +183,21 @@
   margin-bottom: 0.25rem !important;
 }
 
-.error-message {
+/*.error-message {
   color: #ef4444;
   font-size: 11px;
   margin-bottom: 0.5rem;
   padding-left: 4px;
+}*/
+
+.error-message {
+  color: #dc2626;
+  font-size: 13px;
+  margin-top: 6px;
+}
+
+.form-group {
+  margin-bottom: 14px;
 }
 
 .modal-actions {

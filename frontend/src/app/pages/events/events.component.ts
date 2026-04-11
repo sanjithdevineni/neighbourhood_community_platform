@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, NgForm } from '@angular/forms';
 
 interface EventItem {
   id: number;
@@ -17,109 +17,16 @@ interface EventItem {
 @Component({
   selector: 'app-events',
   standalone: true,
-  imports: [CommonModule, FormsModule],  // 👈 ADD THIS
+  imports: [CommonModule, FormsModule],
   templateUrl: './events.component.html',
   styleUrl: './events.component.css'
 })
-
 export class EventsComponent {
-
   showCreateEventForm = false;
-
   showOnlyUserEvents = false;
 
   imagePreview: string | null = null;
-  validationErrors = {
-    name: '',
-    date: '',
-    month: '',
-    time: '',
-    location: '',
-    image: ''
-  };
-  imageError: string | null = null;
-
-  onImageUpload(event: Event) {
-
-    const input = event.target as HTMLInputElement;
-
-    if (!input.files || input.files.length === 0) {
-      return;
-    }
-
-    const file = input.files[0];
-
-    if (!file.type.startsWith('image/')) {
-      this.validationErrors.image = 'Please upload a valid image file.';
-      return;
-    }
-
-    this.validationErrors.image = '';
-
-    const reader = new FileReader();
-
-    reader.onload = () => {
-      this.imagePreview = reader.result as string;
-      this.newEvent.imageUrl = this.imagePreview;
-    };
-
-    reader.readAsDataURL(file);
-  }
-  validateEventForm(): boolean {
-    let isValid = true;
-
-    this.validationErrors = {
-      name: '',
-      date: '',
-      month: '',
-      time: '',
-      location: '',
-      image: ''
-    };
-
-    if (!this.newEvent.name.trim()) {
-      this.validationErrors.name = 'Event name is required.';
-      isValid = false;
-    }
-
-    if (!this.newEvent.date.trim()) {
-      this.validationErrors.date = 'Date is required.';
-      isValid = false;
-    }
-
-    if (!this.newEvent.month.trim()) {
-      this.validationErrors.month = 'Month is required.';
-      isValid = false;
-    }
-
-    if (!this.newEvent.time.trim()) {
-      this.validationErrors.time = 'Time is required.';
-      isValid = false;
-    }
-
-    if (!this.newEvent.location.trim()) {
-      this.validationErrors.location = 'Location is required.';
-      isValid = false;
-    }
-
-    return isValid;
-  }
-
-  clearFieldError(field: keyof typeof this.validationErrors): void {
-    this.validationErrors[field] = '';
-  }
-
-  resetValidationErrors(): void {
-    this.validationErrors = {
-      name: '',
-      date: '',
-      month: '',
-      time: '',
-      location: '',
-      image: ''
-    };
-  }
-
+  imageError = '';
 
   newEvent = {
     name: '',
@@ -131,16 +38,120 @@ export class EventsComponent {
     imageUrl: ''
   };
 
-  openCreateEvent() {
-    this.showCreateEventForm = true;
+  events: EventItem[] = [
+    {
+      id: 1,
+      name: 'Block Party & BBQ',
+      date: '19',
+      month: 'FEB',
+      time: '9:15 AM',
+      location: 'Willow Creek Park',
+      interested: 45,
+      imageUrl:
+        'https://images.unsplash.com/photo-1504754524776-8f4f37790ca0?auto=format&fit=crop&w=1200&q=80'
+    },
+    {
+      id: 2,
+      name: 'Morning Yoga in the Park',
+      date: '20',
+      month: 'FEB',
+      time: '11:00 AM',
+      location: 'Community Center',
+      interested: 12,
+      imageUrl:
+        'https://images.unsplash.com/photo-1552196563-55cd4e45efb3?auto=format&fit=crop&w=1200&q=80'
+    },
+    {
+      id: 3,
+      name: 'Local Book Club Meeting',
+      date: '22',
+      month: 'FEB',
+      time: '6:30 PM',
+      location: 'Public Library',
+      interested: 8,
+      imageUrl:
+        'https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=1200&q=80'
+    },
+    {
+      id: 4,
+      name: 'Saturday Farmers Market',
+      date: '24',
+      month: 'FEB',
+      time: '8:00 AM',
+      location: 'Town Center',
+      interested: 124,
+      imageUrl:
+        'https://images.unsplash.com/photo-1488459716781-31db52582fe9?auto=format&fit=crop&w=1200&q=80'
+    }
+  ];
+
+  get displayedEvents(): EventItem[] {
+    if (this.showOnlyUserEvents) {
+      return this.events.filter((event) => event.createdByUser);
+    }
+
+    return this.events;
   }
 
-  closeCreateEvent() {
+  openCreateEvent(): void {
+    this.showCreateEventForm = true;
+    this.imageError = '';
+  }
+
+  closeCreateEvent(): void {
     this.showCreateEventForm = false;
     this.resetForm();
   }
 
-  resetForm() {
+  onImageUpload(event: Event): void {
+    const input = event.target as HTMLInputElement;
+
+    if (!input.files || input.files.length === 0) {
+      this.imageError = '';
+      return;
+    }
+
+    const file = input.files[0];
+
+    if (!file.type.startsWith('image/')) {
+      this.imageError = 'Please upload a valid image file.';
+      this.imagePreview = null;
+      this.newEvent.imageUrl = '';
+      return;
+    }
+
+    this.imageError = '';
+
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      this.imagePreview = reader.result as string;
+      this.newEvent.imageUrl = this.imagePreview;
+    };
+
+    reader.readAsDataURL(file);
+  }
+
+  createEvent(eventForm: NgForm): void {
+    if (eventForm.invalid || this.imageError) {
+      eventForm.control.markAllAsTouched();
+      return;
+    }
+
+    const newEventWithId: EventItem = {
+      id: Date.now(),
+      ...this.newEvent,
+      createdByUser: true
+    };
+
+    this.events = [newEventWithId, ...this.events];
+
+    this.resetForm();
+    eventForm.resetForm();
+    this.showCreateEventForm = false;
+  }
+
+  private resetForm(): void {
     this.newEvent = {
       name: '',
       date: '',
@@ -151,90 +162,6 @@ export class EventsComponent {
       imageUrl: ''
     };
     this.imagePreview = null;
-    this.imageError = null;
+    this.imageError = '';
   }
-
-  createEvent() {
-
-    const newEventWithId = {
-      id: Date.now(),
-      ...this.newEvent,
-      createdByUser: true   // 👈 important
-    };
-
-    this.events = [
-      newEventWithId,
-      ...this.events
-    ];
-
-    this.closeCreateEvent();
-
-    this.newEvent = {
-      name: '',
-      date: '',
-      month: '',
-      time: '',
-      location: '',
-      interested: 0,
-      imageUrl: 'https://images.unsplash.com/photo-1523580494863-6f3031224c94'
-    };
-    this.imagePreview = null;
-  }
-
-  get displayedEvents(): EventItem[] {
-
-    if (this.showOnlyUserEvents) {
-      return this.events.filter(event => event.createdByUser);
-    }
-
-    return this.events;
-  }
-
-
-
-
-
-  events: EventItem[] = [
-    {
-      id: 1,
-      name: 'Block Party & BBQ',
-      date: '19',
-      month: 'FEB',
-      time: '9:15 AM',
-      location: 'Willow Creek Park',
-      interested: 45,
-      imageUrl: 'https://images.unsplash.com/photo-1504754524776-8f4f37790ca0?auto=format&fit=crop&w=1200&q=80'
-    },
-    {
-      id: 2,
-      name: 'Morning Yoga in the Park',
-      date: '20',
-      month: 'FEB',
-      time: '11:00 AM',
-      location: 'Community Center',
-      interested: 12,
-      imageUrl: 'https://images.unsplash.com/photo-1552196563-55cd4e45efb3?auto=format&fit=crop&w=1200&q=80'
-    },
-    {
-      id: 3,
-      name: 'Local Book Club Meeting',
-      date: '22',
-      month: 'FEB',
-      time: '6:30 PM',
-      location: 'Public Library',
-      interested: 8,
-      imageUrl: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=1200&q=80'
-    },
-    {
-      id: 4,
-      name: 'Saturday Farmers Market',
-      date: '24',
-      month: 'FEB',
-      time: '8:00 AM',
-      location: 'Town Center',
-      interested: 124,
-      imageUrl: 'https://images.unsplash.com/photo-1488459716781-31db52582fe9?auto=format&fit=crop&w=1200&q=80'
-    }
-  ];
-
 }
