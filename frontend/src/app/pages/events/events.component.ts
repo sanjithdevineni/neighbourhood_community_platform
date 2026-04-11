@@ -29,6 +29,15 @@ export class EventsComponent {
   showOnlyUserEvents = false;
 
   imagePreview: string | null = null;
+  validationErrors = {
+    name: '',
+    date: '',
+    month: '',
+    time: '',
+    location: '',
+    image: ''
+  };
+  imageError: string | null = null;
 
   onImageUpload(event: Event) {
 
@@ -40,6 +49,13 @@ export class EventsComponent {
 
     const file = input.files[0];
 
+    if (!file.type.startsWith('image/')) {
+      this.validationErrors.image = 'Please upload a valid image file.';
+      return;
+    }
+
+    this.validationErrors.image = '';
+
     const reader = new FileReader();
 
     reader.onload = () => {
@@ -48,6 +64,60 @@ export class EventsComponent {
     };
 
     reader.readAsDataURL(file);
+  }
+  validateEventForm(): boolean {
+    let isValid = true;
+
+    this.validationErrors = {
+      name: '',
+      date: '',
+      month: '',
+      time: '',
+      location: '',
+      image: ''
+    };
+
+    if (!this.newEvent.name.trim()) {
+      this.validationErrors.name = 'Event name is required.';
+      isValid = false;
+    }
+
+    if (!this.newEvent.date.trim()) {
+      this.validationErrors.date = 'Date is required.';
+      isValid = false;
+    }
+
+    if (!this.newEvent.month.trim()) {
+      this.validationErrors.month = 'Month is required.';
+      isValid = false;
+    }
+
+    if (!this.newEvent.time.trim()) {
+      this.validationErrors.time = 'Time is required.';
+      isValid = false;
+    }
+
+    if (!this.newEvent.location.trim()) {
+      this.validationErrors.location = 'Location is required.';
+      isValid = false;
+    }
+
+    return isValid;
+  }
+
+  clearFieldError(field: keyof typeof this.validationErrors): void {
+    this.validationErrors[field] = '';
+  }
+
+  resetValidationErrors(): void {
+    this.validationErrors = {
+      name: '',
+      date: '',
+      month: '',
+      time: '',
+      location: '',
+      image: ''
+    };
   }
 
 
@@ -67,6 +137,21 @@ export class EventsComponent {
 
   closeCreateEvent() {
     this.showCreateEventForm = false;
+    this.resetForm();
+  }
+
+  resetForm() {
+    this.newEvent = {
+      name: '',
+      date: '',
+      month: '',
+      time: '',
+      location: '',
+      interested: 0,
+      imageUrl: ''
+    };
+    this.imagePreview = null;
+    this.imageError = null;
   }
 
   createEvent() {
@@ -93,6 +178,7 @@ export class EventsComponent {
       interested: 0,
       imageUrl: 'https://images.unsplash.com/photo-1523580494863-6f3031224c94'
     };
+    this.imagePreview = null;
   }
 
   get displayedEvents(): EventItem[] {
