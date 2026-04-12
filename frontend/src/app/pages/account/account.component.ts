@@ -67,4 +67,8 @@ export class AccountComponent {
     this.authService.clearAuthSession();
     void this.router.navigate(['/login']);
   }
+
+  onBackToHome(): void {
+    void this.router.navigate(['/']);
+  }
 }
