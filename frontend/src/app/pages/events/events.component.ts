@@ -39,7 +39,7 @@ export class EventsComponent {
   };
 
   events: EventItem[] = [
-    {
+   /* {
       id: 1,
       name: 'Block Party & BBQ',
       date: '19',
@@ -82,7 +82,7 @@ export class EventsComponent {
       interested: 124,
       imageUrl:
         'https://images.unsplash.com/photo-1488459716781-31db52582fe9?auto=format&fit=crop&w=1200&q=80'
-    }
+    }*/
   ];
 
   get displayedEvents(): EventItem[] {
