@@ -297,6 +297,27 @@
   border-radius: 8px;
 }
 
+.event-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.delete-btn {
+  padding: 10px 14px;
+  border: none;
+  border-radius: 12px;
+  background: #fee2e2;
+  color: #b91c1c;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.delete-btn:hover {
+  background: #fecaca;
+}
+
 @media (max-width: 1024px) {
   .events-grid {
     grid-template-columns: repeat(2, 1fr);

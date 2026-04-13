@@ -38,8 +38,22 @@ export class EventsComponent {
     imageUrl: ''
   };
 
+  deleteEvent(id: number): void {
+    const confirmDelete = confirm('Are you sure you want to delete this event?');
+
+    if (!confirmDelete) {
+      return;
+    }
+
+    this.events = this.events.filter(event => event.id !== id);
+  }
+
+
+
+
+
   events: EventItem[] = [
-    {
+    /* {
       id: 1,
       name: 'Block Party & BBQ',
       date: '19',
@@ -80,9 +94,8 @@ export class EventsComponent {
       time: '8:00 AM',
       location: 'Town Center',
       interested: 124,
-      imageUrl:
-        'https://images.unsplash.com/photo-1488459716781-31db52582fe9?auto=format&fit=crop&w=1200&q=80'
-    }
+      imageUrl: 'https://images.unsplash.com/photo-1488459716781-31db52582fe9?auto=format&fit=crop&w=1200&q=80'
+    } */
   ];
 
   get displayedEvents(): EventItem[] {
