@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, NgForm } from '@angular/forms';
 
 interface EventItem {
   id: number;
@@ -17,39 +17,16 @@ interface EventItem {
 @Component({
   selector: 'app-events',
   standalone: true,
-  imports: [CommonModule, FormsModule],  // 👈 ADD THIS
+  imports: [CommonModule, FormsModule],
   templateUrl: './events.component.html',
   styleUrl: './events.component.css'
 })
-
 export class EventsComponent {
-
   showCreateEventForm = false;
-
   showOnlyUserEvents = false;
 
   imagePreview: string | null = null;
-
-  onImageUpload(event: Event) {
-
-    const input = event.target as HTMLInputElement;
-
-    if (!input.files || input.files.length === 0) {
-      return;
-    }
-
-    const file = input.files[0];
-
-    const reader = new FileReader();
-
-    reader.onload = () => {
-      this.imagePreview = reader.result as string;
-      this.newEvent.imageUrl = this.imagePreview;
-    };
-
-    reader.readAsDataURL(file);
-  }
-
+  imageError = '';
 
   newEvent = {
     name: '',
@@ -127,7 +104,8 @@ export class EventsComponent {
       time: '9:15 AM',
       location: 'Willow Creek Park',
       interested: 45,
-      imageUrl: 'https://images.unsplash.com/photo-1504754524776-8f4f37790ca0?auto=format&fit=crop&w=1200&q=80'
+      imageUrl:
+        'https://images.unsplash.com/photo-1504754524776-8f4f37790ca0?auto=format&fit=crop&w=1200&q=80'
     },
     {
       id: 2,
@@ -137,7 +115,8 @@ export class EventsComponent {
       time: '11:00 AM',
       location: 'Community Center',
       interested: 12,
-      imageUrl: 'https://images.unsplash.com/photo-1552196563-55cd4e45efb3?auto=format&fit=crop&w=1200&q=80'
+      imageUrl:
+        'https://images.unsplash.com/photo-1552196563-55cd4e45efb3?auto=format&fit=crop&w=1200&q=80'
     },
     {
       id: 3,
@@ -147,7 +126,8 @@ export class EventsComponent {
       time: '6:30 PM',
       location: 'Public Library',
       interested: 8,
-      imageUrl: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=1200&q=80'
+      imageUrl:
+        'https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=1200&q=80'
     },
     {
       id: 4,
@@ -161,4 +141,83 @@ export class EventsComponent {
     } */
   ];
 
+  get displayedEvents(): EventItem[] {
+    if (this.showOnlyUserEvents) {
+      return this.events.filter((event) => event.createdByUser);
+    }
+
+    return this.events;
+  }
+
+  openCreateEvent(): void {
+    this.showCreateEventForm = true;
+    this.imageError = '';
+  }
+
+  closeCreateEvent(): void {
+    this.showCreateEventForm = false;
+    this.resetForm();
+  }
+
+  onImageUpload(event: Event): void {
+    const input = event.target as HTMLInputElement;
+
+    if (!input.files || input.files.length === 0) {
+      this.imageError = '';
+      return;
+    }
+
+    const file = input.files[0];
+
+    if (!file.type.startsWith('image/')) {
+      this.imageError = 'Please upload a valid image file.';
+      this.imagePreview = null;
+      this.newEvent.imageUrl = '';
+      return;
+    }
+
+    this.imageError = '';
+
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      this.imagePreview = reader.result as string;
+      this.newEvent.imageUrl = this.imagePreview;
+    };
+
+    reader.readAsDataURL(file);
+  }
+
+  createEvent(eventForm: NgForm): void {
+    if (eventForm.invalid || this.imageError) {
+      eventForm.control.markAllAsTouched();
+      return;
+    }
+
+    const newEventWithId: EventItem = {
+      id: Date.now(),
+      ...this.newEvent,
+      createdByUser: true
+    };
+
+    this.events = [newEventWithId, ...this.events];
+
+    this.resetForm();
+    eventForm.resetForm();
+    this.showCreateEventForm = false;
+  }
+
+  private resetForm(): void {
+    this.newEvent = {
+      name: '',
+      date: '',
+      month: '',
+      time: '',
+      location: '',
+      interested: 0,
+      imageUrl: ''
+    };
+    this.imagePreview = null;
+    this.imageError = '';
+  }
 }
