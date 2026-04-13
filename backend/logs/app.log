@@ -9,3 +9,24 @@
 {"time":"2026-03-23T17:49:55.9165176-07:00","level":"INFO","msg":"User logged in successfully","user_id":1,"email":"haswanth@gmail.com"}
 {"time":"2026-03-23T17:49:55.917621-07:00","level":"INFO","msg":"HTTP Request","method":"POST","path":"/api/login","status":200,"latency_ms":60,"client_ip":"::1","user_agent":"Mozilla/5.0 (Windows NT; Windows NT 10.0; en-IN) WindowsPowerShell/5.1.26100.7920"}
 {"time":"2026-03-23T17:58:09.238196-07:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/health","status":200,"latency_ms":0,"client_ip":"::1","user_agent":"Mozilla/5.0 (Windows NT; Windows NT 10.0; en-IN) WindowsPowerShell/5.1.26100.7920"}
+{"time":"2026-03-25T17:03:11.0420833-04:00","level":"INFO","msg":"Logger initialized","log_file":"logs\\app.log"}
+{"time":"2026-03-25T17:03:11.0432063-04:00","level":"INFO","msg":"Configuration loaded","port":":8080","db_name":"community.db","token_expiry":"24h0m0s","frontend_url":"http://localhost:4200"}
+{"time":"2026-03-25T17:03:11.0454941-04:00","level":"INFO","msg":"Database connected successfully","db_name":"community.db"}
+{"time":"2026-03-25T17:03:11.0454941-04:00","level":"INFO","msg":"Database connected successfully"}
+{"time":"2026-03-25T17:03:11.0483388-04:00","level":"INFO","msg":"Server listening on :8080"}
+{"time":"2026-03-25T17:03:11.0489567-04:00","level":"INFO","msg":"Server starting","port":":8080"}
+{"time":"2026-03-25T17:03:20.4176056-04:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/health","status":200,"latency_ms":0,"client_ip":"::1","user_agent":"curl/8.18.0"}
+{"time":"2026-03-25T17:04:17.1749363-04:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/health","status":200,"latency_ms":0,"client_ip":"::1","user_agent":"curl/8.18.0"}
+{"time":"2026-03-25T17:05:21.8116877-04:00","level":"INFO","msg":"Shutdown signal received, stopping server..."}
+{"time":"2026-03-25T17:05:21.812733-04:00","level":"INFO","msg":"Server stopped."}
+{"time":"2026-03-25T17:05:21.8132733-04:00","level":"INFO","msg":"Database connection closed."}
+{"time":"2026-03-25T17:08:59.5233814-04:00","level":"INFO","msg":"Logger initialized","log_file":"logs\\app.log"}
+{"time":"2026-03-25T17:08:59.5238933-04:00","level":"INFO","msg":"Configuration loaded","port":":8080","db_name":"community.db","token_expiry":"24h0m0s","frontend_url":"http://localhost:4200"}
+{"time":"2026-03-25T17:08:59.5254876-04:00","level":"INFO","msg":"Database connected successfully","db_name":"community.db"}
+{"time":"2026-03-25T17:08:59.5254876-04:00","level":"INFO","msg":"Database connected successfully"}
+{"time":"2026-03-25T17:08:59.5276553-04:00","level":"INFO","msg":"Server listening on :8080"}
+{"time":"2026-03-25T17:08:59.5276553-04:00","level":"INFO","msg":"Server starting","port":":8080"}
+{"time":"2026-03-25T17:09:33.0715444-04:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/health","status":200,"latency_ms":0,"client_ip":"::1","user_agent":"Mozilla/5.0 (Windows NT; Windows NT 10.0; en-IN) WindowsPowerShell/5.1.26100.7920"}
+{"time":"2026-03-25T17:09:55.0148044-04:00","level":"INFO","msg":"User logged in successfully","user_id":1,"email":"haswanth@gmail.com"}
+{"time":"2026-03-25T17:09:55.0148044-04:00","level":"INFO","msg":"HTTP Request","method":"POST","path":"/api/login","status":200,"latency_ms":57,"client_ip":"::1","user_agent":"Mozilla/5.0 (Windows NT; Windows NT 10.0; en-IN) WindowsPowerShell/5.1.26100.7920"}
+{"time":"2026-03-25T17:13:43.2250401-04:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/health","status":200,"latency_ms":8,"client_ip":"::1","user_agent":"curl/8.18.0"}

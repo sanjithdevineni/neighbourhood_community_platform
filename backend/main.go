@@ -32,12 +32,15 @@ func main() {
 	defer database.CloseDatabase()
 
 	// Auto migrate models
-	if err := database.DB.AutoMigrate(&models.User{}, &models.Announcement{}); err != nil {
+	if err := database.DB.AutoMigrate(&models.User{}, &models.Announcement{}, &models.Event{}); err != nil {
 		log.Fatalf("AutoMigrate failed: %v", err)
 	}
 
 	// Initialize router and register routes
 	router := routes.SetupRouter()
+
+	// Serve uploaded event images as static files
+	router.Static("/uploads", "./uploads")
 
 	// Apply middleware
 	router.Use(middleware.CORSMiddleware())
