@@ -140,14 +140,24 @@
         <div class="share-icon">⤴</div>
       </div>
 
-      <div class="event-content">
-        <h3>{{ event.name }}</h3>
-        <p class="time">{{ event.time }}</p>
-        <p class="location">{{ event.location }}</p>
-        <p class="interested">{{ event.interested }} neighbors interested</p>
+    <div class="event-content">
+      <h3>{{ event.name }}</h3>
+      <p class="time">{{ event.time }}</p>
+      <p class="location">{{ event.location }}</p>
+      <p class="interested">{{ event.interested }} neighbors interested</p>
 
+      <div class="event-actions">
         <button class="interest-btn">+ Interested?</button>
+
+        <button
+          *ngIf="event.createdByUser"
+          type="button"
+          class="delete-btn"
+          (click)="deleteEvent(event.id)">
+          Delete
+        </button>
       </div>
+    </div>
 
     </div>
 
