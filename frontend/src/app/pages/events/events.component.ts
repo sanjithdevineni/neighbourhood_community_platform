@@ -109,7 +109,7 @@ export class EventsComponent {
 
 
   events: EventItem[] = [
-    {
+    /* {
       id: 1,
       name: 'Block Party & BBQ',
       date: '19',
