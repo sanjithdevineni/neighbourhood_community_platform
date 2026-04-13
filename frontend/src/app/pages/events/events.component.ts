@@ -48,49 +48,6 @@ export class EventsComponent {
     this.events = this.events.filter(event => event.id !== id);
   }
 
-  openCreateEvent() {
-    this.showCreateEventForm = true;
-  }
-
-  closeCreateEvent() {
-    this.showCreateEventForm = false;
-  }
-
-  createEvent() {
-
-    const newEventWithId = {
-      id: Date.now(),
-      ...this.newEvent,
-      createdByUser: true   // 👈 important
-    };
-
-    this.events = [
-      newEventWithId,
-      ...this.events
-    ];
-
-    this.closeCreateEvent();
-
-    this.newEvent = {
-      name: '',
-      date: '',
-      month: '',
-      time: '',
-      location: '',
-      interested: 0,
-      imageUrl: 'https://images.unsplash.com/photo-1523580494863-6f3031224c94'
-    };
-  }
-
-  get displayedEvents(): EventItem[] {
-
-    if (this.showOnlyUserEvents) {
-      return this.events.filter(event => event.createdByUser);
-    }
-
-    return this.events;
-  }
-
 
 
 
