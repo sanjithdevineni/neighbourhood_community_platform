@@ -8,7 +8,15 @@
 
   <main class="account-main">
     <section class="account-shell" aria-labelledby="account-title">
-      <h1 id="account-title">Account Settings</h1>
+      <div class="heading-row">
+        <button type="button" class="home-btn" (click)="onBackToHome()">
+          <span class="material-icons" aria-hidden="true">west</span>
+          Back to Home
+        </button>
+
+        <h1 id="account-title">Account Settings</h1>
+      </div>
+
       <p class="subheading">Manage your account details and preferences</p>
 
       <section class="card profile-card">

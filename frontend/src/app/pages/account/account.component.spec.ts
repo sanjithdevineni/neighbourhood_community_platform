@@ -70,6 +70,23 @@ describe('AccountComponent', () => {
     expect(compiled.textContent).toContain('Tell us something about yourself!');
   });
 
+  it('should render back to home button and navigate home on click', () => {
+    const fixture = TestBed.createComponent(AccountComponent);
+    fixture.detectChanges();
+
+    const router = TestBed.inject(Router);
+    const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+    const compiled = fixture.nativeElement as HTMLElement;
+    const homeButton = compiled.querySelector('.home-btn') as HTMLButtonElement;
+
+    expect(homeButton).not.toBeNull();
+    expect(homeButton.textContent).toContain('Back to Home');
+
+    homeButton.click();
+
+    expect(navigateSpy).toHaveBeenCalledWith(['/']);
+  });
+
   it('should clear auth session and navigate to login on logout', async () => {
     const fixture = TestBed.createComponent(AccountComponent);
     const component = fixture.componentInstance;
