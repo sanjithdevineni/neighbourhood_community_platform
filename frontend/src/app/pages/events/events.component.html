@@ -9,7 +9,7 @@
     <div class="header-actions">
       <button
         class="create-event-btn"
-        *ngIf="displayedEvents.length > 0"
+        *ngIf="events.length > 0"
         (click)="openCreateEvent()">
         Create an event
       </button>
@@ -196,7 +196,17 @@
           <p class="location">{{ event.location }}</p>
           <p class="interested">{{ event.interested }} neighbors interested</p>
 
-          <button class="interest-btn">+ Interested?</button>
+          <div class="event-actions">
+            <button class="interest-btn">+ Interested?</button>
+
+            <button
+              *ngIf="event.createdByUser"
+              type="button"
+              class="delete-btn"
+              (click)="deleteEvent(event.id)">
+              Delete
+            </button>
+          </div>
         </div>
 
       </div>

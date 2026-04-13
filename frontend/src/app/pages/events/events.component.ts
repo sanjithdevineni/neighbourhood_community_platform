@@ -82,7 +82,7 @@ export class EventsComponent {
       interested: 124,
       imageUrl:
         'https://images.unsplash.com/photo-1488459716781-31db52582fe9?auto=format&fit=crop&w=1200&q=80'
-    }*/
+    } */
   ];
 
   get displayedEvents(): EventItem[] {
@@ -149,6 +149,16 @@ export class EventsComponent {
     this.resetForm();
     eventForm.resetForm();
     this.showCreateEventForm = false;
+  }
+
+  deleteEvent(id: number): void {
+    const confirmDelete = confirm('Are you sure you want to delete this event?');
+
+    if (!confirmDelete) {
+      return;
+    }
+
+    this.events = this.events.filter(event => event.id !== id);
   }
 
   private resetForm(): void {
