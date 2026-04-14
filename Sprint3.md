@@ -2,7 +2,7 @@
 
 # Sprint 3 Demo Video
 
-Sprint 3 Demo Video Link - TODO
+[Sprint 3 Demo Video Link](https://youtu.be/WxU0e8vZE10)
 
 # Frontend – Sprint 3 Completed Work
 
