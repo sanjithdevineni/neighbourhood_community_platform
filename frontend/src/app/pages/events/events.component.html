@@ -7,17 +7,17 @@
     </div>
 
     <div class="header-actions">
-      <button class="create-event-btn" (click)="openCreateEvent()">
+      <button
+        class="create-event-btn"
+        *ngIf="events.length > 0"
+        (click)="openCreateEvent()">
         Create an event
       </button>
+
       <span class="your-events"
-            (click)="showOnlyUserEvents = !showOnlyUserEvents">
+                (click)="showOnlyUserEvents = !showOnlyUserEvents">
         {{ showOnlyUserEvents ? 'All events' : 'Your events' }}
       </span>
-      <p *ngIf="showOnlyUserEvents && displayedEvents.length === 0">
-        You haven't created any events yet.
-      </p>
-
     </div>
   </div>
 
@@ -27,53 +27,88 @@
 
       <h2>Create New Event</h2>
 
-      <form (ngSubmit)="createEvent()">
+      <form (ngSubmit)="createEvent(eventForm)" #eventForm="ngForm">
 
-        <input
-          type="text"
-          placeholder="Event name"
-          [(ngModel)]="newEvent.name"
-          name="name"
-          required
-        />
+        <div class="form-group">
+          <input
+            type="text"
+            placeholder="Event name"
+            [(ngModel)]="newEvent.name"
+            name="name"
+            #name="ngModel"
+            required
+          />
+          <div *ngIf="name.invalid && (name.dirty || name.touched)" class="error-message">
+            Event name is required.
+          </div>
+        </div>
 
-        <input
-          type="text"
-          placeholder="Date (e.g., 25)"
-          [(ngModel)]="newEvent.date"
-          name="date"
-          required
-        />
+        <div class="form-group">
+          <input
+            type="text"
+            placeholder="Date (e.g., 25)"
+            [(ngModel)]="newEvent.date"
+            name="date"
+            #date="ngModel"
+            required
+          />
+          <div *ngIf="date.invalid && (date.dirty || date.touched)" class="error-message">
+            Date is required.
+          </div>
+        </div>
 
-        <input
-          type="text"
-          placeholder="Month (e.g., MAR)"
-          [(ngModel)]="newEvent.month"
-          name="month"
-          required
-        />
+        <div class="form-group">
+          <input
+            type="text"
+            placeholder="Month (e.g., MAR)"
+            [(ngModel)]="newEvent.month"
+            name="month"
+            #month="ngModel"
+            required
+          />
+          <div *ngIf="month.invalid && (month.dirty || month.touched)" class="error-message">
+            Month is required.
+          </div>
+        </div>
 
-        <input
-          type="text"
-          placeholder="Time (e.g., 5:00 PM)"
-          [(ngModel)]="newEvent.time"
-          name="time"
-          required
-        />
+        <div class="form-group">
+          <input
+            type="text"
+            placeholder="Time (e.g., 5:00 PM)"
+            [(ngModel)]="newEvent.time"
+            name="time"
+            #time="ngModel"
+            required
+          />
+          <div *ngIf="time.invalid && (time.dirty || time.touched)" class="error-message">
+            Time is required.
+          </div>
+        </div>
 
-        <input
-          type="text"
-          placeholder="Location"
-          [(ngModel)]="newEvent.location"
-          name="location"
-          required
-        />
+        <div class="form-group">
+          <input
+            type="text"
+            placeholder="Location"
+            [(ngModel)]="newEvent.location"
+            name="location"
+            #location="ngModel"
+            required
+          />
+          <div *ngIf="location.invalid && (location.dirty || location.touched)" class="error-message">
+            Location is required.
+          </div>
+        </div>
 
-        <input
-          type="file"
-          accept="image/*"
-          (change)="onImageUpload($event)"
-        />
+        <div class="form-group">
+          <input
+            type="file"
+            accept="image/*"
+            (change)="onImageUpload($event)"
+          />
+          <div *ngIf="imageError" class="error-message">
+            {{ imageError }}
+          </div>
+        </div>
 
         <div *ngIf="imagePreview" class="image-preview">
           <img [src]="imagePreview" alt="Preview" />
@@ -82,7 +117,7 @@
 
         <div class="modal-actions">
           <button type="button" (click)="closeCreateEvent()">Cancel</button>
-          <button type="submit">Create</button>
+          <button type="submit" [disabled]="eventForm.invalid || !!imageError">Create</button>
         </div>
 
       </form>
@@ -91,7 +126,7 @@
   </div>
 
   <!-- EVENTS GRID -->
-  <div class="events-grid">
+  <!--<div class="events-grid">
   <div class="event-card" *ngFor="let event of displayedEvents">
 
       <div class="image-wrapper">
@@ -105,18 +140,28 @@
         <div class="share-icon">⤴</div>
       </div>
 
-      <div class="event-content">
-        <h3>{{ event.name }}</h3>
-        <p class="time">{{ event.time }}</p>
-        <p class="location">{{ event.location }}</p>
-        <p class="interested">{{ event.interested }} neighbors interested</p>
+    <div class="event-content">
+      <h3>{{ event.name }}</h3>
+      <p class="time">{{ event.time }}</p>
+      <p class="location">{{ event.location }}</p>
+      <p class="interested">{{ event.interested }} neighbors interested</p>
 
+      <div class="event-actions">
         <button class="interest-btn">+ Interested?</button>
+
+        <button
+          *ngIf="event.createdByUser"
+          type="button"
+          class="delete-btn"
+          (click)="deleteEvent(event.id)">
+          Delete
+        </button>
       </div>
+    </div>
 
     </div>
 
-    <!-- Host Event Placeholder Card -->
+    &lt;!&ndash; Host Event Placeholder Card &ndash;&gt;
     <div class="event-card host-card" (click)="openCreateEvent()">
       <div class="host-content">
         <div class="plus-icon">+</div>
@@ -125,6 +170,77 @@
       </div>
     </div>
 
+  </div>-->
+
+  <!-- EVENTS GRID WITH EMPTY STATE -->
+  <div *ngIf="displayedEvents.length > 0; else emptyState">
+
+    <div class="events-grid">
+
+      <div class="event-card" *ngFor="let event of displayedEvents">
+
+        <div class="image-wrapper">
+          <img [src]="event.imageUrl" [alt]="event.name">
+
+          <div class="date-badge">
+            <span class="day">{{ event.date }}</span>
+            <span class="month">{{ event.month }}</span>
+          </div>
+
+          <div class="share-icon">⤴</div>
+        </div>
+
+        <div class="event-content">
+          <h3>{{ event.name }}</h3>
+          <p class="time">{{ event.time }}</p>
+          <p class="location">{{ event.location }}</p>
+          <p class="interested">{{ event.interested }} neighbors interested</p>
+
+          <div class="event-actions">
+            <button class="interest-btn">+ Interested?</button>
+
+            <button
+              *ngIf="event.createdByUser"
+              type="button"
+              class="delete-btn"
+              (click)="deleteEvent(event.id)">
+              Delete
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Host Event Card -->
+      <div class="event-card host-card" (click)="openCreateEvent()">
+        <div class="host-content">
+          <div class="plus-icon">+</div>
+          <h3>Host an event</h3>
+          <p>Bring your neighbors together for something fun!</p>
+        </div>
+      </div>
+
+    </div>
+
   </div>
+
+  <!-- EMPTY STATE -->
+  <ng-template #emptyState>
+    <div class="empty-state">
+      <h3>
+        {{ showOnlyUserEvents ? 'No events created yet' : 'No events available' }}
+      </h3>
+
+      <p>
+        {{ showOnlyUserEvents
+        ? "You haven't created any events yet. Start by creating one."
+        : "There are no events to display right now." }}
+      </p>
+
+      <button class="create-event-btn" (click)="openCreateEvent()">
+        Create an event
+      </button>
+    </div>
+  </ng-template>
 
 </section>
