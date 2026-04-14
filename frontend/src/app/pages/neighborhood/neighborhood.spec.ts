@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { vi } from 'vitest';
 import { NeighborhoodComponent } from './neighborhood.component';
 
 describe('NeighborhoodComponent', () => {
@@ -36,5 +37,35 @@ describe('NeighborhoodComponent', () => {
     expect(compiled.textContent).toContain('Restaurants');
     expect(compiled.textContent).toContain('Shopping');
     expect(items.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it('should switch visible items when category changes', () => {
+    const fixture = TestBed.createComponent(NeighborhoodComponent);
+    const component = fixture.componentInstance;
+
+    expect(component.selectedCategory).toBe('Landmarks');
+
+    component.selectCategory('Restaurants');
+
+    expect(component.selectedCategory).toBe('Restaurants');
+    expect(component.visibleItems.some((item) => item.name.includes('Sushi'))).toBe(true);
+  });
+
+  it('should focus a selected item on the map when marker exists', () => {
+    const fixture = TestBed.createComponent(NeighborhoodComponent);
+    const component = fixture.componentInstance as any;
+    const restaurant = component.categoryData.Restaurants[0];
+    const flyToSpy = vi.fn();
+    const removeSpy = vi.fn();
+    const openPopupSpy = vi.fn();
+
+    component.map = { flyTo: flyToSpy, remove: removeSpy };
+    component.categoryMarkers.set(restaurant.name, { openPopup: openPopupSpy });
+
+    component.focusItem(restaurant);
+
+    expect(component.activeItemName).toBe(restaurant.name);
+    expect(flyToSpy).toHaveBeenCalled();
+    expect(openPopupSpy).toHaveBeenCalled();
   });
 });
