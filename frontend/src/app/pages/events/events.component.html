@@ -33,12 +33,12 @@
           <input
             type="text"
             placeholder="Event name"
-            [(ngModel)]="newEvent.name"
-            name="name"
-            #name="ngModel"
+            [(ngModel)]="newEvent.title"
+            name="title"
+            #title="ngModel"
             required
           />
-          <div *ngIf="name.invalid && (name.dirty || name.touched)" class="error-message">
+          <div *ngIf="title.invalid && (title.dirty || title.touched)" class="error-message">
             Event name is required.
           </div>
         </div>
@@ -137,8 +137,8 @@
           <input
             type="text"
             placeholder="Event name"
-            [(ngModel)]="editEventData.name"
-            name="name"
+            [(ngModel)]="editEventData.title"
+            name="title"
             #editName="ngModel"
             required
           />
@@ -284,7 +284,7 @@
       <div class="event-card" *ngFor="let event of displayedEvents">
 
         <div class="image-wrapper">
-          <img [src]="event.imageUrl" [alt]="event.name">
+          <img [src]="event.imageUrl" [alt]="event.title">
 
           <div class="date-badge">
             <span class="day">{{ event.date }}</span>
@@ -295,7 +295,7 @@
         </div>
 
         <div class="event-content">
-          <h3>{{ event.name }}</h3>
+          <h3>{{ event.title }}</h3>
           <p class="time">{{ event.time }}</p>
           <p class="location">{{ event.location }}</p>
           <p class="interested">{{ event.interested }} neighbors interested</p>
