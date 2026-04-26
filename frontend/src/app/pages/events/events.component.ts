@@ -23,12 +23,24 @@ interface EventItem {
 })
 export class EventsComponent {
   showCreateEventForm = false;
+  showEditEventForm = false;
+  editingEventId: number | null = null;
   showOnlyUserEvents = false;
 
   imagePreview: string | null = null;
   imageError = '';
 
   newEvent = {
+    name: '',
+    date: '',
+    month: '',
+    time: '',
+    location: '',
+    interested: 0,
+    imageUrl: ''
+  };
+
+  editEventData = {
     name: '',
     date: '',
     month: '',
@@ -104,6 +116,64 @@ export class EventsComponent {
     }
 
     return this.events;
+  }
+
+  openEditEvent(event: EventItem): void {
+    this.editingEventId = event.id;
+    this.editEventData = { ...event };
+    this.showEditEventForm = true;
+    this.imageError = '';
+    this.imagePreview = event.imageUrl || null;
+  }
+
+  closeEditEvent(): void {
+    this.showEditEventForm = false;
+    this.editingEventId = null;
+    this.resetForm();
+  }
+
+  onEditImageUpload(event: Event): void {
+    const input = event.target as HTMLInputElement;
+
+    if (!input.files || input.files.length === 0) {
+      this.imageError = '';
+      return;
+    }
+
+    const file = input.files[0];
+
+    if (!file.type.startsWith('image/')) {
+      this.imageError = 'Please upload a valid image file.';
+      this.imagePreview = null;
+      this.editEventData.imageUrl = '';
+      return;
+    }
+
+    this.imageError = '';
+
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      this.imagePreview = reader.result as string;
+      this.editEventData.imageUrl = this.imagePreview;
+    };
+
+    reader.readAsDataURL(file);
+  }
+
+  saveEditEvent(editForm: NgForm): void {
+    if (editForm.invalid || this.imageError || !this.editingEventId) {
+      editForm.control.markAllAsTouched();
+      return;
+    }
+
+    this.events = this.events.map((e) => 
+      e.id === this.editingEventId 
+        ? { ...e, ...this.editEventData }
+        : e
+    );
+
+    this.closeEditEvent();
   }
 
   openCreateEvent(): void {
