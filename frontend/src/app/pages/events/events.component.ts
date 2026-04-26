@@ -1,18 +1,9 @@
-import { Component } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
-
-interface EventItem {
-  id: number;
-  name: string;
-  date: string;
-  month: string;
-  time: string;
-  location: string;
-  interested: number;
-  imageUrl: string;
-  createdByUser?: boolean;
-}
+import { EventService, EventItem } from '../../services/event.service';
+import { AuthService } from '../../services/auth.service';
+import { finalize } from 'rxjs';
 
 @Component({
   selector: 'app-events',
@@ -21,17 +12,54 @@ interface EventItem {
   templateUrl: './events.component.html',
   styleUrl: './events.component.css'
 })
-export class EventsComponent {
+export class EventsComponent implements OnInit {
   showCreateEventForm = false;
   showEditEventForm = false;
   editingEventId: number | null = null;
   showOnlyUserEvents = false;
+  isLoading = false;
+  isSubmitting = false;
+
+  currentUserId = '';
+
+  constructor(
+    private readonly eventService: EventService,
+    private readonly authService: AuthService,
+    private readonly cdr: ChangeDetectorRef
+  ) {}
+
+  ngOnInit(): void {
+    const user = this.authService.getStoredUser();
+    if (user) {
+      this.currentUserId = `${user.id}`;
+    }
+    this.fetchEvents();
+  }
+
+  fetchEvents(): void {
+    this.isLoading = true;
+    this.eventService.getEvents()
+      .pipe(finalize(() => {
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      }))
+      .subscribe({
+        next: (data) => {
+          this.events = data.map(event => ({
+            ...event,
+            createdByUser: event.author === this.currentUserId
+          }));
+        },
+        error: (err) => console.error('Failed to load events:', err)
+      });
+  }
 
   imagePreview: string | null = null;
+  imageFile: File | null = null;
   imageError = '';
 
   newEvent = {
-    name: '',
+    title: '',
     date: '',
     month: '',
     time: '',
@@ -40,8 +68,8 @@ export class EventsComponent {
     imageUrl: ''
   };
 
-  editEventData = {
-    name: '',
+  editEventData: Partial<EventItem> = {
+    title: '',
     date: '',
     month: '',
     time: '',
@@ -149,7 +177,7 @@ export class EventsComponent {
       return;
     }
 
-    this.imageError = '';
+    this.imageFile = file;
 
     const reader = new FileReader();
 
@@ -203,7 +231,7 @@ export class EventsComponent {
       return;
     }
 
-    this.imageError = '';
+    this.imageFile = file;
 
     const reader = new FileReader();
 
@@ -216,27 +244,42 @@ export class EventsComponent {
   }
 
   createEvent(eventForm: NgForm): void {
-    if (eventForm.invalid || this.imageError) {
+    if (eventForm.invalid || this.imageError || this.isSubmitting) {
       eventForm.control.markAllAsTouched();
       return;
     }
 
-    const newEventWithId: EventItem = {
-      id: Date.now(),
-      ...this.newEvent,
-      createdByUser: true
-    };
-
-    this.events = [newEventWithId, ...this.events];
-
-    this.resetForm();
-    eventForm.resetForm();
-    this.showCreateEventForm = false;
+    this.isSubmitting = true;
+    this.eventService.createEvent({
+      title: this.newEvent.title,
+      date: this.newEvent.date,
+      month: this.newEvent.month,
+      time: this.newEvent.time,
+      location: this.newEvent.location,
+      image: this.imageFile || undefined
+    })
+    .pipe(finalize(() => {
+      this.isSubmitting = false;
+      this.cdr.detectChanges();
+    }))
+    .subscribe({
+      next: (createdEvent) => {
+        createdEvent.createdByUser = true;
+        this.events = [createdEvent, ...this.events];
+        
+        this.resetForm();
+        eventForm.resetForm();
+        this.showCreateEventForm = false;
+      },
+      error: (err) => {
+        console.error('Failed to create event:', err);
+      }
+    });
   }
 
   private resetForm(): void {
     this.newEvent = {
-      name: '',
+      title: '',
       date: '',
       month: '',
       time: '',
@@ -245,6 +288,7 @@ export class EventsComponent {
       imageUrl: ''
     };
     this.imagePreview = null;
+    this.imageFile = null;
     this.imageError = '';
   }
 }
