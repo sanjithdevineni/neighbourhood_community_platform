@@ -97,3 +97,114 @@ func CreateEvent(c *gin.Context) {
 	slog.Info("Event created", "id", event.ID, "author", author, "title", title)
 	c.JSON(http.StatusCreated, event)
 }
+
+// UpdateEvent handles PUT requests to update an existing event.
+func UpdateEvent(c *gin.Context) {
+	id := c.Param("id")
+
+	// Parse form fields
+	title := c.PostForm("title")
+	date := c.PostForm("date")
+	eventTime := c.PostForm("time")
+	location := c.PostForm("location")
+
+	// Extract authenticated user
+	author := ""
+	if uid, exists := c.Get("userID"); exists {
+		if s, ok := uid.(string); ok && s != "" {
+			author = s
+		}
+	}
+	if author == "" {
+		utils.RespondWithError(c, utils.Unauthorized("Unable to identify event author"))
+		return
+	}
+
+	var event models.Event
+	if err := database.DB.First(&event, id).Error; err != nil {
+		utils.RespondWithError(c, utils.NotFound("Event not found"))
+		return
+	}
+
+	// Verify authorship
+	if event.Author != author {
+		utils.RespondWithError(c, utils.Forbidden("You are not authorized to update this event"))
+		return
+	}
+
+	// Update fields if provided
+	if title != "" {
+		event.Title = title
+	}
+	if date != "" {
+		event.Date = date
+	}
+	if eventTime != "" {
+		event.Time = eventTime
+	}
+	if location != "" {
+		event.Location = location
+	}
+
+	// Handle optional image upload (replace if new one provided)
+	file, err := c.FormFile("image")
+	if err == nil && file != nil {
+		uploadDir := "./uploads"
+		if mkErr := os.MkdirAll(uploadDir, os.ModePerm); mkErr != nil {
+			utils.RespondWithError(c, utils.InternalServerError("Failed to create upload directory"), "error", mkErr)
+			return
+		}
+		ext := filepath.Ext(file.Filename)
+		uniqueName := fmt.Sprintf("%d_%s%s", time.Now().UnixNano(), uuid.New().String(), ext)
+		savePath := filepath.Join(uploadDir, uniqueName)
+		if saveErr := c.SaveUploadedFile(file, savePath); saveErr != nil {
+			utils.RespondWithError(c, utils.InternalServerError("Failed to save uploaded image"), "error", saveErr)
+			return
+		}
+		event.ImageURL = "/uploads/" + uniqueName
+	}
+
+	if err := database.DB.Save(&event).Error; err != nil {
+		utils.RespondWithError(c, utils.InternalServerError("Failed to update event"), "error", err)
+		return
+	}
+
+	slog.Info("Event updated", "id", event.ID, "author", author)
+	c.JSON(http.StatusOK, event)
+}
+
+// DeleteEvent handles DELETE requests to remove an event.
+func DeleteEvent(c *gin.Context) {
+	id := c.Param("id")
+
+	author := ""
+	if uid, exists := c.Get("userID"); exists {
+		if s, ok := uid.(string); ok && s != "" {
+			author = s
+		}
+	}
+	if author == "" {
+		utils.RespondWithError(c, utils.Unauthorized("Unable to identify user"))
+		return
+	}
+
+	var event models.Event
+	if err := database.DB.First(&event, id).Error; err != nil {
+		utils.RespondWithError(c, utils.NotFound("Event not found"))
+		return
+	}
+
+	// Verify authorship
+	if event.Author != author {
+		utils.RespondWithError(c, utils.Forbidden("You are not authorized to delete this event"))
+		return
+	}
+
+	if err := database.DB.Delete(&event).Error; err != nil {
+		utils.RespondWithError(c, utils.InternalServerError("Failed to delete event"), "error", err)
+		return
+	}
+
+	slog.Info("Event deleted", "id", event.ID, "author", author)
+	c.JSON(http.StatusOK, gin.H{"message": "Event deleted successfully"})
+}
