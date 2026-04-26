@@ -182,8 +182,8 @@ export class EventsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.events = this.events.map((e) => 
-      e.id === this.editingEventId 
+    this.events = this.events.map((e) =>
+      e.id === this.editingEventId
         ? { ...e, ...this.editEventData }
         : e
     );
