@@ -15,7 +15,7 @@
       </button>
 
       <span class="your-events"
-                (click)="showOnlyUserEvents = !showOnlyUserEvents">
+            (click)="showOnlyUserEvents = !showOnlyUserEvents">
         {{ showOnlyUserEvents ? 'All events' : 'Your events' }}
       </span>
     </div>
@@ -125,6 +125,110 @@
     </div>
   </div>
 
+  <!-- ✅ EDIT EVENT MODAL -->
+  <div class="event-modal-overlay" *ngIf="showEditEventForm">
+    <div class="event-modal">
+
+      <h2>Edit Event</h2>
+
+      <form (ngSubmit)="saveEditEvent(editForm)" #editForm="ngForm">
+
+        <div class="form-group">
+          <input
+            type="text"
+            placeholder="Event name"
+            [(ngModel)]="editEventData.name"
+            name="name"
+            #editName="ngModel"
+            required
+          />
+          <div *ngIf="editName.invalid && (editName.dirty || editName.touched)" class="error-message">
+            Event name is required.
+          </div>
+        </div>
+
+        <div class="form-group">
+          <input
+            type="text"
+            placeholder="Date (e.g., 25)"
+            [(ngModel)]="editEventData.date"
+            name="date"
+            #editDate="ngModel"
+            required
+          />
+          <div *ngIf="editDate.invalid && (editDate.dirty || editDate.touched)" class="error-message">
+            Date is required.
+          </div>
+        </div>
+
+        <div class="form-group">
+          <input
+            type="text"
+            placeholder="Month (e.g., MAR)"
+            [(ngModel)]="editEventData.month"
+            name="month"
+            #editMonth="ngModel"
+            required
+          />
+          <div *ngIf="editMonth.invalid && (editMonth.dirty || editMonth.touched)" class="error-message">
+            Month is required.
+          </div>
+        </div>
+
+        <div class="form-group">
+          <input
+            type="text"
+            placeholder="Time (e.g., 5:00 PM)"
+            [(ngModel)]="editEventData.time"
+            name="time"
+            #editTime="ngModel"
+            required
+          />
+          <div *ngIf="editTime.invalid && (editTime.dirty || editTime.touched)" class="error-message">
+            Time is required.
+          </div>
+        </div>
+
+        <div class="form-group">
+          <input
+            type="text"
+            placeholder="Location"
+            [(ngModel)]="editEventData.location"
+            name="location"
+            #editLocation="ngModel"
+            required
+          />
+          <div *ngIf="editLocation.invalid && (editLocation.dirty || editLocation.touched)" class="error-message">
+            Location is required.
+          </div>
+        </div>
+
+        <div class="form-group">
+          <input
+            type="file"
+            accept="image/*"
+            (change)="onEditImageUpload($event)"
+          />
+          <div *ngIf="imageError" class="error-message">
+            {{ imageError }}
+          </div>
+        </div>
+
+        <div *ngIf="imagePreview" class="image-preview">
+          <img [src]="imagePreview" alt="Preview" />
+        </div>
+
+
+        <div class="modal-actions">
+          <button type="button" (click)="closeEditEvent()">Cancel</button>
+          <button type="submit" [disabled]="editForm.invalid || !!imageError">Save</button>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
   <!-- EVENTS GRID -->
   <!--<div class="events-grid">
   <div class="event-card" *ngFor="let event of displayedEvents">
@@ -198,6 +302,14 @@
 
           <div class="event-actions">
             <button class="interest-btn">+ Interested?</button>
+
+            <button
+              *ngIf="event.createdByUser"
+              type="button"
+              class="edit-btn"
+              (click)="openEditEvent(event)">
+              Edit
+            </button>
 
             <button
               *ngIf="event.createdByUser"
