@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"fmt"
+	"io"
 	"log/slog"
 	"net/http"
 	"os"
@@ -15,6 +16,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
+
+const MaxUploadSize = 5 * 1024 * 1024 // 5 MB
 
 // GetEvents returns all events ordered by newest first.
 func GetEvents(c *gin.Context) {
@@ -59,6 +62,30 @@ func CreateEvent(c *gin.Context) {
 	imageURL := ""
 	file, err := c.FormFile("image")
 	if err == nil && file != nil {
+		if file.Size > MaxUploadSize {
+			utils.RespondWithError(c, utils.BadRequest("Image file size exceeds the 5MB limit"))
+			return
+		}
+
+		openedFile, err := file.Open()
+		if err != nil {
+			utils.RespondWithError(c, utils.InternalServerError("Failed to open uploaded image"), "error", err)
+			return
+		}
+		defer openedFile.Close()
+
+		buffer := make([]byte, 512)
+		if _, err := openedFile.Read(buffer); err != nil && err != io.EOF {
+			utils.RespondWithError(c, utils.InternalServerError("Failed to read uploaded image"), "error", err)
+			return
+		}
+
+		contentType := http.DetectContentType(buffer)
+		if contentType != "image/jpeg" && contentType != "image/png" && contentType != "image/webp" {
+			utils.RespondWithError(c, utils.BadRequest("Invalid file type. Only JPEG, PNG, and WEBP are allowed"))
+			return
+		}
+
 		// Ensure the uploads directory exists
 		uploadDir := "./uploads"
 		if mkErr := os.MkdirAll(uploadDir, os.ModePerm); mkErr != nil {
@@ -149,6 +176,30 @@ func UpdateEvent(c *gin.Context) {
 	// Handle optional image upload (replace if new one provided)
 	file, err := c.FormFile("image")
 	if err == nil && file != nil {
+		if file.Size > MaxUploadSize {
+			utils.RespondWithError(c, utils.BadRequest("Image file size exceeds the 5MB limit"))
+			return
+		}
+
+		openedFile, err := file.Open()
+		if err != nil {
+			utils.RespondWithError(c, utils.InternalServerError("Failed to open uploaded image"), "error", err)
+			return
+		}
+		defer openedFile.Close()
+
+		buffer := make([]byte, 512)
+		if _, err := openedFile.Read(buffer); err != nil && err != io.EOF {
+			utils.RespondWithError(c, utils.InternalServerError("Failed to read uploaded image"), "error", err)
+			return
+		}
+
+		contentType := http.DetectContentType(buffer)
+		if contentType != "image/jpeg" && contentType != "image/png" && contentType != "image/webp" {
+			utils.RespondWithError(c, utils.BadRequest("Invalid file type. Only JPEG, PNG, and WEBP are allowed"))
+			return
+		}
+
 		uploadDir := "./uploads"
 		if mkErr := os.MkdirAll(uploadDir, os.ModePerm); mkErr != nil {
 			utils.RespondWithError(c, utils.InternalServerError("Failed to create upload directory"), "error", mkErr)
