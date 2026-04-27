@@ -46,6 +46,36 @@
   gap: 24px;
 }
 
+.events-empty-note {
+  margin: 0 0 14px;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.status-state {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 24px;
+  text-align: center;
+  max-width: 500px;
+  margin: 24px auto 0;
+}
+
+.loading-state {
+  color: #374151;
+}
+
+.error-state {
+  border-color: #fecaca;
+  background: #fff7f7;
+}
+
+.error-state p {
+  color: #b91c1c;
+  margin: 0 0 14px 0;
+}
+
 .event-card {
   background: #ffffff;
   border-radius: 16px;
