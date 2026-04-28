@@ -5,7 +5,7 @@ import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { EventsComponent } from './events.component';
 import { AuthService } from '../../services/auth.service';
-import { CommunityEvent, EventService } from '../../services/event.service';
+import { CommunityEvent, CreateEventPayload, EventService } from '../../services/event.service';
 
 describe('EventsComponent', () => {
   let component: EventsComponent;
@@ -13,8 +13,20 @@ describe('EventsComponent', () => {
   let routeQueryParamMap$: BehaviorSubject<ReturnType<typeof convertToParamMap>>;
   const eventServiceStub: {
     getEvents: () => Observable<CommunityEvent[]>;
+    createEvent: (payload: CreateEventPayload) => Observable<CommunityEvent>;
   } = {
-    getEvents: () => of([])
+    getEvents: () => of([]),
+    createEvent: (payload: CreateEventPayload) =>
+      of({
+        id: 999,
+        title: payload.title,
+        date: payload.date,
+        time: payload.time,
+        location: payload.location,
+        image_url: '',
+        author: '1',
+        created_at: '2026-04-10T14:23:15Z'
+      })
   };
   const authServiceStub: {
     getStoredUser: () => { id: number; name: string; email: string; created_at: string } | null;
@@ -24,6 +36,17 @@ describe('EventsComponent', () => {
 
   beforeEach(async () => {
     eventServiceStub.getEvents = () => of([]);
+    eventServiceStub.createEvent = (payload: CreateEventPayload) =>
+      of({
+        id: 999,
+        title: payload.title,
+        date: payload.date,
+        time: payload.time,
+        location: payload.location,
+        image_url: '',
+        author: '1',
+        created_at: '2026-04-10T14:23:15Z'
+      });
     authServiceStub.getStoredUser = () => null;
     routeQueryParamMap$ = new BehaviorSubject(convertToParamMap({ refresh: '0' }));
 
@@ -115,6 +138,22 @@ describe('EventsComponent', () => {
     expect(component.eventsError).toBe('Unable to reach the backend. Make sure the API is running.');
   });
 
+  it('should show loading state while events are being fetched', () => {
+    eventServiceStub.getEvents = () =>
+      new Observable<CommunityEvent[]>(() => {
+        return () => undefined;
+      });
+
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const loadingState = compiled.querySelector('.loading-state');
+    const hostCard = compiled.querySelector('.host-card');
+
+    expect(loadingState?.textContent).toContain('Loading events...');
+    expect(hostCard).toBeNull();
+  });
+
   it('should show only host card when there are no events', () => {
     fixture.detectChanges();
 
@@ -199,7 +238,47 @@ describe('EventsComponent', () => {
     expect(emptyNote).toBeNull();
   });
 
-  it('should not render past events from the API', () => {
+  it('should show all events in default view including user-created ones', () => {
+    authServiceStub.getStoredUser = () => ({
+      id: 2,
+      name: 'Jane Doe',
+      email: 'jane@example.com',
+      created_at: '2026-04-01T10:00:00Z'
+    });
+    eventServiceStub.getEvents = () =>
+      of([
+        {
+          id: 1,
+          title: 'My Event',
+          date: '2099-04-20',
+          time: '7:00 AM',
+          location: 'Riverside Park',
+          image_url: '/uploads/yoga.jpg',
+          author: '2',
+          created_at: '2026-04-10T14:23:15Z'
+        },
+        {
+          id: 2,
+          title: 'Other Event',
+          date: '2099-04-21',
+          time: '8:00 AM',
+          location: 'Depot Park',
+          image_url: '/uploads/other.jpg',
+          author: '3',
+          created_at: '2026-04-10T14:23:16Z'
+        }
+      ]);
+
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const eventCards = compiled.querySelectorAll('.event-card:not(.host-card)');
+
+    expect(component.displayedEvents.length).toBe(2);
+    expect(eventCards.length).toBe(2);
+  });
+
+  it('should keep past and upcoming events from the API', () => {
     eventServiceStub.getEvents = () =>
       of([
         {
@@ -226,8 +305,9 @@ describe('EventsComponent', () => {
 
     fixture.detectChanges();
 
-    expect(component.events.length).toBe(1);
-    expect(component.events[0].name).toBe('Upcoming Event');
+    expect(component.events.length).toBe(2);
+    expect(component.events[0].name).toBe('Old Event');
+    expect(component.events[1].name).toBe('Upcoming Event');
   });
 
   it('should keep form invalid when required fields are empty', () => {
@@ -241,12 +321,32 @@ describe('EventsComponent', () => {
     expect(form.checkValidity()).toBe(false);
   });
 
-  it('should create a user event and reset the form state', () => {
+  it('should create an event via API and reset form state', () => {
+    authServiceStub.getStoredUser = () => ({
+      id: 1,
+      name: 'Jane Doe',
+      email: 'jane@example.com',
+      created_at: '2026-04-01T10:00:00Z'
+    });
+    const createEventSpy = vi.fn((payload: CreateEventPayload) =>
+      of({
+        id: 4001,
+        title: payload.title,
+        date: payload.date,
+        time: payload.time,
+        location: payload.location,
+        image_url: '/uploads/new.jpg',
+        author: '1',
+        created_at: '2026-04-10T14:23:15Z'
+      })
+    );
+    eventServiceStub.createEvent = createEventSpy;
+
+    fixture.detectChanges();
     const initialEventCount = component.events.length;
     component.newEvent = {
       name: 'Neighborhood Cleanup',
-      date: '30',
-      month: 'APR',
+      date: '2026-04-30',
       time: '10:00 AM',
       location: 'Depot Park',
       interested: 0,
@@ -260,38 +360,75 @@ describe('EventsComponent', () => {
 
     component.createEvent(mockForm as never);
 
+    expect(createEventSpy).toHaveBeenCalledTimes(1);
     expect(component.events.length).toBe(initialEventCount + 1);
     expect(component.events[0].createdByUser).toBe(true);
+    expect(component.events[0].imageUrl).toBe('/uploads/new.jpg');
     expect(component.showCreateEventForm).toBe(false);
     expect(component.newEvent.name).toBe('');
   });
 
-  it('should show delete button only for user-created events', () => {
+  it('should show create error when API event creation fails', () => {
+    eventServiceStub.createEvent = () =>
+      throwError(
+        () =>
+          new HttpErrorResponse({
+            status: 401
+          })
+      );
+
     fixture.detectChanges();
-    component.events = [
-      {
-        id: 1001,
-        name: 'User Event',
-        date: '15',
-        month: 'APR',
-        time: '5:00 PM',
-        location: 'UF Campus',
-        interested: 10,
-        imageUrl: 'https://example.com/user-event.jpg',
-        createdByUser: true
-      },
-      {
-        id: 1002,
-        name: 'Community Event',
-        date: '16',
-        month: 'APR',
-        time: '6:00 PM',
-        location: 'Downtown',
-        interested: 20,
-        imageUrl: 'https://example.com/community-event.jpg',
-        createdByUser: false
-      }
-    ];
+    component.newEvent = {
+      name: 'Neighborhood Cleanup',
+      date: '2026-04-30',
+      time: '10:00 AM',
+      location: 'Depot Park',
+      interested: 0,
+      imageUrl: ''
+    };
+    const mockForm = {
+      invalid: false,
+      control: { markAllAsTouched: () => undefined },
+      resetForm: () => undefined
+    };
+
+    component.createEvent(mockForm as never);
+
+    expect(component.createEventError).toBe('You must be logged in to create an event.');
+    expect(component.showCreateEventForm).toBe(false);
+  });
+
+  it('should show delete button only for user-created events', () => {
+    authServiceStub.getStoredUser = () => ({
+      id: 1,
+      name: 'Jane Doe',
+      email: 'jane@example.com',
+      created_at: '2026-04-01T10:00:00Z'
+    });
+    eventServiceStub.getEvents = () =>
+      of([
+        {
+          id: 1001,
+          title: 'User Event',
+          date: '2099-04-15',
+          time: '5:00 PM',
+          location: 'UF Campus',
+          image_url: 'https://example.com/user-event.jpg',
+          author: '1',
+          created_at: '2026-04-10T14:23:15Z'
+        },
+        {
+          id: 1002,
+          title: 'Community Event',
+          date: '2099-04-16',
+          time: '6:00 PM',
+          location: 'Downtown',
+          image_url: 'https://example.com/community-event.jpg',
+          author: '2',
+          created_at: '2026-04-10T14:23:16Z'
+        }
+      ]);
+
     fixture.detectChanges();
 
     const compiled = fixture.nativeElement as HTMLElement;

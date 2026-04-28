@@ -9,7 +9,6 @@
     <div class="header-actions">
       <button
         class="create-event-btn"
-        *ngIf="events.length > 0"
         (click)="openCreateEvent()">
         Create an event
       </button>
@@ -45,8 +44,7 @@
 
         <div class="form-group">
           <input
-            type="text"
-            placeholder="Date (e.g., 25)"
+            type="date"
             [(ngModel)]="newEvent.date"
             name="date"
             #date="ngModel"
@@ -54,20 +52,6 @@
           />
           <div *ngIf="date.invalid && (date.dirty || date.touched)" class="error-message">
             Date is required.
-          </div>
-        </div>
-
-        <div class="form-group">
-          <input
-            type="text"
-            placeholder="Month (e.g., MAR)"
-            [(ngModel)]="newEvent.month"
-            name="month"
-            #month="ngModel"
-            required
-          />
-          <div *ngIf="month.invalid && (month.dirty || month.touched)" class="error-message">
-            Month is required.
           </div>
         </div>
 
@@ -114,10 +98,15 @@
           <img [src]="imagePreview" alt="Preview" />
         </div>
 
+        <div *ngIf="createEventError" class="error-message">
+          {{ createEventError }}
+        </div>
 
         <div class="modal-actions">
           <button type="button" (click)="closeCreateEvent()">Cancel</button>
-          <button type="submit" [disabled]="eventForm.invalid || !!imageError">Create</button>
+          <button type="submit" [disabled]="eventForm.invalid || !!imageError || isCreatingEvent">
+            {{ isCreatingEvent ? 'Creating...' : 'Create' }}
+          </button>
         </div>
 
       </form>
@@ -172,13 +161,17 @@
 
   </div>-->
 
-  <div *ngIf="eventsError" class="status-state error-state">
+  <div *ngIf="isLoadingEvents" class="status-state loading-state">
+    <p>Loading events...</p>
+  </div>
+
+  <div *ngIf="!isLoadingEvents && eventsError" class="status-state error-state">
     <p>{{ eventsError }}</p>
     <button type="button" class="create-event-btn" (click)="fetchEvents()">Retry</button>
   </div>
 
   <!-- EVENTS GRID -->
-  <div *ngIf="!eventsError">
+  <div *ngIf="!isLoadingEvents && !eventsError">
     <div class="events-empty-note" *ngIf="displayedEvents.length === 0">
       {{ showOnlyUserEvents ? 'No events created yet' : 'No events available' }}
     </div>
@@ -188,7 +181,8 @@
       <div class="event-card" *ngFor="let event of displayedEvents">
 
         <div class="image-wrapper">
-          <img [src]="event.imageUrl" [alt]="event.name">
+          <img *ngIf="event.imageUrl" [src]="event.imageUrl" [alt]="event.name">
+          <div *ngIf="!event.imageUrl" class="image-placeholder"></div>
 
           <div class="date-badge">
             <span class="day">{{ event.date }}</span>
