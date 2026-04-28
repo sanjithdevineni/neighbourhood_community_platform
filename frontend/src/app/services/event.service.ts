@@ -119,4 +119,17 @@ export class EventService {
       .post<RawEvent>(this.apiUrl, formData, { headers })
       .pipe(map((event) => this.normalizeEvent(event)));
   }
+
+  deleteEvent(eventId: number): Observable<void> {
+    const token = localStorage.getItem(this.tokenKey);
+    const headers = token
+      ? new HttpHeaders({
+          Authorization: `Bearer ${token}`
+        })
+      : undefined;
+
+    return this.http
+      .delete(`${this.apiUrl}/${eventId}`, { headers, observe: 'response', responseType: 'text' })
+      .pipe(map(() => undefined));
+  }
 }

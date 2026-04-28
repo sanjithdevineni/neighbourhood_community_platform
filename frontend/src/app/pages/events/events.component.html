@@ -172,6 +172,10 @@
 
   <!-- EVENTS GRID -->
   <div *ngIf="!isLoadingEvents && !eventsError">
+    <div class="events-delete-error" *ngIf="deleteEventError">
+      {{ deleteEventError }}
+    </div>
+
     <div class="events-empty-note" *ngIf="displayedEvents.length === 0">
       {{ showOnlyUserEvents ? 'No events created yet' : 'No events available' }}
     </div>
@@ -205,8 +209,9 @@
               *ngIf="event.createdByUser"
               type="button"
               class="delete-btn"
+              [disabled]="deletingEventIds.has(event.id)"
               (click)="deleteEvent(event.id)">
-              Delete
+              {{ deletingEventIds.has(event.id) ? 'Deleting...' : 'Delete' }}
             </button>
           </div>
         </div>

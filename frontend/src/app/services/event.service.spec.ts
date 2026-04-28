@@ -191,4 +191,25 @@ describe('EventService', () => {
     expect(events[0].image_url).toBe('/uploads/movie-night.jpg');
     expect(events[1].image_url).toBe('/uploads/picnic.jpg');
   });
+
+  it('sends authenticated delete request for event deletion', async () => {
+    localStorage.setItem('auth_token', 'jwt-token-123');
+
+    let deleteUrl = '';
+    let deleteAuthHeader = '';
+    const httpClientStub = {
+      get: () => of([]),
+      delete: (url: string, options?: { headers?: { get(name: string): string | null } }) => {
+        deleteUrl = url;
+        deleteAuthHeader = options?.headers?.get('Authorization') ?? '';
+        return of({ message: 'Event deleted successfully' });
+      }
+    } as unknown as HttpClient;
+
+    const service = new EventService(httpClientStub);
+    await firstValueFrom(service.deleteEvent(101));
+
+    expect(deleteUrl).toBe('/api/events/101');
+    expect(deleteAuthHeader).toBe('Bearer jwt-token-123');
+  });
 });
