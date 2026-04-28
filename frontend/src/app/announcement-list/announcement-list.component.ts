@@ -6,12 +6,8 @@ import { catchError, finalize, map, of, retry, switchMap } from 'rxjs';
 import { PostCardComponent } from '../post-card/post-card.component';
 import { SearchService } from '../services/search.service';
 import { AuthService } from '../services/auth.service';
-import {
-  AnnouncementService,
-  Announcement,
-  CreateAnnouncementPayload,
-  UpdateAnnouncementPayload
-} from '../services/announcement.service';
+import { AnnouncementService, Announcement, CreateAnnouncementPayload, UpdateAnnouncementPayload } from '../services/announcement.service';
+import { ToastService } from '../services/toast.service';
 
 @Component({
   selector: 'app-announcement-list',
@@ -29,6 +25,7 @@ export class AnnouncementListComponent implements OnInit, OnDestroy {
     private readonly searchService: SearchService,
     private readonly authService: AuthService,
     private readonly announcementService: AnnouncementService,
+    private readonly toastService: ToastService,
     private readonly cdr: ChangeDetectorRef
   ) {}
 
@@ -133,11 +130,12 @@ export class AnnouncementListComponent implements OnInit, OnDestroy {
           this.announcements = announcements;
           this.newPostTitle = '';
           this.newPostContent = '';
+          this.toastService.success('Announcement posted successfully');
           this.safeDetectChanges();
         },
         error: (error: unknown) => {
           console.error(error);
-          this.submitErrorMessage = this.getCreateErrorMessage(error);
+          this.toastService.error(this.getCreateErrorMessage(error));
           this.safeDetectChanges();
         }
       });
@@ -199,12 +197,13 @@ export class AnnouncementListComponent implements OnInit, OnDestroy {
               announcement.id === updated.id ? updated : announcement
             )
           );
+          this.toastService.success('Announcement updated successfully');
           this.closeEditModal();
           this.safeDetectChanges();
         },
         error: (error: unknown) => {
           console.error(error);
-          this.editErrorMessage = this.getUpdateErrorMessage(error);
+          this.toastService.error(this.getUpdateErrorMessage(error));
           this.safeDetectChanges();
         }
       });
@@ -238,6 +237,7 @@ export class AnnouncementListComponent implements OnInit, OnDestroy {
       .subscribe({
         next: () => {
           this.announcements = this.announcements.filter((item) => item.id !== announcement.id);
+          this.toastService.success('Announcement deleted successfully');
           if (this.editingAnnouncementId === announcement.id) {
             this.closeEditModal();
           }
@@ -245,7 +245,7 @@ export class AnnouncementListComponent implements OnInit, OnDestroy {
         },
         error: (error: unknown) => {
           console.error(error);
-          this.deleteErrorMessage = this.getDeleteErrorMessage(error);
+          this.toastService.error(this.getDeleteErrorMessage(error));
           this.safeDetectChanges();
         }
       });
