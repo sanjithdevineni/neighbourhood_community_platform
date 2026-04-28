@@ -48,6 +48,15 @@ export interface CreateEventPayload {
   image?: File | null;
 }
 
+export interface UpdateEventPayload {
+  id: number;
+  title?: string;
+  date?: string;
+  time?: string;
+  location?: string;
+  image?: File | null;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -118,6 +127,23 @@ export class EventService {
     return this.http
       .post<RawEvent>(this.apiUrl, formData, { headers })
       .pipe(map((event) => this.normalizeEvent(event)));
+  }
+
+  updateEvent(payload: UpdateEventPayload): Observable<CommunityEvent> {
+    const token = localStorage.getItem(this.tokenKey);
+    const headers = token ? new HttpHeaders({ Authorization: `Bearer ${token}` }) : undefined;
+    
+    const formData = new FormData();
+    formData.append('id', payload.id.toString());
+    if (payload.title) formData.append('title', payload.title);
+    if (payload.date) formData.append('date', payload.date);
+    if (payload.time) formData.append('time', payload.time);
+    if (payload.location) formData.append('location', payload.location);
+    if (payload.image) formData.append('image', payload.image);
+    
+    return this.http.post<RawEvent>(`${this.apiUrl}/update`, formData, { headers }).pipe(
+      map(e => this.normalizeEvent(e))
+    );
   }
 
   deleteEvent(eventId: number): Observable<void> {
