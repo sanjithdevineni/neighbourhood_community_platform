@@ -6,10 +6,6 @@
       <p>Discover what's happening in your community</p>
     </div>
 
-    <div *ngIf="deleteErrorMessage" class="error-message" style="color: red; margin-bottom: 20px;">
-      {{ deleteErrorMessage }}
-    </div>
-
     <div class="header-actions">
       <button
         class="create-event-btn"
@@ -18,7 +14,7 @@
       </button>
 
       <span class="your-events"
-            (click)="showOnlyUserEvents = !showOnlyUserEvents">
+                (click)="showOnlyUserEvents = !showOnlyUserEvents">
         {{ showOnlyUserEvents ? 'All events' : 'Your events' }}
       </span>
     </div>
@@ -36,12 +32,12 @@
           <input
             type="text"
             placeholder="Event name"
-            [(ngModel)]="newEvent.title"
-            name="title"
-            #title="ngModel"
+            [(ngModel)]="newEvent.name"
+            name="name"
+            #name="ngModel"
             required
           />
-          <div *ngIf="title.invalid && (title.dirty || title.touched)" class="error-message">
+          <div *ngIf="name.invalid && (name.dirty || name.touched)" class="error-message">
             Event name is required.
           </div>
         </div>
@@ -118,99 +114,52 @@
     </div>
   </div>
 
-  <!-- ✅ EDIT EVENT MODAL -->
-  <div class="event-modal-overlay" *ngIf="showEditEventForm">
-    <div class="event-modal">
+  <!-- EVENTS GRID -->
+  <!--<div class="events-grid">
+  <div class="event-card" *ngFor="let event of displayedEvents">
 
-      <h2>Edit Event</h2>
+      <div class="image-wrapper">
+        <img [src]="event.imageUrl" [alt]="event.name">
 
-      <form (ngSubmit)="saveEditEvent(editForm)" #editForm="ngForm">
-
-        <div class="form-group">
-          <input
-            type="text"
-            placeholder="Event name"
-            [(ngModel)]="editEventData.title"
-            name="title"
-            #editName="ngModel"
-            required
-          />
-          <div *ngIf="editName.invalid && (editName.dirty || editName.touched)" class="error-message">
-            Event name is required.
-          </div>
+        <div class="date-badge">
+          <span class="day">{{ event.date }}</span>
+          <span class="month">{{ event.month }}</span>
         </div>
 
-        <div class="form-group">
-          <input
-            type="text"
-            placeholder="Date (e.g., 25)"
-            [(ngModel)]="editEventData.date"
-            name="date"
-            #editDate="ngModel"
-            required
-          />
-          <div *ngIf="editDate.invalid && (editDate.dirty || editDate.touched)" class="error-message">
-            Date is required.
-          </div>
-        </div>
+        <div class="share-icon">⤴</div>
+      </div>
 
-        <div class="form-group">
-          <input
-            type="text"
-            placeholder="Time (e.g., 5:00 PM)"
-            [(ngModel)]="editEventData.time"
-            name="time"
-            #editTime="ngModel"
-            required
-          />
-          <div *ngIf="editTime.invalid && (editTime.dirty || editTime.touched)" class="error-message">
-            Time is required.
-          </div>
-        </div>
+    <div class="event-content">
+      <h3>{{ event.name }}</h3>
+      <p class="time">{{ event.time }}</p>
+      <p class="location">{{ event.location }}</p>
+      <p class="interested">{{ event.interested }} neighbors interested</p>
 
-        <div class="form-group">
-          <input
-            type="text"
-            placeholder="Location"
-            [(ngModel)]="editEventData.location"
-            name="location"
-            #editLocation="ngModel"
-            required
-          />
-          <div *ngIf="editLocation.invalid && (editLocation.dirty || editLocation.touched)" class="error-message">
-            Location is required.
-          </div>
-        </div>
+      <div class="event-actions">
+        <button class="interest-btn">+ Interested?</button>
 
-        <div class="form-group">
-          <input
-            type="file"
-            accept="image/*"
-            (change)="onEditImageUpload($event)"
-          />
-          <div *ngIf="imageError" class="error-message">
-            {{ imageError }}
-          </div>
-        </div>
-
-        <div *ngIf="imagePreview" class="image-preview">
-          <img [src]="imagePreview" alt="Preview" />
-        </div>
-
-
-        <div *ngIf="editErrorMessage" class="error-message" style="margin-bottom: 15px;">
-          {{ editErrorMessage }}
-        </div>
-
-        <div class="modal-actions">
-          <button type="button" (click)="closeEditEvent()">Cancel</button>
-          <button type="submit" [disabled]="editForm.invalid || !!imageError || isUpdatingEvent">Save</button>
-        </div>
-
-      </form>
+        <button
+          *ngIf="event.createdByUser"
+          type="button"
+          class="delete-btn"
+          (click)="deleteEvent(event.id)">
+          Delete
+        </button>
+      </div>
+    </div>
 
     </div>
-  </div>
+
+    &lt;!&ndash; Host Event Placeholder Card &ndash;&gt;
+    <div class="event-card host-card" (click)="openCreateEvent()">
+      <div class="host-content">
+        <div class="plus-icon">+</div>
+        <h3>Host an event</h3>
+        <p>Bring your neighbors together for something fun!</p>
+      </div>
+    </div>
+
+  </div>-->
 
   <div *ngIf="isLoadingEvents" class="status-state loading-state">
     <p>Loading events...</p>
@@ -236,7 +185,7 @@
       <div class="event-card" *ngFor="let event of displayedEvents">
 
         <div class="image-wrapper">
-          <img *ngIf="event.imageUrl" [src]="event.imageUrl" [alt]="event.title">
+          <img *ngIf="event.imageUrl" [src]="event.imageUrl" [alt]="event.name">
           <div *ngIf="!event.imageUrl" class="image-placeholder"></div>
 
           <div class="date-badge">
@@ -248,21 +197,13 @@
         </div>
 
         <div class="event-content">
-          <h3>{{ event.title }}</h3>
+          <h3>{{ event.name }}</h3>
           <p class="time">{{ event.time }}</p>
           <p class="location">{{ event.location }}</p>
           <p class="interested">{{ event.interested }} neighbors interested</p>
 
           <div class="event-actions">
             <button class="interest-btn">+ Interested?</button>
-
-            <button
-              *ngIf="event.createdByUser"
-              type="button"
-              class="edit-btn"
-              (click)="openEditEvent(event)">
-              Edit
-            </button>
 
             <button
               *ngIf="event.createdByUser"

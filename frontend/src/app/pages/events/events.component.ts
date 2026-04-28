@@ -9,7 +9,7 @@ import { CommunityEvent, CreateEventPayload, EventService } from '../../services
 
 interface EventItem {
   id: number;
-  title: string;
+  name: string;
   date: string;
   month: string;
   time: string;
@@ -29,10 +29,7 @@ interface EventItem {
 })
 export class EventsComponent implements OnInit, OnDestroy {
   showCreateEventForm = false;
-  showEditEventForm = false;
-  editingEventId: number | null = null;
   showOnlyUserEvents = false;
-
   isLoadingEvents = false;
   eventsError = '';
 
@@ -46,32 +43,6 @@ export class EventsComponent implements OnInit, OnDestroy {
   private currentUserId = '';
   private refreshSubscription?: Subscription;
   private readonly monthLabels = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
-
-  editImageFile: File | null = null;
-  isUpdatingEvent = false;
-  editErrorMessage = '';
-  deleteErrorMessage = '';
-
-  newEvent = {
-    title: '',
-    date: '',
-    time: '',
-    location: '',
-    interested: 0,
-    imageUrl: ''
-  };
-
-  editEventData: Partial<EventItem> = {
-    title: '',
-    date: '',
-    month: '',
-    time: '',
-    location: '',
-    interested: 0,
-    imageUrl: ''
-  };
-
-  events: EventItem[] = [];
 
   constructor(
     private readonly route: ActivatedRoute,
@@ -95,6 +66,15 @@ export class EventsComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.refreshSubscription?.unsubscribe();
   }
+
+  newEvent = {
+    name: '',
+    date: '',
+    time: '',
+    location: '',
+    interested: 0,
+    imageUrl: ''
+  };
 
   deleteEvent(id: number): void {
     if (this.deletingEventIds.has(id)) {
@@ -128,6 +108,7 @@ export class EventsComponent implements OnInit, OnDestroy {
         }
       });
   }
+  events: EventItem[] = [];
 
   fetchEvents(): void {
     this.isLoadingEvents = true;
@@ -162,86 +143,8 @@ export class EventsComponent implements OnInit, OnDestroy {
     if (this.showOnlyUserEvents) {
       return this.events.filter((event) => event.createdByUser);
     }
+
     return this.events;
-  }
-
-  openEditEvent(event: EventItem): void {
-    this.editingEventId = event.id;
-    this.editEventData = { ...event };
-    
-    this.showEditEventForm = true;
-    this.imageError = '';
-    this.imagePreview = event.imageUrl || null;
-    this.editImageFile = null;
-  }
-
-  closeEditEvent(): void {
-    this.showEditEventForm = false;
-    this.editingEventId = null;
-    this.resetForm();
-  }
-
-  onEditImageUpload(event: Event): void {
-    const input = event.target as HTMLInputElement;
-
-    if (!input.files || input.files.length === 0) {
-      this.imageError = '';
-      return;
-    }
-
-    const file = input.files[0];
-
-    if (!file.type.startsWith('image/')) {
-      this.imageError = 'Please upload a valid image file.';
-      this.imagePreview = null;
-      this.editEventData.imageUrl = '';
-      return;
-    }
-
-    this.editImageFile = file;
-    this.imageError = '';
-
-    const reader = new FileReader();
-
-    reader.onload = () => {
-      this.imagePreview = reader.result as string;
-      this.editEventData.imageUrl = this.imagePreview;
-    };
-
-    reader.readAsDataURL(file);
-  }
-
-  saveEditEvent(editForm: NgForm): void {
-    if (editForm.invalid || this.imageError || !this.editingEventId || this.isUpdatingEvent) {
-      editForm.control.markAllAsTouched();
-      return;
-    }
-
-    this.isUpdatingEvent = true;
-    this.editErrorMessage = '';
-
-    this.eventService.updateEvent({
-      id: this.editingEventId,
-      title: this.editEventData.title || '',
-      date: this.editEventData.date || '',
-      time: this.editEventData.time || '',
-      location: this.editEventData.location || '',
-      image: this.editImageFile
-    }).pipe(finalize(() => {
-      this.isUpdatingEvent = false;
-      this.cdr.detectChanges();
-    })).subscribe({
-      next: (updatedEvent) => {
-        const mapped = this.mapToEventItem(updatedEvent);
-        mapped.createdByUser = true;
-        this.events = this.events.map(e => e.id === this.editingEventId ? mapped : e);
-        this.closeEditEvent();
-      },
-      error: (err) => {
-        console.error('Update failed', err);
-        this.editErrorMessage = 'Server failed to update event.';
-      }
-    });
   }
 
   openCreateEvent(): void {
@@ -298,7 +201,7 @@ export class EventsComponent implements OnInit, OnDestroy {
     }
 
     const payload: CreateEventPayload = {
-      title: this.newEvent.title.trim(),
+      title: this.newEvent.name.trim(),
       date: this.newEvent.date.trim(),
       time: this.newEvent.time.trim(),
       location: this.newEvent.location.trim(),
@@ -318,7 +221,6 @@ export class EventsComponent implements OnInit, OnDestroy {
       .createEvent(payload)
       .pipe(finalize(() => {
         this.isCreatingEvent = false;
-        this.cdr.detectChanges();
       }))
       .subscribe({
         next: (createdEvent) => {
@@ -336,7 +238,7 @@ export class EventsComponent implements OnInit, OnDestroy {
 
   private resetForm(): void {
     this.newEvent = {
-      title: '',
+      name: '',
       date: '',
       time: '',
       location: '',
@@ -347,15 +249,13 @@ export class EventsComponent implements OnInit, OnDestroy {
     this.selectedImageFile = null;
     this.imageError = '';
     this.createEventError = '';
-    this.editImageFile = null;
-    this.editErrorMessage = '';
   }
 
   private mapToEventItem(event: CommunityEvent): EventItem {
     const badge = this.getDateBadge(event.date);
     return {
       id: event.id,
-      title: event.title,
+      name: event.title,
       date: badge.day,
       month: badge.month,
       time: event.time,
@@ -447,6 +347,7 @@ export class EventsComponent implements OnInit, OnDestroy {
 
     return 'Failed to create event. Please try again.';
   }
+
   private getDeleteErrorMessage(error: unknown): string {
     if (!(error instanceof HttpErrorResponse)) {
       return 'Failed to delete event. Please try again.';
@@ -477,4 +378,5 @@ export class EventsComponent implements OnInit, OnDestroy {
 
     return 'Failed to delete event. Please try again.';
   }
+
 }
