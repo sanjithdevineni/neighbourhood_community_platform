@@ -40,8 +40,9 @@ export class EventsComponent implements OnInit, OnDestroy {
   selectedImageFile: File | null = null;
   imageError = '';
   createEventError = '';
+  deleteEventError = '';
   isCreatingEvent = false;
-
+  deletingEventIds = new Set<number>();
   private currentUserId = '';
   private refreshSubscription?: Subscription;
   private readonly monthLabels = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
@@ -96,23 +97,42 @@ export class EventsComponent implements OnInit, OnDestroy {
   }
 
   deleteEvent(id: number): void {
-    const confirmDelete = confirm('Are you sure you want to delete this event?');
-    if (!confirmDelete) return;
+    if (this.deletingEventIds.has(id)) {
+      return;
+    }
 
-    this.eventService.deleteEvent(id).subscribe({
-      next: () => {
-        this.events = this.events.filter(event => event.id !== id);
-      },
-      error: (err) => {
-        console.error('Delete failed', err);
-        this.deleteErrorMessage = 'Failed to delete event.';
-      }
-    });
+    const confirmDelete = window.confirm('Are you sure you want to delete this event?');
+
+    if (!confirmDelete) {
+      return;
+    }
+
+    this.deleteEventError = '';
+    this.deletingEventIds = new Set(this.deletingEventIds).add(id);
+
+    this.eventService
+      .deleteEvent(id)
+      .pipe(finalize(() => {
+        const nextDeletingIds = new Set(this.deletingEventIds);
+        nextDeletingIds.delete(id);
+        this.deletingEventIds = nextDeletingIds;
+        this.cdr.detectChanges();
+      }))
+      .subscribe({
+        next: () => {
+          this.events = this.events.filter(event => String(event.id) !== String(id));
+        },
+        error: (error: unknown) => {
+          console.error(error);
+          this.deleteEventError = this.getDeleteErrorMessage(error);
+        }
+      });
   }
 
   fetchEvents(): void {
     this.isLoadingEvents = true;
     this.eventsError = '';
+    this.deleteEventError = '';
 
     this.eventService
       .getEvents()
@@ -228,6 +248,7 @@ export class EventsComponent implements OnInit, OnDestroy {
     this.showCreateEventForm = true;
     this.imageError = '';
     this.createEventError = '';
+    this.deleteEventError = '';
   }
 
   closeCreateEvent(): void {
@@ -425,5 +446,35 @@ export class EventsComponent implements OnInit, OnDestroy {
     }
 
     return 'Failed to create event. Please try again.';
+  }
+  private getDeleteErrorMessage(error: unknown): string {
+    if (!(error instanceof HttpErrorResponse)) {
+      return 'Failed to delete event. Please try again.';
+    }
+
+    if (error.status === 401) {
+      return 'You must be logged in to delete this event.';
+    }
+
+    if (error.status === 403) {
+      return 'You can only delete events you created.';
+    }
+
+    if (error.status === 0) {
+      return 'Unable to reach the backend. Make sure the API is running.';
+    }
+
+    if (typeof error.error === 'string') {
+      const trimmed = error.error.trim();
+      if (trimmed) {
+        return trimmed;
+      }
+    }
+
+    if (error.error?.error) {
+      return error.error.error;
+    }
+
+    return 'Failed to delete event. Please try again.';
   }
 }

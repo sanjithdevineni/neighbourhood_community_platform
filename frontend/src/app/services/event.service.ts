@@ -146,9 +146,16 @@ export class EventService {
     );
   }
 
-  deleteEvent(id: number): Observable<{ message: string }> {
+  deleteEvent(eventId: number): Observable<void> {
     const token = localStorage.getItem(this.tokenKey);
-    const headers = token ? new HttpHeaders({ Authorization: `Bearer ${token}` }) : undefined;
-    return this.http.post<{ message: string }>(`${this.apiUrl}/delete`, { id }, { headers });
+    const headers = token
+      ? new HttpHeaders({
+          Authorization: `Bearer ${token}`
+        })
+      : undefined;
+
+    return this.http
+      .delete(`${this.apiUrl}/${eventId}`, { headers, observe: 'response', responseType: 'text' })
+      .pipe(map(() => undefined));
   }
 }
