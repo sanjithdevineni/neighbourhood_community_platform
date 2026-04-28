@@ -273,21 +273,21 @@ func ToggleEventInterest(c *gin.Context) {
 		}
 	}
 	if userIDStr == "" {
+		slog.Warn("ToggleEventInterest: userID missing from context")
 		utils.RespondWithError(c, utils.Unauthorized("You must be logged in to express interest"))
 		return
 	}
 
-	// In this codebase, userID is stored as string in context but might be uint in models.
-	// Let's check the users table if needed, or parse if it's a numeric string.
-	// Based on User model, ID is uint.
 	var user models.User
 	if err := database.DB.Where("id = ?", userIDStr).First(&user).Error; err != nil {
+		slog.Error("ToggleEventInterest: User not found", "userID", userIDStr, "error", err)
 		utils.RespondWithError(c, utils.Unauthorized("User not found"))
 		return
 	}
 
 	var event models.Event
 	if err := database.DB.First(&event, eventIDStr).Error; err != nil {
+		slog.Error("ToggleEventInterest: Event not found", "eventID", eventIDStr, "error", err)
 		utils.RespondWithError(c, utils.NotFound("Event not found"))
 		return
 	}
@@ -297,25 +297,24 @@ func ToggleEventInterest(c *gin.Context) {
 
 	isInterested := false
 	if err == nil {
-		// Already interested, so remove it
+		slog.Info("ToggleEventInterest: Removing interest", "event_id", event.ID, "user_id", user.ID)
 		if delErr := database.DB.Delete(&interest).Error; delErr != nil {
+			slog.Error("ToggleEventInterest: Failed to delete interest", "error", delErr)
 			utils.RespondWithError(c, utils.InternalServerError("Failed to remove interest"), "error", delErr)
 			return
 		}
-		// Atomic decrement
 		database.DB.Model(&event).Update("interested_count", gorm.Expr("interested_count - ?", 1))
-		isInterested = false
 	} else {
-		// Not interested, so add it
+		slog.Info("ToggleEventInterest: Adding interest", "event_id", event.ID, "user_id", user.ID)
 		interest = models.EventInterest{
 			EventID: event.ID,
 			UserID:  user.ID,
 		}
 		if createErr := database.DB.Create(&interest).Error; createErr != nil {
+			slog.Error("ToggleEventInterest: Failed to create interest", "error", createErr)
 			utils.RespondWithError(c, utils.InternalServerError("Failed to add interest"), "error", createErr)
 			return
 		}
-		// Atomic increment
 		database.DB.Model(&event).Update("interested_count", gorm.Expr("interested_count + ?", 1))
 		isInterested = true
 	}
