@@ -67,17 +67,22 @@ export class EventsComponent implements OnInit, OnDestroy {
     this.refreshSubscription?.unsubscribe();
   }
 
+  imagePreview: string | null = null;
+  imageFile: File | null = null;
+  imageError = '';
+
   newEvent = {
-    name: '',
+    title: '',
     date: '',
+    month: '',
     time: '',
     location: '',
     interested: 0,
     imageUrl: ''
   };
 
-  editEventData = {
-    name: '',
+  editEventData: Partial<EventItem> = {
+    title: '',
     date: '',
     month: '',
     time: '',

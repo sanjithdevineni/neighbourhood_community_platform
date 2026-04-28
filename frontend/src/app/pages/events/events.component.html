@@ -6,6 +6,10 @@
       <p>Discover what's happening in your community</p>
     </div>
 
+    <div *ngIf="deleteErrorMessage" class="error-message" style="color: red; margin-bottom: 20px;">
+      {{ deleteErrorMessage }}
+    </div>
+
     <div class="header-actions">
       <button
         class="create-event-btn"
@@ -100,6 +104,10 @@
 
         <div *ngIf="createEventError" class="error-message">
           {{ createEventError }}
+        </div>
+
+        <div *ngIf="submitError" class="error-message" style="margin-bottom: 15px;">
+          {{ submitError }}
         </div>
 
         <div class="modal-actions">
@@ -208,9 +216,13 @@
         </div>
 
 
+        <div *ngIf="editErrorMessage" class="error-message" style="margin-bottom: 15px;">
+          {{ editErrorMessage }}
+        </div>
+
         <div class="modal-actions">
           <button type="button" (click)="closeEditEvent()">Cancel</button>
-          <button type="submit" [disabled]="editForm.invalid || !!imageError">Save</button>
+          <button type="submit" [disabled]="editForm.invalid || !!imageError || isUpdatingEvent">Save</button>
         </div>
 
       </form>
