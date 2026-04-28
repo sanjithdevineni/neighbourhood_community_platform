@@ -9,7 +9,7 @@ import { CommunityEvent, CreateEventPayload, EventService } from '../../services
 
 interface EventItem {
   id: number;
-  name: string;
+  title: string;
   date: string;
   month: string;
   time: string;
@@ -32,6 +32,7 @@ export class EventsComponent implements OnInit, OnDestroy {
   showEditEventForm = false;
   editingEventId: number | null = null;
   showOnlyUserEvents = false;
+
   isLoadingEvents = false;
   eventsError = '';
 
@@ -40,9 +41,36 @@ export class EventsComponent implements OnInit, OnDestroy {
   imageError = '';
   createEventError = '';
   isCreatingEvent = false;
+
   private currentUserId = '';
   private refreshSubscription?: Subscription;
   private readonly monthLabels = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+
+  editImageFile: File | null = null;
+  isUpdatingEvent = false;
+  editErrorMessage = '';
+  deleteErrorMessage = '';
+
+  newEvent = {
+    title: '',
+    date: '',
+    time: '',
+    location: '',
+    interested: 0,
+    imageUrl: ''
+  };
+
+  editEventData: Partial<EventItem> = {
+    title: '',
+    date: '',
+    month: '',
+    time: '',
+    location: '',
+    interested: 0,
+    imageUrl: ''
+  };
+
+  events: EventItem[] = [];
 
   constructor(
     private readonly route: ActivatedRoute,
@@ -67,40 +95,20 @@ export class EventsComponent implements OnInit, OnDestroy {
     this.refreshSubscription?.unsubscribe();
   }
 
-  imagePreview: string | null = null;
-  imageFile: File | null = null;
-  imageError = '';
-
-  newEvent = {
-    title: '',
-    date: '',
-    month: '',
-    time: '',
-    location: '',
-    interested: 0,
-    imageUrl: ''
-  };
-
-  editEventData: Partial<EventItem> = {
-    title: '',
-    date: '',
-    month: '',
-    time: '',
-    location: '',
-    interested: 0,
-    imageUrl: ''
-  };
-
   deleteEvent(id: number): void {
     const confirmDelete = confirm('Are you sure you want to delete this event?');
+    if (!confirmDelete) return;
 
-    if (!confirmDelete) {
-      return;
-    }
-
-    this.events = this.events.filter(event => event.id !== id);
+    this.eventService.deleteEvent(id).subscribe({
+      next: () => {
+        this.events = this.events.filter(event => event.id !== id);
+      },
+      error: (err) => {
+        console.error('Delete failed', err);
+        this.deleteErrorMessage = 'Failed to delete event.';
+      }
+    });
   }
-  events: EventItem[] = [];
 
   fetchEvents(): void {
     this.isLoadingEvents = true;
@@ -134,16 +142,17 @@ export class EventsComponent implements OnInit, OnDestroy {
     if (this.showOnlyUserEvents) {
       return this.events.filter((event) => event.createdByUser);
     }
-
     return this.events;
   }
 
   openEditEvent(event: EventItem): void {
     this.editingEventId = event.id;
     this.editEventData = { ...event };
+    
     this.showEditEventForm = true;
     this.imageError = '';
     this.imagePreview = event.imageUrl || null;
+    this.editImageFile = null;
   }
 
   closeEditEvent(): void {
@@ -169,6 +178,7 @@ export class EventsComponent implements OnInit, OnDestroy {
       return;
     }
 
+    this.editImageFile = file;
     this.imageError = '';
 
     const reader = new FileReader();
@@ -182,18 +192,36 @@ export class EventsComponent implements OnInit, OnDestroy {
   }
 
   saveEditEvent(editForm: NgForm): void {
-    if (editForm.invalid || this.imageError || !this.editingEventId) {
+    if (editForm.invalid || this.imageError || !this.editingEventId || this.isUpdatingEvent) {
       editForm.control.markAllAsTouched();
       return;
     }
 
-    this.events = this.events.map((e) =>
-      e.id === this.editingEventId
-        ? { ...e, ...this.editEventData }
-        : e
-    );
+    this.isUpdatingEvent = true;
+    this.editErrorMessage = '';
 
-    this.closeEditEvent();
+    this.eventService.updateEvent({
+      id: this.editingEventId,
+      title: this.editEventData.title || '',
+      date: this.editEventData.date || '',
+      time: this.editEventData.time || '',
+      location: this.editEventData.location || '',
+      image: this.editImageFile
+    }).pipe(finalize(() => {
+      this.isUpdatingEvent = false;
+      this.cdr.detectChanges();
+    })).subscribe({
+      next: (updatedEvent) => {
+        const mapped = this.mapToEventItem(updatedEvent);
+        mapped.createdByUser = true;
+        this.events = this.events.map(e => e.id === this.editingEventId ? mapped : e);
+        this.closeEditEvent();
+      },
+      error: (err) => {
+        console.error('Update failed', err);
+        this.editErrorMessage = 'Server failed to update event.';
+      }
+    });
   }
 
   openCreateEvent(): void {
@@ -249,7 +277,7 @@ export class EventsComponent implements OnInit, OnDestroy {
     }
 
     const payload: CreateEventPayload = {
-      title: this.newEvent.name.trim(),
+      title: this.newEvent.title.trim(),
       date: this.newEvent.date.trim(),
       time: this.newEvent.time.trim(),
       location: this.newEvent.location.trim(),
@@ -269,6 +297,7 @@ export class EventsComponent implements OnInit, OnDestroy {
       .createEvent(payload)
       .pipe(finalize(() => {
         this.isCreatingEvent = false;
+        this.cdr.detectChanges();
       }))
       .subscribe({
         next: (createdEvent) => {
@@ -286,7 +315,7 @@ export class EventsComponent implements OnInit, OnDestroy {
 
   private resetForm(): void {
     this.newEvent = {
-      name: '',
+      title: '',
       date: '',
       time: '',
       location: '',
@@ -297,13 +326,15 @@ export class EventsComponent implements OnInit, OnDestroy {
     this.selectedImageFile = null;
     this.imageError = '';
     this.createEventError = '';
+    this.editImageFile = null;
+    this.editErrorMessage = '';
   }
 
   private mapToEventItem(event: CommunityEvent): EventItem {
     const badge = this.getDateBadge(event.date);
     return {
       id: event.id,
-      name: event.title,
+      title: event.title,
       date: badge.day,
       month: badge.month,
       time: event.time,
@@ -395,5 +426,4 @@ export class EventsComponent implements OnInit, OnDestroy {
 
     return 'Failed to create event. Please try again.';
   }
-
 }

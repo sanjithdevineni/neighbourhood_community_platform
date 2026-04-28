@@ -36,12 +36,12 @@
           <input
             type="text"
             placeholder="Event name"
-            [(ngModel)]="newEvent.name"
-            name="name"
-            #name="ngModel"
+            [(ngModel)]="newEvent.title"
+            name="title"
+            #title="ngModel"
             required
           />
-          <div *ngIf="name.invalid && (name.dirty || name.touched)" class="error-message">
+          <div *ngIf="title.invalid && (title.dirty || title.touched)" class="error-message">
             Event name is required.
           </div>
         </div>
@@ -106,10 +106,6 @@
           {{ createEventError }}
         </div>
 
-        <div *ngIf="submitError" class="error-message" style="margin-bottom: 15px;">
-          {{ submitError }}
-        </div>
-
         <div class="modal-actions">
           <button type="button" (click)="closeCreateEvent()">Cancel</button>
           <button type="submit" [disabled]="eventForm.invalid || !!imageError || isCreatingEvent">
@@ -134,8 +130,8 @@
           <input
             type="text"
             placeholder="Event name"
-            [(ngModel)]="editEventData.name"
-            name="name"
+            [(ngModel)]="editEventData.title"
+            name="title"
             #editName="ngModel"
             required
           />
@@ -155,20 +151,6 @@
           />
           <div *ngIf="editDate.invalid && (editDate.dirty || editDate.touched)" class="error-message">
             Date is required.
-          </div>
-        </div>
-
-        <div class="form-group">
-          <input
-            type="text"
-            placeholder="Month (e.g., MAR)"
-            [(ngModel)]="editEventData.month"
-            name="month"
-            #editMonth="ngModel"
-            required
-          />
-          <div *ngIf="editMonth.invalid && (editMonth.dirty || editMonth.touched)" class="error-message">
-            Month is required.
           </div>
         </div>
 
@@ -230,53 +212,6 @@
     </div>
   </div>
 
-  <!-- EVENTS GRID -->
-  <!--<div class="events-grid">
-  <div class="event-card" *ngFor="let event of displayedEvents">
-
-      <div class="image-wrapper">
-        <img [src]="event.imageUrl" [alt]="event.name">
-
-        <div class="date-badge">
-          <span class="day">{{ event.date }}</span>
-          <span class="month">{{ event.month }}</span>
-        </div>
-
-        <div class="share-icon">⤴</div>
-      </div>
-
-    <div class="event-content">
-      <h3>{{ event.name }}</h3>
-      <p class="time">{{ event.time }}</p>
-      <p class="location">{{ event.location }}</p>
-      <p class="interested">{{ event.interested }} neighbors interested</p>
-
-      <div class="event-actions">
-        <button class="interest-btn">+ Interested?</button>
-
-        <button
-          *ngIf="event.createdByUser"
-          type="button"
-          class="delete-btn"
-          (click)="deleteEvent(event.id)">
-          Delete
-        </button>
-      </div>
-    </div>
-
-    </div>
-
-    &lt;!&ndash; Host Event Placeholder Card &ndash;&gt;
-    <div class="event-card host-card" (click)="openCreateEvent()">
-      <div class="host-content">
-        <div class="plus-icon">+</div>
-        <h3>Host an event</h3>
-        <p>Bring your neighbors together for something fun!</p>
-      </div>
-    </div>
-
-  </div>-->
-
   <div *ngIf="isLoadingEvents" class="status-state loading-state">
     <p>Loading events...</p>
   </div>
@@ -297,7 +232,7 @@
       <div class="event-card" *ngFor="let event of displayedEvents">
 
         <div class="image-wrapper">
-          <img *ngIf="event.imageUrl" [src]="event.imageUrl" [alt]="event.name">
+          <img *ngIf="event.imageUrl" [src]="event.imageUrl" [alt]="event.title">
           <div *ngIf="!event.imageUrl" class="image-placeholder"></div>
 
           <div class="date-badge">
@@ -309,7 +244,7 @@
         </div>
 
         <div class="event-content">
-          <h3>{{ event.name }}</h3>
+          <h3>{{ event.title }}</h3>
           <p class="time">{{ event.time }}</p>
           <p class="location">{{ event.location }}</p>
           <p class="interested">{{ event.interested }} neighbors interested</p>

@@ -52,10 +52,9 @@ export interface UpdateEventPayload {
   id: number;
   title?: string;
   date?: string;
-  month?: string;
   time?: string;
   location?: string;
-  image?: File;
+  image?: File | null;
 }
 
 @Injectable({
@@ -130,32 +129,20 @@ export class EventService {
       .pipe(map((event) => this.normalizeEvent(event)));
   }
 
-  updateEvent(payload: UpdateEventPayload): Observable<EventItem> {
+  updateEvent(payload: UpdateEventPayload): Observable<CommunityEvent> {
     const token = localStorage.getItem(this.tokenKey);
     const headers = token ? new HttpHeaders({ Authorization: `Bearer ${token}` }) : undefined;
     
     const formData = new FormData();
     formData.append('id', payload.id.toString());
     if (payload.title) formData.append('title', payload.title);
-    if (payload.date || payload.month) {
-      formData.append('date', `${payload.date || ''}|${payload.month || ''}`);
-    }
+    if (payload.date) formData.append('date', payload.date);
     if (payload.time) formData.append('time', payload.time);
     if (payload.location) formData.append('location', payload.location);
     if (payload.image) formData.append('image', payload.image);
     
-    return this.http.post<any>(`${this.apiUrl}/update`, formData, { headers }).pipe(
-      map(e => ({
-        id: e.ID,
-        title: e.title,
-        date: this.extractDate(e.date),
-        month: this.extractMonth(e.date),
-        time: e.time,
-        location: e.location,
-        interested: 0,
-        imageUrl: e.image_url ? `${ApiConfig.baseUrl.replace('/api', '')}${e.image_url}` : '',
-        author: e.author || ''
-      }))
+    return this.http.post<RawEvent>(`${this.apiUrl}/update`, formData, { headers }).pipe(
+      map(e => this.normalizeEvent(e))
     );
   }
 
