@@ -32,7 +32,7 @@ func main() {
 	defer database.CloseDatabase()
 
 	// Auto migrate models
-	if err := database.DB.AutoMigrate(&models.User{}, &models.Announcement{}, &models.Event{}); err != nil {
+	if err := database.DB.AutoMigrate(&models.User{}, &models.Announcement{}, &models.Event{}, &models.Alert{}); err != nil {
 		log.Fatalf("AutoMigrate failed: %v", err)
 	}
 
@@ -54,7 +54,7 @@ func main() {
 	// Run the server in a goroutine so the main goroutine can listen for signals
 	go func() {
 		log.Printf("Server listening on %s", config.ServerPort)
-    slog.Info("Server starting", "port", config.ServerPort)
+		slog.Info("Server starting", "port", config.ServerPort)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Server error: %v", err)
 		}

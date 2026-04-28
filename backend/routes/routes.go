@@ -20,6 +20,13 @@ func RegisterRoutes(router *gin.Engine) {
 		api.POST("/events", middleware.AuthMiddleware(), controllers.CreateEvent)
 		api.PUT("/events/:id", middleware.AuthMiddleware(), controllers.UpdateEvent)
 		api.DELETE("/events/:id", middleware.AuthMiddleware(), controllers.DeleteEvent)
+
+		// Alert routes
+		api.GET("/alerts", controllers.GetAlerts)
+		api.POST("/alerts", middleware.AuthMiddleware(), controllers.CreateAlert)
+		api.PUT("/alerts/:id", middleware.AuthMiddleware(), controllers.UpdateAlert)
+		api.DELETE("/alerts/:id", middleware.AuthMiddleware(), controllers.DeleteAlert)
+
 		api.GET("/health", func(c *gin.Context) {
 			c.JSON(200, gin.H{"status": "ok"})
 		})
