@@ -52,6 +52,12 @@
   font-size: 14px;
 }
 
+.events-delete-error {
+  margin: 0 0 14px;
+  color: #b91c1c;
+  font-size: 14px;
+}
+
 .status-state {
   background: #ffffff;
   border: 1px solid #e5e7eb;
@@ -352,6 +358,11 @@
 
 .delete-btn:hover {
   background: #fecaca;
+}
+
+.delete-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 @media (max-width: 1024px) {

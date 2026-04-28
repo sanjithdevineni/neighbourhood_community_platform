@@ -14,6 +14,7 @@ describe('EventsComponent', () => {
   const eventServiceStub: {
     getEvents: () => Observable<CommunityEvent[]>;
     createEvent: (payload: CreateEventPayload) => Observable<CommunityEvent>;
+    deleteEvent: (id: number) => Observable<void>;
   } = {
     getEvents: () => of([]),
     createEvent: (payload: CreateEventPayload) =>
@@ -26,7 +27,8 @@ describe('EventsComponent', () => {
         image_url: '',
         author: '1',
         created_at: '2026-04-10T14:23:15Z'
-      })
+      }),
+    deleteEvent: () => of(undefined)
   };
   const authServiceStub: {
     getStoredUser: () => { id: number; name: string; email: string; created_at: string } | null;
@@ -47,6 +49,7 @@ describe('EventsComponent', () => {
         author: '1',
         created_at: '2026-04-10T14:23:15Z'
       });
+    eventServiceStub.deleteEvent = () => of(undefined);
     authServiceStub.getStoredUser = () => null;
     routeQueryParamMap$ = new BehaviorSubject(convertToParamMap({ refresh: '0' }));
 
@@ -438,6 +441,8 @@ describe('EventsComponent', () => {
   });
 
   it('should delete event when user confirms', () => {
+    const deleteEventSpy = vi.fn(() => of(undefined));
+    eventServiceStub.deleteEvent = deleteEventSpy;
     component.events = [
       {
         id: 2001,
@@ -456,11 +461,14 @@ describe('EventsComponent', () => {
     component.deleteEvent(2001);
 
     expect(confirmSpy).toHaveBeenCalled();
+    expect(deleteEventSpy).toHaveBeenCalledWith(2001);
     expect(component.events.length).toBe(0);
     confirmSpy.mockRestore();
   });
 
   it('should keep event when user cancels delete confirmation', () => {
+    const deleteEventSpy = vi.fn(() => of(undefined));
+    eventServiceStub.deleteEvent = deleteEventSpy;
     component.events = [
       {
         id: 3001,
@@ -478,7 +486,38 @@ describe('EventsComponent', () => {
 
     component.deleteEvent(3001);
 
+    expect(deleteEventSpy).not.toHaveBeenCalled();
     expect(component.events.length).toBe(1);
+    confirmSpy.mockRestore();
+  });
+
+  it('should show delete error and keep event when API delete fails', () => {
+    eventServiceStub.deleteEvent = () =>
+      throwError(
+        () =>
+          new HttpErrorResponse({
+            status: 403
+          })
+      );
+    component.events = [
+      {
+        id: 3002,
+        name: 'Protected Event',
+        date: '22',
+        month: 'APR',
+        time: '8:00 PM',
+        location: 'Town Hall',
+        interested: 4,
+        imageUrl: 'https://example.com/protected.jpg',
+        createdByUser: true
+      }
+    ];
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+
+    component.deleteEvent(3002);
+
+    expect(component.events.length).toBe(1);
+    expect(component.deleteEventError).toBe('You can only delete events you created.');
     confirmSpy.mockRestore();
   });
 });
