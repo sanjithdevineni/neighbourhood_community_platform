@@ -1,11 +1,11 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule, NgForm } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { finalize, Subscription } from 'rxjs';
+import { distinctUntilChanged, finalize, map, Subscription } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
-import { CommunityEvent, EventService } from '../../services/event.service';
+import { CommunityEvent, CreateEventPayload, EventService } from '../../services/event.service';
 
 interface EventItem {
   id: number;
@@ -34,32 +34,40 @@ export class EventsComponent implements OnInit, OnDestroy {
   eventsError = '';
 
   imagePreview: string | null = null;
+  selectedImageFile: File | null = null;
   imageError = '';
+  createEventError = '';
+  isCreatingEvent = false;
   private currentUserId = '';
-  private routeSubscription?: Subscription;
+  private refreshSubscription?: Subscription;
   private readonly monthLabels = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
 
   constructor(
     private readonly route: ActivatedRoute,
     private readonly eventService: EventService,
-    private readonly authService: AuthService
+    private readonly authService: AuthService,
+    private readonly cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
     this.loadCurrentUserContext();
-    this.routeSubscription = this.route.queryParamMap.subscribe(() => {
-      this.fetchEvents();
-    });
+    this.refreshSubscription = this.route.queryParamMap
+      .pipe(
+        map((params) => params.get('refresh') ?? ''),
+        distinctUntilChanged()
+      )
+      .subscribe(() => {
+        this.fetchEvents();
+      });
   }
 
   ngOnDestroy(): void {
-    this.routeSubscription?.unsubscribe();
+    this.refreshSubscription?.unsubscribe();
   }
 
   newEvent = {
     name: '',
     date: '',
-    month: '',
     time: '',
     location: '',
     interested: 0,
@@ -85,12 +93,18 @@ export class EventsComponent implements OnInit, OnDestroy {
       .getEvents()
       .pipe(finalize(() => {
         this.isLoadingEvents = false;
+        this.cdr.detectChanges();
       }))
       .subscribe({
         next: (events) => {
-          this.events = events
-            .filter((event) => this.isUpcomingEvent(event.date))
-            .map((event) => this.mapToEventItem(event));
+          try {
+            const normalizedEvents = Array.isArray(events) ? events : [];
+            this.events = normalizedEvents.map((event) => this.mapToEventItem(event));
+          } catch (error) {
+            console.error(error);
+            this.eventsError = 'Failed to load events.';
+            this.events = [];
+          }
         },
         error: (error: unknown) => {
           console.error(error);
@@ -110,6 +124,7 @@ export class EventsComponent implements OnInit, OnDestroy {
   openCreateEvent(): void {
     this.showCreateEventForm = true;
     this.imageError = '';
+    this.createEventError = '';
   }
 
   closeCreateEvent(): void {
@@ -122,6 +137,9 @@ export class EventsComponent implements OnInit, OnDestroy {
 
     if (!input.files || input.files.length === 0) {
       this.imageError = '';
+      this.selectedImageFile = null;
+      this.imagePreview = null;
+      this.newEvent.imageUrl = '';
       return;
     }
 
@@ -130,11 +148,14 @@ export class EventsComponent implements OnInit, OnDestroy {
     if (!file.type.startsWith('image/')) {
       this.imageError = 'Please upload a valid image file.';
       this.imagePreview = null;
+      this.selectedImageFile = null;
       this.newEvent.imageUrl = '';
       return;
     }
 
     this.imageError = '';
+    this.createEventError = '';
+    this.selectedImageFile = file;
 
     const reader = new FileReader();
 
@@ -147,36 +168,60 @@ export class EventsComponent implements OnInit, OnDestroy {
   }
 
   createEvent(eventForm: NgForm): void {
-    if (eventForm.invalid || this.imageError) {
+    if (eventForm.invalid || this.imageError || this.isCreatingEvent) {
       eventForm.control.markAllAsTouched();
       return;
     }
 
-    const newEventWithId: EventItem = {
-      id: Date.now(),
-      ...this.newEvent,
-      createdByUser: true
+    const payload: CreateEventPayload = {
+      title: this.newEvent.name.trim(),
+      date: this.newEvent.date.trim(),
+      time: this.newEvent.time.trim(),
+      location: this.newEvent.location.trim(),
+      image: this.selectedImageFile
     };
 
-    this.events = [newEventWithId, ...this.events];
+    if (!payload.title || !payload.date || !payload.time || !payload.location) {
+      this.createEventError = 'All required fields must be filled.';
+      eventForm.control.markAllAsTouched();
+      return;
+    }
 
-    this.resetForm();
-    eventForm.resetForm();
-    this.showCreateEventForm = false;
+    this.isCreatingEvent = true;
+    this.createEventError = '';
+
+    this.eventService
+      .createEvent(payload)
+      .pipe(finalize(() => {
+        this.isCreatingEvent = false;
+      }))
+      .subscribe({
+        next: (createdEvent) => {
+          this.events = [this.mapToEventItem(createdEvent), ...this.events];
+          this.resetForm();
+          eventForm.resetForm();
+          this.showCreateEventForm = false;
+        },
+        error: (error: unknown) => {
+          console.error(error);
+          this.createEventError = this.getCreateErrorMessage(error);
+        }
+      });
   }
 
   private resetForm(): void {
     this.newEvent = {
       name: '',
       date: '',
-      month: '',
       time: '',
       location: '',
       interested: 0,
       imageUrl: ''
     };
     this.imagePreview = null;
+    this.selectedImageFile = null;
     this.imageError = '';
+    this.createEventError = '';
   }
 
   private mapToEventItem(event: CommunityEvent): EventItem {
@@ -221,24 +266,6 @@ export class EventsComponent implements OnInit, OnDestroy {
     return { day: trimmed, month: '' };
   }
 
-  private isUpcomingEvent(dateValue: string): boolean {
-    const trimmed = dateValue.trim();
-    if (!trimmed) {
-      return true;
-    }
-
-    const parsed = new Date(trimmed);
-    if (Number.isNaN(parsed.getTime())) {
-      return true;
-    }
-
-    const eventDay = new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate()).getTime();
-    const today = new Date();
-    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
-
-    return eventDay >= todayStart;
-  }
-
   private loadCurrentUserContext(): void {
     const user = this.authService.getStoredUser();
     this.currentUserId = user ? `${user.id}` : '';
@@ -266,4 +293,32 @@ export class EventsComponent implements OnInit, OnDestroy {
 
     return 'Failed to load events.';
   }
+
+  private getCreateErrorMessage(error: unknown): string {
+    if (!(error instanceof HttpErrorResponse)) {
+      return 'Failed to create event. Please try again.';
+    }
+
+    if (error.status === 401) {
+      return 'You must be logged in to create an event.';
+    }
+
+    if (error.status === 0) {
+      return 'Unable to reach the backend. Make sure the API is running.';
+    }
+
+    if (typeof error.error === 'string') {
+      const trimmed = error.error.trim();
+      if (trimmed) {
+        return trimmed;
+      }
+    }
+
+    if (error.error?.error) {
+      return error.error.error;
+    }
+
+    return 'Failed to create event. Please try again.';
+  }
+
 }
