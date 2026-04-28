@@ -1,8 +1,9 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule, NgForm } from '@angular/forms';
-import { finalize } from 'rxjs';
+import { ActivatedRoute } from '@angular/router';
+import { finalize, Subscription } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { CommunityEvent, EventService } from '../../services/event.service';
 
@@ -26,7 +27,7 @@ interface EventItem {
   templateUrl: './events.component.html',
   styleUrl: './events.component.css'
 })
-export class EventsComponent implements OnInit {
+export class EventsComponent implements OnInit, OnDestroy {
   showCreateEventForm = false;
   showOnlyUserEvents = false;
   isLoadingEvents = false;
@@ -35,16 +36,24 @@ export class EventsComponent implements OnInit {
   imagePreview: string | null = null;
   imageError = '';
   private currentUserId = '';
+  private routeSubscription?: Subscription;
   private readonly monthLabels = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
 
   constructor(
+    private readonly route: ActivatedRoute,
     private readonly eventService: EventService,
     private readonly authService: AuthService
   ) {}
 
   ngOnInit(): void {
     this.loadCurrentUserContext();
-    this.fetchEvents();
+    this.routeSubscription = this.route.queryParamMap.subscribe(() => {
+      this.fetchEvents();
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.routeSubscription?.unsubscribe();
   }
 
   newEvent = {

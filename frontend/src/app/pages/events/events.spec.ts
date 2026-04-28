@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Observable, of, throwError } from 'rxjs';
+import { ActivatedRoute, convertToParamMap } from '@angular/router';
+import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { EventsComponent } from './events.component';
 import { AuthService } from '../../services/auth.service';
@@ -9,6 +10,7 @@ import { CommunityEvent, EventService } from '../../services/event.service';
 describe('EventsComponent', () => {
   let component: EventsComponent;
   let fixture: ComponentFixture<EventsComponent>;
+  let routeQueryParamMap$: BehaviorSubject<ReturnType<typeof convertToParamMap>>;
   const eventServiceStub: {
     getEvents: () => Observable<CommunityEvent[]>;
   } = {
@@ -23,10 +25,17 @@ describe('EventsComponent', () => {
   beforeEach(async () => {
     eventServiceStub.getEvents = () => of([]);
     authServiceStub.getStoredUser = () => null;
+    routeQueryParamMap$ = new BehaviorSubject(convertToParamMap({ refresh: '0' }));
 
     await TestBed.configureTestingModule({
       imports: [EventsComponent],
       providers: [
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            queryParamMap: routeQueryParamMap$.asObservable()
+          }
+        },
         {
           provide: EventService,
           useValue: eventServiceStub
@@ -75,6 +84,17 @@ describe('EventsComponent', () => {
     expect(component.events[0].month).toBe('APR');
     expect(component.events[0].imageUrl).toBe('/uploads/1712345678_abc123.jpg');
     expect(component.events[0].createdByUser).toBe(true);
+  });
+
+  it('should refetch events when events refresh query param changes', () => {
+    const getEventsSpy = vi.fn(() => of([]));
+    eventServiceStub.getEvents = getEventsSpy;
+
+    fixture.detectChanges();
+    expect(getEventsSpy).toHaveBeenCalledTimes(1);
+
+    routeQueryParamMap$.next(convertToParamMap({ refresh: '1' }));
+    expect(getEventsSpy).toHaveBeenCalledTimes(2);
   });
 
   it('should show error state when fetch fails', () => {
