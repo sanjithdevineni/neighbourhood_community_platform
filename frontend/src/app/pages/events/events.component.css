@@ -242,6 +242,15 @@
   transform: translateY(-1px);
 }
 
+.interest-btn.active {
+  background: #2e7d32;
+  color: white;
+}
+
+.interest-btn.active:hover {
+  background: #1b5e20;
+}
+
 /* Modal buttons */
 .modal-actions button {
   padding: 8px 18px;

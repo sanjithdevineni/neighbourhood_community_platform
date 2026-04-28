@@ -20,6 +20,7 @@ func RegisterRoutes(router *gin.Engine) {
 		api.POST("/events", middleware.AuthMiddleware(), controllers.CreateEvent)
 		api.PUT("/events/:id", middleware.AuthMiddleware(), controllers.UpdateEvent)
 		api.DELETE("/events/:id", middleware.AuthMiddleware(), controllers.DeleteEvent)
+		api.POST("/events/:id/interest", middleware.AuthMiddleware(), controllers.ToggleEventInterest)
 
 		// Alert routes
 		api.GET("/alerts", controllers.GetAlerts)

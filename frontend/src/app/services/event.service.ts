@@ -25,6 +25,10 @@ interface RawEvent {
   UpdatedAt?: string;
   deleted_at?: string | null;
   DeletedAt?: string | null;
+  interested_count?: number;
+  InterestedCount?: number;
+  is_interested?: boolean;
+  IsInterested?: boolean;
 }
 
 export interface CommunityEvent {
@@ -38,6 +42,8 @@ export interface CommunityEvent {
   created_at: string;
   updated_at?: string;
   deleted_at?: string | null;
+  interested_count: number;
+  is_interested?: boolean;
 }
 
 export interface CreateEventPayload {
@@ -96,7 +102,9 @@ export class EventService {
       author: String(raw.author ?? raw.Author ?? ''),
       created_at: raw.created_at ?? raw.CreatedAt ?? '',
       updated_at: raw.updated_at ?? raw.UpdatedAt,
-      deleted_at: raw.deleted_at ?? raw.DeletedAt ?? null
+      deleted_at: raw.deleted_at ?? raw.DeletedAt ?? null,
+      interested_count: raw.interested_count ?? raw.InterestedCount ?? 0,
+      is_interested: raw.is_interested ?? raw.IsInterested ?? false
     };
   }
 
@@ -156,5 +164,15 @@ export class EventService {
     return this.http
       .delete(`${this.apiUrl}/${eventId}`, { headers, observe: 'response', responseType: 'text' })
       .pipe(map(() => undefined));
+  }
+
+  toggleInterest(eventId: number): Observable<{ is_interested: boolean, interested_count: number }> {
+    const token = localStorage.getItem(this.tokenKey);
+    const headers = token ? new HttpHeaders({ Authorization: `Bearer ${token}` }) : undefined;
+    return this.http.post<{ is_interested: boolean, interested_count: number }>(
+      `${this.apiUrl}/${eventId}/interest`,
+      {},
+      { headers }
+    );
   }
 }

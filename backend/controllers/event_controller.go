@@ -15,6 +15,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 const MaxUploadSize = 5 * 1024 * 1024 // 5 MB
@@ -258,4 +259,73 @@ func DeleteEvent(c *gin.Context) {
 
 	slog.Info("Event deleted", "id", event.ID, "author", author)
 	c.JSON(http.StatusOK, gin.H{"message": "Event deleted successfully"})
+}
+
+// ToggleEventInterest adds or removes interest for the authenticated user and updates the event's InterestedCount.
+func ToggleEventInterest(c *gin.Context) {
+	eventIDStr := c.Param("id")
+	
+	// Get authenticated user ID
+	userIDStr := ""
+	if uid, exists := c.Get("userID"); exists {
+		if s, ok := uid.(string); ok && s != "" {
+			userIDStr = s
+		}
+	}
+	if userIDStr == "" {
+		utils.RespondWithError(c, utils.Unauthorized("You must be logged in to express interest"))
+		return
+	}
+
+	// In this codebase, userID is stored as string in context but might be uint in models.
+	// Let's check the users table if needed, or parse if it's a numeric string.
+	// Based on User model, ID is uint.
+	var user models.User
+	if err := database.DB.Where("id = ?", userIDStr).First(&user).Error; err != nil {
+		utils.RespondWithError(c, utils.Unauthorized("User not found"))
+		return
+	}
+
+	var event models.Event
+	if err := database.DB.First(&event, eventIDStr).Error; err != nil {
+		utils.RespondWithError(c, utils.NotFound("Event not found"))
+		return
+	}
+
+	var interest models.EventInterest
+	err := database.DB.Where("event_id = ? AND user_id = ?", event.ID, user.ID).First(&interest).Error
+
+	isInterested := false
+	if err == nil {
+		// Already interested, so remove it
+		if delErr := database.DB.Delete(&interest).Error; delErr != nil {
+			utils.RespondWithError(c, utils.InternalServerError("Failed to remove interest"), "error", delErr)
+			return
+		}
+		// Atomic decrement
+		database.DB.Model(&event).Update("interested_count", gorm.Expr("interested_count - ?", 1))
+		isInterested = false
+	} else {
+		// Not interested, so add it
+		interest = models.EventInterest{
+			EventID: event.ID,
+			UserID:  user.ID,
+		}
+		if createErr := database.DB.Create(&interest).Error; createErr != nil {
+			utils.RespondWithError(c, utils.InternalServerError("Failed to add interest"), "error", createErr)
+			return
+		}
+		// Atomic increment
+		database.DB.Model(&event).Update("interested_count", gorm.Expr("interested_count + ?", 1))
+		isInterested = true
+	}
+
+	// Fetch updated count
+	database.DB.First(&event, event.ID)
+
+	slog.Info("Event interest toggled", "event_id", event.ID, "user_id", user.ID, "is_interested", isInterested)
+	c.JSON(http.StatusOK, gin.H{
+		"is_interested":    isInterested,
+		"interested_count": event.InterestedCount,
+	})
 }

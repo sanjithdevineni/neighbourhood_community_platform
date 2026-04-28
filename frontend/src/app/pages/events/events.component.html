@@ -249,7 +249,12 @@
           <p class="interested">{{ event.interested }} neighbors interested</p>
 
           <div class="event-actions">
-            <button class="interest-btn" (click)="toggleInterest(event)">+ Interested?</button>
+            <button 
+              class="interest-btn" 
+              [class.active]="event.is_interested"
+              (click)="toggleInterest(event)">
+              {{ event.is_interested ? '✓ Interested' : '+ Interested?' }}
+            </button>
 
             <button
               *ngIf="event.createdByUser"

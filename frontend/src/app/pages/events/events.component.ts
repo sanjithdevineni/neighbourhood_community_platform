@@ -16,6 +16,7 @@ interface EventItem {
   time: string;
   location: string;
   interested: number;
+  is_interested?: boolean;
   imageUrl: string;
   author: string;
   createdByUser?: boolean;
@@ -315,8 +316,27 @@ export class EventsComponent implements OnInit, OnDestroy {
   }
 
   toggleInterest(event: EventItem): void {
-    // To be implemented: Send request to backend to toggle interest
-    this.toastService.info('Interest tracking coming soon!');
+    this.eventService.toggleInterest(event.id).subscribe({
+      next: (res) => {
+        event.interested = res.interested_count;
+        event.is_interested = res.is_interested;
+        
+        if (res.is_interested) {
+          this.toastService.success('You are now interested in this event!');
+        } else {
+          this.toastService.info('No longer interested in this event.');
+        }
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Interest toggle failed', err);
+        if (err.status === 401) {
+          this.toastService.error('You must be logged in to express interest.');
+        } else {
+          this.toastService.error('Failed to update interest. Please try again.');
+        }
+      }
+    });
   }
 
   private resetForm(): void {
@@ -344,7 +364,8 @@ export class EventsComponent implements OnInit, OnDestroy {
       month: badge.month,
       time: event.time,
       location: event.location,
-      interested: 0,
+      interested: event.interested_count,
+      is_interested: event.is_interested,
       imageUrl: event.image_url,
       author: event.author,
       createdByUser: this.currentUserId !== '' && event.author === this.currentUserId
