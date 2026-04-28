@@ -1,6 +1,11 @@
-import { Component } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule, NgForm } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
+import { finalize, Subscription } from 'rxjs';
+import { AuthService } from '../../services/auth.service';
+import { CommunityEvent, EventService } from '../../services/event.service';
 
 interface EventItem {
   id: number;
@@ -11,6 +16,7 @@ interface EventItem {
   location: string;
   interested: number;
   imageUrl: string;
+  author?: string;
   createdByUser?: boolean;
 }
 
@@ -21,12 +27,34 @@ interface EventItem {
   templateUrl: './events.component.html',
   styleUrl: './events.component.css'
 })
-export class EventsComponent {
+export class EventsComponent implements OnInit, OnDestroy {
   showCreateEventForm = false;
   showOnlyUserEvents = false;
+  isLoadingEvents = false;
+  eventsError = '';
 
   imagePreview: string | null = null;
   imageError = '';
+  private currentUserId = '';
+  private routeSubscription?: Subscription;
+  private readonly monthLabels = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+
+  constructor(
+    private readonly route: ActivatedRoute,
+    private readonly eventService: EventService,
+    private readonly authService: AuthService
+  ) {}
+
+  ngOnInit(): void {
+    this.loadCurrentUserContext();
+    this.routeSubscription = this.route.queryParamMap.subscribe(() => {
+      this.fetchEvents();
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.routeSubscription?.unsubscribe();
+  }
 
   newEvent = {
     name: '',
@@ -47,56 +75,29 @@ export class EventsComponent {
 
     this.events = this.events.filter(event => event.id !== id);
   }
+  events: EventItem[] = [];
 
+  fetchEvents(): void {
+    this.isLoadingEvents = true;
+    this.eventsError = '';
 
-
-
-
-  events: EventItem[] = [
-    /* {
-      id: 1,
-      name: 'Block Party & BBQ',
-      date: '19',
-      month: 'FEB',
-      time: '9:15 AM',
-      location: 'Willow Creek Park',
-      interested: 45,
-      imageUrl:
-        'https://images.unsplash.com/photo-1504754524776-8f4f37790ca0?auto=format&fit=crop&w=1200&q=80'
-    },
-    {
-      id: 2,
-      name: 'Morning Yoga in the Park',
-      date: '20',
-      month: 'FEB',
-      time: '11:00 AM',
-      location: 'Community Center',
-      interested: 12,
-      imageUrl:
-        'https://images.unsplash.com/photo-1552196563-55cd4e45efb3?auto=format&fit=crop&w=1200&q=80'
-    },
-    {
-      id: 3,
-      name: 'Local Book Club Meeting',
-      date: '22',
-      month: 'FEB',
-      time: '6:30 PM',
-      location: 'Public Library',
-      interested: 8,
-      imageUrl:
-        'https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=1200&q=80'
-    },
-    {
-      id: 4,
-      name: 'Saturday Farmers Market',
-      date: '24',
-      month: 'FEB',
-      time: '8:00 AM',
-      location: 'Town Center',
-      interested: 124,
-      imageUrl: 'https://images.unsplash.com/photo-1488459716781-31db52582fe9?auto=format&fit=crop&w=1200&q=80'
-    } */
-  ];
+    this.eventService
+      .getEvents()
+      .pipe(finalize(() => {
+        this.isLoadingEvents = false;
+      }))
+      .subscribe({
+        next: (events) => {
+          this.events = events
+            .filter((event) => this.isUpcomingEvent(event.date))
+            .map((event) => this.mapToEventItem(event));
+        },
+        error: (error: unknown) => {
+          console.error(error);
+          this.eventsError = this.getFetchErrorMessage(error);
+        }
+      });
+  }
 
   get displayedEvents(): EventItem[] {
     if (this.showOnlyUserEvents) {
@@ -176,5 +177,93 @@ export class EventsComponent {
     };
     this.imagePreview = null;
     this.imageError = '';
+  }
+
+  private mapToEventItem(event: CommunityEvent): EventItem {
+    const badge = this.getDateBadge(event.date);
+    return {
+      id: event.id,
+      name: event.title,
+      date: badge.day,
+      month: badge.month,
+      time: event.time,
+      location: event.location,
+      interested: 0,
+      imageUrl: event.image_url,
+      author: event.author,
+      createdByUser: this.currentUserId !== '' && event.author === this.currentUserId
+    };
+  }
+
+  private getDateBadge(dateValue: string): { day: string; month: string } {
+    const trimmed = dateValue.trim();
+    if (!trimmed) {
+      return { day: '', month: '' };
+    }
+
+    const isoDateMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (isoDateMatch) {
+      const monthIndex = Number(isoDateMatch[2]) - 1;
+      return {
+        day: String(Number(isoDateMatch[3])).padStart(2, '0'),
+        month: this.monthLabels[monthIndex] ?? ''
+      };
+    }
+
+    const parsed = new Date(trimmed);
+    if (!Number.isNaN(parsed.getTime())) {
+      return {
+        day: String(parsed.getDate()).padStart(2, '0'),
+        month: this.monthLabels[parsed.getMonth()] ?? ''
+      };
+    }
+
+    return { day: trimmed, month: '' };
+  }
+
+  private isUpcomingEvent(dateValue: string): boolean {
+    const trimmed = dateValue.trim();
+    if (!trimmed) {
+      return true;
+    }
+
+    const parsed = new Date(trimmed);
+    if (Number.isNaN(parsed.getTime())) {
+      return true;
+    }
+
+    const eventDay = new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate()).getTime();
+    const today = new Date();
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+
+    return eventDay >= todayStart;
+  }
+
+  private loadCurrentUserContext(): void {
+    const user = this.authService.getStoredUser();
+    this.currentUserId = user ? `${user.id}` : '';
+  }
+
+  private getFetchErrorMessage(error: unknown): string {
+    if (!(error instanceof HttpErrorResponse)) {
+      return 'Failed to load events.';
+    }
+
+    if (error.status === 0) {
+      return 'Unable to reach the backend. Make sure the API is running.';
+    }
+
+    if (typeof error.error === 'string') {
+      const trimmed = error.error.trim();
+      if (trimmed) {
+        return trimmed;
+      }
+    }
+
+    if (error.error?.error) {
+      return error.error.error;
+    }
+
+    return 'Failed to load events.';
   }
 }

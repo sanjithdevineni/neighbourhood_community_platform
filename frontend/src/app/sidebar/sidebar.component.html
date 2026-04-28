@@ -22,6 +22,14 @@
 
     <a
             routerLink="/events"
+            [queryParams]="{ refresh: eventsRefreshToken }"
+            (click)="refreshEventsLink()"
+            [routerLinkActiveOptions]="{
+              paths: 'exact',
+              queryParams: 'ignored',
+              matrixParams: 'ignored',
+              fragment: 'ignored'
+            }"
             routerLinkActive="active"
             class="menu-item"
     >

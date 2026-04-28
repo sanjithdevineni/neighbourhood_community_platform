@@ -172,8 +172,16 @@
 
   </div>-->
 
-  <!-- EVENTS GRID WITH EMPTY STATE -->
-  <div *ngIf="displayedEvents.length > 0; else emptyState">
+  <div *ngIf="eventsError" class="status-state error-state">
+    <p>{{ eventsError }}</p>
+    <button type="button" class="create-event-btn" (click)="fetchEvents()">Retry</button>
+  </div>
+
+  <!-- EVENTS GRID -->
+  <div *ngIf="!eventsError">
+    <div class="events-empty-note" *ngIf="displayedEvents.length === 0">
+      {{ showOnlyUserEvents ? 'No events created yet' : 'No events available' }}
+    </div>
 
     <div class="events-grid">
 
@@ -221,26 +229,6 @@
       </div>
 
     </div>
-
   </div>
-
-  <!-- EMPTY STATE -->
-  <ng-template #emptyState>
-    <div class="empty-state">
-      <h3>
-        {{ showOnlyUserEvents ? 'No events created yet' : 'No events available' }}
-      </h3>
-
-      <p>
-        {{ showOnlyUserEvents
-        ? "You haven't created any events yet. Start by creating one."
-        : "There are no events to display right now." }}
-      </p>
-
-      <button class="create-event-btn" (click)="openCreateEvent()">
-        Create an event
-      </button>
-    </div>
-  </ng-template>
 
 </section>
