@@ -5,6 +5,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { finalize, Subscription, timer, timeout, TimeoutError } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
+import { ToastService } from '../../services/toast.service';
 
 @Component({
   selector: 'app-signup',
@@ -21,6 +22,7 @@ export class SignupComponent implements OnDestroy {
 
   private readonly formBuilder = inject(FormBuilder);
   private readonly authService = inject(AuthService);
+  private readonly toastService = inject(ToastService);
   private readonly router = inject(Router);
   private readonly cdr = inject(ChangeDetectorRef);
   private redirectSub?: Subscription;
@@ -62,7 +64,7 @@ export class SignupComponent implements OnDestroy {
       )
       .subscribe({
         next: () => {
-          this.successMessage = 'Account created successfully. Redirecting to login...';
+          this.toastService.success('Account created successfully. Redirecting to login...');
           this.signupForm.reset();
           this.cdr.detectChanges();
 
@@ -72,7 +74,7 @@ export class SignupComponent implements OnDestroy {
           });
         },
         error: (error: unknown) => {
-          this.errorMessage = this.getErrorMessage(error);
+          this.toastService.error(this.getErrorMessage(error));
           this.cdr.detectChanges();
         }
       });

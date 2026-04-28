@@ -134,14 +134,13 @@ export class EventService {
     const headers = token ? new HttpHeaders({ Authorization: `Bearer ${token}` }) : undefined;
     
     const formData = new FormData();
-    formData.append('id', payload.id.toString());
     if (payload.title) formData.append('title', payload.title);
     if (payload.date) formData.append('date', payload.date);
     if (payload.time) formData.append('time', payload.time);
     if (payload.location) formData.append('location', payload.location);
     if (payload.image) formData.append('image', payload.image);
     
-    return this.http.post<RawEvent>(`${this.apiUrl}/update`, formData, { headers }).pipe(
+    return this.http.put<RawEvent>(`${this.apiUrl}/${payload.id}`, formData, { headers }).pipe(
       map(e => this.normalizeEvent(e))
     );
   }

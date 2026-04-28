@@ -20,6 +20,8 @@ interface EventItem {
   createdByUser?: boolean;
 }
 
+import { ToastService } from '../../services/toast.service';
+
 @Component({
   selector: 'app-events',
   standalone: true,
@@ -77,6 +79,7 @@ export class EventsComponent implements OnInit, OnDestroy {
     private readonly route: ActivatedRoute,
     private readonly eventService: EventService,
     private readonly authService: AuthService,
+    private readonly toastService: ToastService,
     private readonly cdr: ChangeDetectorRef
   ) {}
 
@@ -121,10 +124,11 @@ export class EventsComponent implements OnInit, OnDestroy {
       .subscribe({
         next: () => {
           this.events = this.events.filter(event => String(event.id) !== String(id));
+          this.toastService.success('Event deleted successfully');
         },
         error: (error: unknown) => {
           console.error(error);
-          this.deleteEventError = this.getDeleteErrorMessage(error);
+          this.toastService.error(this.getDeleteErrorMessage(error));
         }
       });
   }
@@ -235,11 +239,12 @@ export class EventsComponent implements OnInit, OnDestroy {
         const mapped = this.mapToEventItem(updatedEvent);
         mapped.createdByUser = true;
         this.events = this.events.map(e => e.id === this.editingEventId ? mapped : e);
+        this.toastService.success('Event updated successfully');
         this.closeEditEvent();
       },
       error: (err) => {
         console.error('Update failed', err);
-        this.editErrorMessage = 'Server failed to update event.';
+        this.toastService.error('Server failed to update event.');
       }
     });
   }
@@ -323,13 +328,14 @@ export class EventsComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (createdEvent) => {
           this.events = [this.mapToEventItem(createdEvent), ...this.events];
+          this.toastService.success('Event created successfully');
           this.resetForm();
           eventForm.resetForm();
           this.showCreateEventForm = false;
         },
         error: (error: unknown) => {
           console.error(error);
-          this.createEventError = this.getCreateErrorMessage(error);
+          this.toastService.error(this.getCreateErrorMessage(error));
         }
       });
   }
