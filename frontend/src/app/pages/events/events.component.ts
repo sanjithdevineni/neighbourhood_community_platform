@@ -177,7 +177,7 @@ export class EventsComponent implements OnInit {
       return;
     }
 
-    this.imageFile = file;
+    this.editImageFile = file;
 
     const reader = new FileReader();
 
@@ -190,18 +190,36 @@ export class EventsComponent implements OnInit {
   }
 
   saveEditEvent(editForm: NgForm): void {
-    if (editForm.invalid || this.imageError || !this.editingEventId) {
+    if (editForm.invalid || this.imageError || !this.editingEventId || this.isUpdatingEvent) {
       editForm.control.markAllAsTouched();
       return;
     }
 
-    this.events = this.events.map((e) => 
-      e.id === this.editingEventId 
-        ? { ...e, ...this.editEventData }
-        : e
-    );
+    this.isUpdatingEvent = true;
+    this.editErrorMessage = '';
 
-    this.closeEditEvent();
+    this.eventService.updateEvent({
+      id: this.editingEventId,
+      title: this.editEventData.title || '',
+      date: this.editEventData.date || '',
+      month: this.editEventData.month || '',
+      time: this.editEventData.time || '',
+      location: this.editEventData.location || '',
+      image: this.editImageFile || undefined
+    }).pipe(finalize(() => {
+      this.isUpdatingEvent = false;
+      this.cdr.detectChanges();
+    })).subscribe({
+      next: (updatedEvent) => {
+        updatedEvent.createdByUser = true;
+        this.events = this.events.map(e => e.id === this.editingEventId ? updatedEvent : e);
+        this.closeEditEvent();
+      },
+      error: (err) => {
+        console.error('Update failed', err);
+        this.editErrorMessage = 'Server failed to update event.';
+      }
+    });
   }
 
   openCreateEvent(): void {
@@ -266,13 +284,14 @@ export class EventsComponent implements OnInit {
       next: (createdEvent) => {
         createdEvent.createdByUser = true;
         this.events = [createdEvent, ...this.events];
-        
+
         this.resetForm();
         eventForm.resetForm();
         this.showCreateEventForm = false;
       },
       error: (err) => {
         console.error('Failed to create event:', err);
+        this.submitError = 'Server failed to save event. Database check needed.';
       }
     });
   }
@@ -290,5 +309,6 @@ export class EventsComponent implements OnInit {
     this.imagePreview = null;
     this.imageFile = null;
     this.imageError = '';
+    this.submitError = '';
   }
 }
