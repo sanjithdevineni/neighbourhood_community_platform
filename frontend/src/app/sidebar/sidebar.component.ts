@@ -8,4 +8,10 @@ import { RouterModule } from '@angular/router';
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.css'
 })
-export class SidebarComponent {}
+export class SidebarComponent {
+  eventsRefreshToken = 0;
+
+  refreshEventsLink(): void {
+    this.eventsRefreshToken += 1;
+  }
+}
