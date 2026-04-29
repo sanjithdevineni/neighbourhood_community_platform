@@ -30,7 +30,7 @@ func setupControllerTestDB(t *testing.T) {
 		t.Fatalf("failed to open in-memory db: %v", err)
 	}
 
-	if err := db.AutoMigrate(&models.User{}, &models.Announcement{}, &models.Event{}); err != nil {
+	if err := db.AutoMigrate(&models.User{}, &models.Announcement{}, &models.Event{}, &models.Alert{}); err != nil {
 		t.Fatalf("failed to migrate test db: %v", err)
 	}
 
@@ -767,3 +767,481 @@ func TestGetAnnouncements_Pagination_CustomPage(t *testing.T) {
 	}
 }
 
+// Event Update/Delete Tests
+
+func TestUpdateEvent_SuccessfulUpdate(t *testing.T) {
+	setupControllerTestDB(t)
+
+	// Create an event
+	event := models.Event{Title: "Old Title", Date: "2026-04-20", Time: "10:00", Location: "Old Location", Author: "user1"}
+	if err := database.DB.Create(&event).Error; err != nil {
+		t.Fatalf("seed event failed: %v", err)
+	}
+
+	r := gin.New()
+	r.POST("/api/events/:id/update", func(c *gin.Context) {
+		c.Set("userID", "user1")
+		UpdateEvent(c)
+	})
+
+	fields := map[string]string{
+		"title":    "New Title",
+		"date":     "2026-05-20",
+		"time":     "14:00",
+		"location": "New Location",
+	}
+
+	w := performMultipartRequest(r, http.MethodPost, fmt.Sprintf("/api/events/%d/update", event.ID), fields, "", "", nil)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", w.Code, w.Body.String())
+	}
+
+	var updated models.Event
+	if err := database.DB.First(&updated, event.ID).Error; err != nil {
+		t.Fatalf("failed to fetch updated event: %v", err)
+	}
+
+	if updated.Title != "New Title" || updated.Date != "2026-05-20" {
+		t.Fatalf("event not updated correctly: %+v", updated)
+	}
+}
+
+func TestUpdateEvent_ForbiddenForDifferentAuthor(t *testing.T) {
+	setupControllerTestDB(t)
+
+	event := models.Event{Title: "Event", Date: "2026-04-20", Time: "10:00", Location: "Location", Author: "user1"}
+	if err := database.DB.Create(&event).Error; err != nil {
+		t.Fatalf("seed event failed: %v", err)
+	}
+
+	r := gin.New()
+	r.POST("/api/events/:id/update", func(c *gin.Context) {
+		c.Set("userID", "user2") // Different user
+		UpdateEvent(c)
+	})
+
+	fields := map[string]string{
+		"title": "Updated",
+	}
+
+	w := performMultipartRequest(r, http.MethodPost, fmt.Sprintf("/api/events/%d/update", event.ID), fields, "", "", nil)
+	if w.Code != http.StatusForbidden {
+		t.Fatalf("expected 403 for different author, got %d body=%s", w.Code, w.Body.String())
+	}
+}
+
+func TestUpdateEvent_WithImageReplacement(t *testing.T) {
+	setupControllerTestDB(t)
+
+	event := models.Event{
+		Title:    "Event",
+		Date:     "2026-04-20",
+		Time:     "10:00",
+		Location: "Location",
+		ImageURL: "/uploads/old_image.png",
+		Author:   "user1",
+	}
+	if err := database.DB.Create(&event).Error; err != nil {
+		t.Fatalf("seed event failed: %v", err)
+	}
+
+	r := gin.New()
+	r.POST("/api/events/:id/update", func(c *gin.Context) {
+		c.Set("userID", "user1")
+		UpdateEvent(c)
+	})
+
+	fields := map[string]string{
+		"title": "Updated Title",
+	}
+	mockImage := []byte{0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A}
+
+	w := performMultipartRequest(r, http.MethodPost, fmt.Sprintf("/api/events/%d/update", event.ID), fields, "image", "new_event.png", mockImage)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", w.Code, w.Body.String())
+	}
+
+	var updated models.Event
+	if err := database.DB.First(&updated, event.ID).Error; err != nil {
+		t.Fatalf("failed to fetch updated event: %v", err)
+	}
+
+	if updated.ImageURL == "/uploads/old_image.png" {
+		t.Fatalf("image should have been replaced, got %q", updated.ImageURL)
+	}
+}
+
+func TestUpdateEvent_ImageUpload_InvalidType(t *testing.T) {
+	setupControllerTestDB(t)
+
+	event := models.Event{Title: "Event", Date: "2026-04-20", Time: "10:00", Location: "Location", Author: "user1"}
+	if err := database.DB.Create(&event).Error; err != nil {
+		t.Fatalf("seed event failed: %v", err)
+	}
+
+	r := gin.New()
+	r.POST("/api/events/:id/update", func(c *gin.Context) {
+		c.Set("userID", "user1")
+		UpdateEvent(c)
+	})
+
+	fields := map[string]string{
+		"title": "Updated",
+	}
+	mockFile := []byte("not an image")
+
+	w := performMultipartRequest(r, http.MethodPost, fmt.Sprintf("/api/events/%d/update", event.ID), fields, "image", "bad.txt", mockFile)
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for invalid image type, got %d body=%s", w.Code, w.Body.String())
+	}
+}
+
+func TestUpdateEvent_ImageUpload_ExceedsSizeLimit(t *testing.T) {
+	setupControllerTestDB(t)
+
+	event := models.Event{Title: "Event", Date: "2026-04-20", Time: "10:00", Location: "Location", Author: "user1"}
+	if err := database.DB.Create(&event).Error; err != nil {
+		t.Fatalf("seed event failed: %v", err)
+	}
+
+	r := gin.New()
+	r.POST("/api/events/:id/update", func(c *gin.Context) {
+		c.Set("userID", "user1")
+		UpdateEvent(c)
+	})
+
+	fields := map[string]string{
+		"title": "Updated",
+	}
+	largeFile := make([]byte, MaxUploadSize+1)
+
+	w := performMultipartRequest(r, http.MethodPost, fmt.Sprintf("/api/events/%d/update", event.ID), fields, "image", "large.png", largeFile)
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for oversized image, got %d body=%s", w.Code, w.Body.String())
+	}
+}
+
+func TestDeleteEvent_SuccessfulDeletion(t *testing.T) {
+	setupControllerTestDB(t)
+
+	event := models.Event{Title: "To Delete", Date: "2026-04-20", Time: "10:00", Location: "Location", Author: "user1"}
+	if err := database.DB.Create(&event).Error; err != nil {
+		t.Fatalf("seed event failed: %v", err)
+	}
+
+	r := gin.New()
+	r.DELETE("/api/events/:id", func(c *gin.Context) {
+		c.Set("userID", "user1")
+		DeleteEvent(c)
+	})
+
+	w := performJSONRequest(r, http.MethodDelete, fmt.Sprintf("/api/events/%d", event.ID), nil)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", w.Code, w.Body.String())
+	}
+
+	if !bytes.Contains(w.Body.Bytes(), []byte(`"message":"Event deleted successfully"`)) {
+		t.Fatalf("expected success message in response: %s", w.Body.String())
+	}
+
+	// Verify event is deleted
+	var deleted models.Event
+	result := database.DB.First(&deleted, event.ID)
+	if result.Error == nil {
+		t.Fatalf("event should have been deleted, but still exists")
+	}
+}
+
+func TestDeleteEvent_ForbiddenForDifferentAuthor(t *testing.T) {
+	setupControllerTestDB(t)
+
+	event := models.Event{Title: "Event", Date: "2026-04-20", Time: "10:00", Location: "Location", Author: "user1"}
+	if err := database.DB.Create(&event).Error; err != nil {
+		t.Fatalf("seed event failed: %v", err)
+	}
+
+	r := gin.New()
+	r.DELETE("/api/events/:id", func(c *gin.Context) {
+		c.Set("userID", "user2") // Different user
+		DeleteEvent(c)
+	})
+
+	w := performJSONRequest(r, http.MethodDelete, fmt.Sprintf("/api/events/%d", event.ID), nil)
+	if w.Code != http.StatusForbidden {
+		t.Fatalf("expected 403 for different author, got %d body=%s", w.Code, w.Body.String())
+	}
+
+	// Verify event still exists
+	var stillExists models.Event
+	if err := database.DB.First(&stillExists, event.ID).Error; err != nil {
+		t.Fatalf("event should still exist: %v", err)
+	}
+}
+
+// Alert Controller Tests
+
+func TestGetAlerts_EmptyList(t *testing.T) {
+	setupControllerTestDB(t)
+
+	r := gin.New()
+	r.GET("/api/alerts", GetAlerts)
+
+	w := performJSONRequest(r, http.MethodGet, "/api/alerts", nil)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", w.Code, w.Body.String())
+	}
+
+	var alerts []models.Alert
+	if err := json.Unmarshal(w.Body.Bytes(), &alerts); err != nil {
+		t.Fatalf("failed to unmarshal response: %v body=%s", err, w.Body.String())
+	}
+
+	if len(alerts) != 0 {
+		t.Fatalf("expected 0 alerts, got %d", len(alerts))
+	}
+}
+
+func TestGetAlerts_WithData(t *testing.T) {
+	setupControllerTestDB(t)
+
+	// Seed some alerts
+	for i := 1; i <= 3; i++ {
+		alert := models.Alert{
+			Title:   fmt.Sprintf("Alert %d", i),
+			Message: fmt.Sprintf("Message %d", i),
+			Type:    "info",
+			Author:  "user1",
+		}
+		if err := database.DB.Create(&alert).Error; err != nil {
+			t.Fatalf("seed alert failed: %v", err)
+		}
+	}
+
+	r := gin.New()
+	r.GET("/api/alerts", GetAlerts)
+
+	w := performJSONRequest(r, http.MethodGet, "/api/alerts", nil)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", w.Code, w.Body.String())
+	}
+
+	var alerts []models.Alert
+	if err := json.Unmarshal(w.Body.Bytes(), &alerts); err != nil {
+		t.Fatalf("failed to unmarshal response: %v body=%s", err, w.Body.String())
+	}
+
+	if len(alerts) != 3 {
+		t.Fatalf("expected 3 alerts, got %d", len(alerts))
+	}
+}
+
+func TestCreateAlert_SuccessfulCreation(t *testing.T) {
+	setupControllerTestDB(t)
+
+	r := gin.New()
+	r.POST("/api/alerts", func(c *gin.Context) {
+		c.Set("userID", "user123")
+		CreateAlert(c)
+	})
+
+	payload := map[string]any{
+		"title":   "System Alert",
+		"message": "Something important",
+		"type":    "warning",
+	}
+
+	w := performJSONRequest(r, http.MethodPost, "/api/alerts", payload)
+	if w.Code != http.StatusCreated {
+		t.Fatalf("expected 201, got %d body=%s", w.Code, w.Body.String())
+	}
+
+	var created models.Alert
+	if err := database.DB.First(&created).Error; err != nil {
+		t.Fatalf("failed to fetch created alert: %v", err)
+	}
+
+	if created.Title != "System Alert" || created.Author != "user123" {
+		t.Fatalf("alert not created correctly: %+v", created)
+	}
+}
+
+func TestCreateAlert_Unauthorized(t *testing.T) {
+	setupControllerTestDB(t)
+
+	r := gin.New()
+	r.POST("/api/alerts", CreateAlert) // No auth middleware, no userID set
+
+	payload := map[string]any{
+		"title":   "System Alert",
+		"message": "Something important",
+		"type":    "warning",
+	}
+
+	w := performJSONRequest(r, http.MethodPost, "/api/alerts", payload)
+	if w.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401 for missing auth, got %d body=%s", w.Code, w.Body.String())
+	}
+}
+
+func TestUpdateAlert_SuccessfulUpdate(t *testing.T) {
+	setupControllerTestDB(t)
+
+	alert := models.Alert{
+		Title:   "Old Title",
+		Message: "Old Message",
+		Type:    "info",
+		Author:  "user1",
+	}
+	if err := database.DB.Create(&alert).Error; err != nil {
+		t.Fatalf("seed alert failed: %v", err)
+	}
+
+	r := gin.New()
+	r.POST("/api/alerts/:id", func(c *gin.Context) {
+		c.Set("userID", "user1")
+		UpdateAlert(c)
+	})
+
+	payload := map[string]any{
+		"title":   "Updated Title",
+		"message": "Updated Message",
+		"type":    "warning",
+	}
+
+	w := performJSONRequest(r, http.MethodPost, fmt.Sprintf("/api/alerts/%d", alert.ID), payload)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", w.Code, w.Body.String())
+	}
+
+	var updated models.Alert
+	if err := database.DB.First(&updated, alert.ID).Error; err != nil {
+		t.Fatalf("failed to fetch updated alert: %v", err)
+	}
+
+	if updated.Title != "Updated Title" || updated.Message != "Updated Message" {
+		t.Fatalf("alert not updated correctly: %+v", updated)
+	}
+}
+
+func TestUpdateAlert_ForbiddenForDifferentAuthor(t *testing.T) {
+	setupControllerTestDB(t)
+
+	alert := models.Alert{
+		Title:   "Alert",
+		Message: "Message",
+		Type:    "info",
+		Author:  "user1",
+	}
+	if err := database.DB.Create(&alert).Error; err != nil {
+		t.Fatalf("seed alert failed: %v", err)
+	}
+
+	r := gin.New()
+	r.POST("/api/alerts/:id", func(c *gin.Context) {
+		c.Set("userID", "user2") // Different user
+		UpdateAlert(c)
+	})
+
+	payload := map[string]any{
+		"title": "Hacked",
+	}
+
+	w := performJSONRequest(r, http.MethodPost, fmt.Sprintf("/api/alerts/%d", alert.ID), payload)
+	if w.Code != http.StatusForbidden {
+		t.Fatalf("expected 403 for different author, got %d body=%s", w.Code, w.Body.String())
+	}
+}
+
+func TestUpdateAlert_NoFieldsToUpdate(t *testing.T) {
+	setupControllerTestDB(t)
+
+	alert := models.Alert{
+		Title:   "Alert",
+		Message: "Message",
+		Type:    "info",
+		Author:  "user1",
+	}
+	if err := database.DB.Create(&alert).Error; err != nil {
+		t.Fatalf("seed alert failed: %v", err)
+	}
+
+	r := gin.New()
+	r.POST("/api/alerts/:id", func(c *gin.Context) {
+		c.Set("userID", "user1")
+		UpdateAlert(c)
+	})
+
+	payload := map[string]any{} // Empty update
+
+	w := performJSONRequest(r, http.MethodPost, fmt.Sprintf("/api/alerts/%d", alert.ID), payload)
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for no fields to update, got %d body=%s", w.Code, w.Body.String())
+	}
+}
+
+func TestDeleteAlert_SuccessfulDeletion(t *testing.T) {
+	setupControllerTestDB(t)
+
+	alert := models.Alert{
+		Title:   "To Delete",
+		Message: "Message",
+		Type:    "info",
+		Author:  "user1",
+	}
+	if err := database.DB.Create(&alert).Error; err != nil {
+		t.Fatalf("seed alert failed: %v", err)
+	}
+
+	r := gin.New()
+	r.DELETE("/api/alerts/:id", func(c *gin.Context) {
+		c.Set("userID", "user1")
+		DeleteAlert(c)
+	})
+
+	w := performJSONRequest(r, http.MethodDelete, fmt.Sprintf("/api/alerts/%d", alert.ID), nil)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", w.Code, w.Body.String())
+	}
+
+	if !bytes.Contains(w.Body.Bytes(), []byte(`"message":"Alert deleted successfully"`)) {
+		t.Fatalf("expected success message in response: %s", w.Body.String())
+	}
+
+	// Verify alert is deleted
+	var deleted models.Alert
+	result := database.DB.First(&deleted, alert.ID)
+	if result.Error == nil {
+		t.Fatalf("alert should have been deleted, but still exists")
+	}
+}
+
+func TestDeleteAlert_ForbiddenForDifferentAuthor(t *testing.T) {
+	setupControllerTestDB(t)
+
+	alert := models.Alert{
+		Title:   "Alert",
+		Message: "Message",
+		Type:    "info",
+		Author:  "user1",
+	}
+	if err := database.DB.Create(&alert).Error; err != nil {
+		t.Fatalf("seed alert failed: %v", err)
+	}
+
+	r := gin.New()
+	r.DELETE("/api/alerts/:id", func(c *gin.Context) {
+		c.Set("userID", "user2") // Different user
+		DeleteAlert(c)
+	})
+
+	w := performJSONRequest(r, http.MethodDelete, fmt.Sprintf("/api/alerts/%d", alert.ID), nil)
+	if w.Code != http.StatusForbidden {
+		t.Fatalf("expected 403 for different author, got %d body=%s", w.Code, w.Body.String())
+	}
+
+	// Verify alert still exists
+	var stillExists models.Alert
+	if err := database.DB.First(&stillExists, alert.ID).Error; err != nil {
+		t.Fatalf("alert should still exist: %v", err)
+	}
+}
