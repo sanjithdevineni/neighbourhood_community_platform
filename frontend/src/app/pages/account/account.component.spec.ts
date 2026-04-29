@@ -84,7 +84,7 @@ describe('AccountComponent', () => {
 
     homeButton.click();
 
-    expect(navigateSpy).toHaveBeenCalledWith(['/']);
+    expect(navigateSpy).toHaveBeenCalledWith(['/home']);
   });
 
   it('should clear auth session and navigate to login on logout', async () => {

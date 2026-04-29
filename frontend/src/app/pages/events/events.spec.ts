@@ -373,7 +373,6 @@ describe('EventsComponent', () => {
     component.newEvent = {
       title: 'Neighborhood Cleanup',
       date: '2026-04-30',
-      month: '',
       time: '10:00 AM',
       location: 'Depot Park',
       interested: 0,
@@ -408,7 +407,6 @@ describe('EventsComponent', () => {
     component.newEvent = {
       title: 'Neighborhood Cleanup',
       date: '2026-04-30',
-      month: '',
       time: '10:00 AM',
       location: 'Depot Park',
       interested: 0,

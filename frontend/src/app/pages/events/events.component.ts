@@ -57,7 +57,6 @@ export class EventsComponent implements OnInit, OnDestroy {
   newEvent = {
     title: '',
     date: '',
-    month: '',
     time: '',
     location: '',
     interested: 0,
@@ -295,10 +294,9 @@ export class EventsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const combinedDate = `${this.newEvent.month} ${this.newEvent.date}`.trim();
     const payload: CreateEventPayload = {
       title: this.newEvent.title.trim(),
-      date: combinedDate,
+      date: this.newEvent.date.trim(),
       time: this.newEvent.time.trim(),
       location: this.newEvent.location.trim(),
       image: this.selectedImageFile
@@ -358,7 +356,6 @@ export class EventsComponent implements OnInit, OnDestroy {
     this.newEvent = {
       title: '',
       date: '',
-      month: '',
       time: '',
       location: '',
       interested: 0,

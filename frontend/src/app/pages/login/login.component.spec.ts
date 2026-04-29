@@ -81,7 +81,7 @@ describe('LoginComponent', () => {
       expect(component.isSubmitting).toBe(false);
 
       vi.advanceTimersByTime(800);
-      expect(navigateSpy).toHaveBeenCalledWith(['/']);
+      expect(navigateSpy).toHaveBeenCalledWith(['/home']);
     } finally {
       vi.useRealTimers();
     }

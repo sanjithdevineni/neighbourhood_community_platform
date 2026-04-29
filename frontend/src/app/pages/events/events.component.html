@@ -45,8 +45,7 @@
 
         <div class="form-group">
           <input
-            type="text"
-            placeholder="Date (e.g., 25)"
+            type="date"
             [(ngModel)]="newEvent.date"
             name="date"
             #date="ngModel"
@@ -54,20 +53,6 @@
           />
           <div *ngIf="date.invalid && (date.dirty || date.touched)" class="error-message">
             Date is required.
-          </div>
-        </div>
-
-        <div class="form-group">
-          <input
-            type="text"
-            placeholder="Month (e.g., MAR)"
-            [(ngModel)]="newEvent.month"
-            name="month"
-            #month="ngModel"
-            required
-          />
-          <div *ngIf="month.invalid && (month.dirty || month.touched)" class="error-message">
-            Month is required.
           </div>
         </div>
 
