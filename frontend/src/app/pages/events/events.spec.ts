@@ -624,4 +624,61 @@ describe('EventsComponent', () => {
 
     expect(component.showEditEventForm).toBe(false);
   });
+
+  it('should toggle interest on success and update event state', () => {
+    const successSpy = vi.spyOn((component as any).toastService, 'success');
+
+    eventServiceStub.toggleInterest = vi.fn(() =>
+      of({
+        is_interested: true,
+        interested_count: 9
+      })
+    );
+
+    const eventItem = {
+      id: 55,
+      title: 'Interest Test',
+      eventDate: '2099-08-20',
+      date: '20',
+      month: 'AUG',
+      time: '5:00 PM',
+      location: 'Depot Park',
+      interested: 1,
+      is_interested: false,
+      imageUrl: '',
+      author: '1'
+    };
+
+    component.toggleInterest(eventItem);
+
+    expect(eventServiceStub.toggleInterest).toHaveBeenCalledWith(55);
+    expect(eventItem.interested).toBe(9);
+    expect(eventItem.is_interested).toBe(true);
+    expect(successSpy).toHaveBeenCalledWith('You are now interested in this event!');
+  });
+
+  it('should show auth error toast when toggle interest returns 401', () => {
+    const errorSpy = vi.spyOn((component as any).toastService, 'error');
+    eventServiceStub.toggleInterest = vi.fn(() =>
+      throwError(() => new HttpErrorResponse({ status: 401 }))
+    );
+
+    const eventItem = {
+      id: 56,
+      title: 'Interest Unauthorized',
+      eventDate: '2099-08-21',
+      date: '21',
+      month: 'AUG',
+      time: '6:00 PM',
+      location: 'Riverside Park',
+      interested: 3,
+      is_interested: false,
+      imageUrl: '',
+      author: '2'
+    };
+
+    component.toggleInterest(eventItem);
+
+    expect(errorSpy).toHaveBeenCalledWith('You must be logged in to express interest.');
+  });
 });
