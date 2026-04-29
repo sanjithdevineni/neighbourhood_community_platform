@@ -1,11 +1,12 @@
-import { HttpErrorResponse } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule, NgForm } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { distinctUntilChanged, finalize, map, Subscription } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
-import { CommunityEvent, CreateEventPayload, EventService } from '../../services/event.service';
+import { CreateEventPayload, EventService, CommunityEvent } from '../../services/event.service';
+import { ToastService } from '../../services/toast.service';
 
 interface EventItem {
   id: number;
@@ -15,12 +16,11 @@ interface EventItem {
   time: string;
   location: string;
   interested: number;
+  is_interested?: boolean;
   imageUrl: string;
-  author?: string;
+  author: string;
   createdByUser?: boolean;
 }
-
-import { ToastService } from '../../services/toast.service';
 
 @Component({
   selector: 'app-events',
@@ -57,6 +57,7 @@ export class EventsComponent implements OnInit, OnDestroy {
   newEvent = {
     title: '',
     date: '',
+    month: '',
     time: '',
     location: '',
     interested: 0,
@@ -99,12 +100,30 @@ export class EventsComponent implements OnInit, OnDestroy {
     this.refreshSubscription?.unsubscribe();
   }
 
-  deleteEvent(id: number): void {
-    if (this.deletingEventIds.has(id)) {
-      return;
-    }
+  fetchEvents(): void {
+    this.isLoadingEvents = true;
+    this.eventsError = '';
+    this.deleteEventError = '';
 
-    const confirmDelete = window.confirm('Are you sure you want to delete this event?');
+    this.eventService
+      .getEvents()
+      .pipe(finalize(() => {
+        this.isLoadingEvents = false;
+        this.cdr.detectChanges();
+      }))
+      .subscribe({
+        next: (data) => {
+          this.events = data.map((e) => this.mapToEventItem(e));
+        },
+        error: (error: unknown) => {
+          console.error(error);
+          this.eventsError = this.getFetchErrorMessage(error);
+        }
+      });
+  }
+
+  deleteEvent(id: number): void {
+    const confirmDelete = confirm('Are you sure you want to delete this event?');
 
     if (!confirmDelete) {
       return;
@@ -129,35 +148,6 @@ export class EventsComponent implements OnInit, OnDestroy {
         error: (error: unknown) => {
           console.error(error);
           this.toastService.error(this.getDeleteErrorMessage(error));
-        }
-      });
-  }
-
-  fetchEvents(): void {
-    this.isLoadingEvents = true;
-    this.eventsError = '';
-    this.deleteEventError = '';
-
-    this.eventService
-      .getEvents()
-      .pipe(finalize(() => {
-        this.isLoadingEvents = false;
-        this.cdr.detectChanges();
-      }))
-      .subscribe({
-        next: (events) => {
-          try {
-            const normalizedEvents = Array.isArray(events) ? events : [];
-            this.events = normalizedEvents.map((event) => this.mapToEventItem(event));
-          } catch (error) {
-            console.error(error);
-            this.eventsError = 'Failed to load events.';
-            this.events = [];
-          }
-        },
-        error: (error: unknown) => {
-          console.error(error);
-          this.eventsError = this.getFetchErrorMessage(error);
         }
       });
   }
@@ -252,8 +242,6 @@ export class EventsComponent implements OnInit, OnDestroy {
   openCreateEvent(): void {
     this.showCreateEventForm = true;
     this.imageError = '';
-    this.createEventError = '';
-    this.deleteEventError = '';
   }
 
   closeCreateEvent(): void {
@@ -266,9 +254,6 @@ export class EventsComponent implements OnInit, OnDestroy {
 
     if (!input.files || input.files.length === 0) {
       this.imageError = '';
-      this.selectedImageFile = null;
-      this.imagePreview = null;
-      this.newEvent.imageUrl = '';
       return;
     }
 
@@ -277,14 +262,11 @@ export class EventsComponent implements OnInit, OnDestroy {
     if (!file.type.startsWith('image/')) {
       this.imageError = 'Please upload a valid image file.';
       this.imagePreview = null;
-      this.selectedImageFile = null;
       this.newEvent.imageUrl = '';
       return;
     }
 
     this.imageError = '';
-    this.createEventError = '';
-    this.selectedImageFile = file;
 
     const reader = new FileReader();
 
@@ -297,24 +279,19 @@ export class EventsComponent implements OnInit, OnDestroy {
   }
 
   createEvent(eventForm: NgForm): void {
-    if (eventForm.invalid || this.imageError || this.isCreatingEvent) {
+    if (eventForm.invalid || this.imageError) {
       eventForm.control.markAllAsTouched();
       return;
     }
 
+    const combinedDate = `${this.newEvent.month} ${this.newEvent.date}`.trim();
     const payload: CreateEventPayload = {
       title: this.newEvent.title.trim(),
-      date: this.newEvent.date.trim(),
+      date: combinedDate,
       time: this.newEvent.time.trim(),
       location: this.newEvent.location.trim(),
       image: this.selectedImageFile
     };
-
-    if (!payload.title || !payload.date || !payload.time || !payload.location) {
-      this.createEventError = 'All required fields must be filled.';
-      eventForm.control.markAllAsTouched();
-      return;
-    }
 
     this.isCreatingEvent = true;
     this.createEventError = '';
@@ -340,17 +317,41 @@ export class EventsComponent implements OnInit, OnDestroy {
       });
   }
 
+  toggleInterest(event: EventItem): void {
+    this.eventService.toggleInterest(event.id).subscribe({
+      next: (res) => {
+        event.interested = res.interested_count;
+        event.is_interested = res.is_interested;
+        
+        if (res.is_interested) {
+          this.toastService.success('You are now interested in this event!');
+        } else {
+          this.toastService.info('No longer interested in this event.');
+        }
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Interest toggle failed', err);
+        if (err.status === 401) {
+          this.toastService.error('You must be logged in to express interest.');
+        } else {
+          this.toastService.error('Failed to update interest. Please try again.');
+        }
+      }
+    });
+  }
+
   private resetForm(): void {
     this.newEvent = {
       title: '',
       date: '',
+      month: '',
       time: '',
       location: '',
       interested: 0,
       imageUrl: ''
     };
     this.imagePreview = null;
-    this.selectedImageFile = null;
     this.imageError = '';
     this.createEventError = '';
     this.editImageFile = null;
@@ -366,7 +367,8 @@ export class EventsComponent implements OnInit, OnDestroy {
       month: badge.month,
       time: event.time,
       location: event.location,
-      interested: 0,
+      interested: event.interested_count,
+      is_interested: event.is_interested,
       imageUrl: event.image_url,
       author: event.author,
       createdByUser: this.currentUserId !== '' && event.author === this.currentUserId
@@ -453,6 +455,7 @@ export class EventsComponent implements OnInit, OnDestroy {
 
     return 'Failed to create event. Please try again.';
   }
+
   private getDeleteErrorMessage(error: unknown): string {
     if (!(error instanceof HttpErrorResponse)) {
       return 'Failed to delete event. Please try again.';

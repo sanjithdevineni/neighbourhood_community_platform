@@ -9,6 +9,7 @@ type Event struct {
 	Date     string `json:"date" gorm:"not null"`
 	Time     string `json:"time" gorm:"not null"`
 	Location string `json:"location" gorm:"not null"`
-	ImageURL string `json:"image_url"`
-	Author   string `json:"author" gorm:"not null"`
+	ImageURL        string `json:"image_url"`
+	Author          string `json:"author" gorm:"not null"`
+	InterestedCount int    `json:"interested_count" gorm:"default:0"`
 }
