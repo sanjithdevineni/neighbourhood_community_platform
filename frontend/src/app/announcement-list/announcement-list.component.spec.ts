@@ -5,6 +5,7 @@ import { vi } from 'vitest';
 import { AnnouncementListComponent } from './announcement-list.component';
 import { AnnouncementService } from '../services/announcement.service';
 import { AuthService } from '../services/auth.service';
+import { ToastService } from '../services/toast.service';
 
 describe('AnnouncementListComponent', () => {
   const mockAnnouncements = [
@@ -212,6 +213,8 @@ describe('AnnouncementListComponent', () => {
 
     const fixture = TestBed.createComponent(AnnouncementListComponent);
     const component = fixture.componentInstance;
+    const toastService = TestBed.inject(ToastService);
+    const errorToastSpy = vi.spyOn(toastService, 'error');
     fixture.detectChanges();
 
     component.newPostTitle = 'Road Work';
@@ -219,7 +222,8 @@ describe('AnnouncementListComponent', () => {
     component.createPost();
 
     expect(component.isSubmitting).toBe(false);
-    expect(component.submitErrorMessage).toBe('You must be logged in to post an announcement.');
+    expect(component.submitErrorMessage).toBe('');
+    expect(errorToastSpy).toHaveBeenCalledWith('You must be logged in to post an announcement.');
 
     consoleErrorSpy.mockRestore();
   });
