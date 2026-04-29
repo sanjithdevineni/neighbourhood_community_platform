@@ -40,6 +40,12 @@ func CreateAlert(c *gin.Context) {
 		}
 	}
 
+	// Ensure user is authenticated
+	if alert.Author == "" {
+		utils.RespondWithError(c, utils.Unauthorized("Unable to identify alert author"))
+		return
+	}
+
 	if err := database.DB.Create(&alert).Error; err != nil {
 		utils.RespondWithError(c, utils.InternalServerError("Failed to create alert"), "error", err, "author", alert.Author)
 		return
