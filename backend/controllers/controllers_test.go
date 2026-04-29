@@ -464,6 +464,56 @@ func TestCreateEvent_WithImageUpload(t *testing.T) {
 	}
 }
 
+func TestCreateEvent_ImageUpload_InvalidType(t *testing.T) {
+	setupControllerTestDB(t)
+
+	r := gin.New()
+	r.POST("/api/events", func(c *gin.Context) {
+		c.Set("userID", "user123")
+		CreateEvent(c)
+	})
+
+	fields := map[string]string{
+		"title":    "Community Cleanup",
+		"date":     "2026-04-20",
+		"time":     "10:00",
+		"location": "Central Park",
+	}
+
+	// Create mock text file data
+	mockImage := []byte("This is a text file, not an image.")
+
+	w := performMultipartRequest(r, http.MethodPost, "/api/events", fields, "image", "event.txt", mockImage)
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for invalid file type, got %d body=%s", w.Code, w.Body.String())
+	}
+}
+
+func TestCreateEvent_ImageUpload_ExceedsSizeLimit(t *testing.T) {
+	setupControllerTestDB(t)
+
+	r := gin.New()
+	r.POST("/api/events", func(c *gin.Context) {
+		c.Set("userID", "user123")
+		CreateEvent(c)
+	})
+
+	fields := map[string]string{
+		"title":    "Community Cleanup",
+		"date":     "2026-04-20",
+		"time":     "10:00",
+		"location": "Central Park",
+	}
+
+	// Create mock large file data (just over 5MB)
+	mockImage := make([]byte, MaxUploadSize+1)
+
+	w := performMultipartRequest(r, http.MethodPost, "/api/events", fields, "image", "large.png", mockImage)
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for large file size, got %d body=%s", w.Code, w.Body.String())
+	}
+}
+
 func TestCreateEvent_WithoutImage_Optional(t *testing.T) {
 	setupControllerTestDB(t)
 

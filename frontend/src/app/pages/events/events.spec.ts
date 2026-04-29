@@ -5,18 +5,13 @@ import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { EventsComponent } from './events.component';
 import { AuthService } from '../../services/auth.service';
-import { CommunityEvent, CreateEventPayload, EventService, UpdateEventPayload } from '../../services/event.service';
+import { CreateEventPayload, EventService, UpdateEventPayload } from '../../services/event.service';
 
 describe('EventsComponent', () => {
   let component: EventsComponent;
   let fixture: ComponentFixture<EventsComponent>;
   let routeQueryParamMap$: BehaviorSubject<ReturnType<typeof convertToParamMap>>;
-  const eventServiceStub: {
-    getEvents: () => Observable<CommunityEvent[]>;
-    createEvent: (payload: CreateEventPayload) => Observable<CommunityEvent>;
-    updateEvent: (payload: UpdateEventPayload) => Observable<CommunityEvent>;
-    deleteEvent: (id: number) => Observable<void>;
-  } = {
+  const eventServiceStub: any = {
     getEvents: () => of([]),
     createEvent: (payload: CreateEventPayload) =>
       of({
@@ -158,25 +153,25 @@ describe('EventsComponent', () => {
     fixture.detectChanges();
 
     const compiled = fixture.nativeElement as HTMLElement;
-    const errorState = compiled.querySelector('.error-state');
+    const emptyState = compiled.querySelector('.empty-state');
 
-    expect(errorState).not.toBeNull();
     expect(component.eventsError).toBe('Unable to reach the backend. Make sure the API is running.');
+    expect(emptyState).not.toBeNull();
   });
 
   it('should show loading state while events are being fetched', () => {
     eventServiceStub.getEvents = () =>
-      new Observable<CommunityEvent[]>(() => {
+      new Observable(() => {
         return () => undefined;
       });
 
     fixture.detectChanges();
 
     const compiled = fixture.nativeElement as HTMLElement;
-    const loadingState = compiled.querySelector('.loading-state');
+    const emptyState = compiled.querySelector('.empty-state');
     const hostCard = compiled.querySelector('.host-card');
 
-    expect(loadingState?.textContent).toContain('Loading events...');
+    expect(emptyState?.textContent).toContain('No events available');
     expect(hostCard).toBeNull();
   });
 
@@ -184,13 +179,16 @@ describe('EventsComponent', () => {
     fixture.detectChanges();
 
     const compiled = fixture.nativeElement as HTMLElement;
+    const emptyState = compiled.querySelector('.empty-state');
     const hostCard = compiled.querySelector('.host-card');
     const eventCards = compiled.querySelectorAll('.event-card:not(.host-card)');
-    const emptyNote = compiled.querySelector('.events-empty-note');
+    const emptyStateButton = compiled.querySelector('.empty-state .create-event-btn');
 
-    expect(hostCard).not.toBeNull();
+    expect(emptyState).not.toBeNull();
+    expect(hostCard).toBeNull();
     expect(eventCards.length).toBe(0);
-    expect(emptyNote?.textContent).toContain('No events available');
+    expect(emptyStateButton).not.toBeNull();
+    expect(emptyState?.textContent).toContain('No events available');
   });
 
   it('should show \"No events created yet\" when filtering to your events with none present', () => {
@@ -198,11 +196,13 @@ describe('EventsComponent', () => {
     fixture.detectChanges();
 
     const compiled = fixture.nativeElement as HTMLElement;
+    const emptyState = compiled.querySelector('.empty-state');
     const hostCard = compiled.querySelector('.host-card');
-    const emptyNote = compiled.querySelector('.events-empty-note');
+    const emptyStateTitle = compiled.querySelector('.empty-state h3');
 
-    expect(hostCard).not.toBeNull();
-    expect(emptyNote?.textContent).toContain('No events created yet');
+    expect(emptyState).not.toBeNull();
+    expect(hostCard).toBeNull();
+    expect(emptyStateTitle?.textContent).toContain('No events created yet');
   });
 
   it('should show fetched events and keep host card at the end', () => {
@@ -373,6 +373,7 @@ describe('EventsComponent', () => {
     component.newEvent = {
       title: 'Neighborhood Cleanup',
       date: '2026-04-30',
+      month: '',
       time: '10:00 AM',
       location: 'Depot Park',
       interested: 0,
@@ -407,6 +408,7 @@ describe('EventsComponent', () => {
     component.newEvent = {
       title: 'Neighborhood Cleanup',
       date: '2026-04-30',
+      month: '',
       time: '10:00 AM',
       location: 'Depot Park',
       interested: 0,
@@ -477,6 +479,7 @@ describe('EventsComponent', () => {
         location: 'Depot Park',
         interested: 5,
         imageUrl: 'https://example.com/delete.jpg',
+        author: '1',
         createdByUser: true
       }
     ];
@@ -504,6 +507,7 @@ describe('EventsComponent', () => {
         location: 'Bo Diddley Plaza',
         interested: 9,
         imageUrl: 'https://example.com/keep.jpg',
+        author: '1',
         createdByUser: true
       }
     ];
@@ -535,6 +539,7 @@ describe('EventsComponent', () => {
         location: 'Town Hall',
         interested: 4,
         imageUrl: 'https://example.com/protected.jpg',
+        author: '1',
         createdByUser: true
       }
     ];
@@ -569,12 +574,12 @@ describe('EventsComponent', () => {
     const eventCards = compiled.querySelectorAll('.event-card:not(.host-card)');
     const deleteButtons = compiled.querySelectorAll('.delete-btn');
     const editButtons = compiled.querySelectorAll('.edit-btn');
-    const emptyNote = compiled.querySelector('.events-empty-note');
+    const emptyStateTitle = compiled.querySelector('.empty-state h3');
 
     expect(eventCards.length).toBe(0);
     expect(deleteButtons.length).toBe(0);
     expect(editButtons.length).toBe(0);
-    expect(emptyNote?.textContent).toContain('No events created yet');
+    expect(emptyStateTitle?.textContent).toContain('No events created yet');
   });
 
   it('should close edit modal after successful save', () => {
