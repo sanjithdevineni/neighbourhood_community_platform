@@ -11,16 +11,22 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// GetAnnouncements returns a paginated list of announcements.
+// Supports ?page=1&limit=10 query parameters.
 func GetAnnouncements(c *gin.Context) {
+	params := utils.ParsePagination(c)
 	var announcements []models.Announcement
 
-	if err := database.DB.Find(&announcements).Error; err != nil {
+	baseQuery := database.DB.Model(&models.Announcement{})
+
+	result, err := utils.Paginate(baseQuery, params, &announcements)
+	if err != nil {
 		utils.RespondWithError(c, utils.InternalServerError("Failed to fetch announcements"), "error", err)
 		return
 	}
 
-	slog.Info("Announcements fetched", "count", len(announcements))
-	c.JSON(http.StatusOK, announcements)
+	slog.Info("Announcements fetched", "count", len(announcements), "page", params.Page, "limit", params.Limit)
+	c.JSON(http.StatusOK, result)
 }
 
 func CreateAnnouncement(c *gin.Context) {

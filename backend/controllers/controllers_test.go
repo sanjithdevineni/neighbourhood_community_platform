@@ -97,8 +97,23 @@ func TestGetAnnouncements(t *testing.T) {
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d body=%s", w.Code, w.Body.String())
 	}
-	if !bytes.Contains(w.Body.Bytes(), []byte(`"title":"T1"`)) {
-		t.Fatalf("expected announcement in response body: %s", w.Body.String())
+
+	var resp map[string]interface{}
+	if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("failed to unmarshal response: %v body=%s", err, w.Body.String())
+	}
+
+	data, ok := resp["data"].([]interface{})
+	if !ok {
+		t.Fatalf("expected 'data' array in response: %s", w.Body.String())
+	}
+	if len(data) != 1 {
+		t.Fatalf("expected 1 announcement in data, got %d", len(data))
+	}
+
+	first := data[0].(map[string]interface{})
+	if first["title"] != "T1" {
+		t.Fatalf("expected title 'T1', got %v", first["title"])
 	}
 }
 
@@ -240,13 +255,21 @@ func TestGetEvents_EmptyList(t *testing.T) {
 		t.Fatalf("expected 200, got %d body=%s", w.Code, w.Body.String())
 	}
 
-	var events []models.Event
-	if err := json.Unmarshal(w.Body.Bytes(), &events); err != nil {
+	var resp map[string]interface{}
+	if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
 		t.Fatalf("failed to unmarshal response: %v body=%s", err, w.Body.String())
 	}
 
-	if len(events) != 0 {
-		t.Fatalf("expected empty array, got %d events", len(events))
+	data, ok := resp["data"].([]interface{})
+	if !ok {
+		t.Fatalf("expected 'data' array in response: %s", w.Body.String())
+	}
+	if len(data) != 0 {
+		t.Fatalf("expected empty data array, got %d events", len(data))
+	}
+
+	if resp["total"].(float64) != 0 {
+		t.Fatalf("expected total 0, got %v", resp["total"])
 	}
 }
 
@@ -273,18 +296,26 @@ func TestGetEvents_SortedByCreatedAtDesc(t *testing.T) {
 		t.Fatalf("expected 200, got %d body=%s", w.Code, w.Body.String())
 	}
 
-	var events []models.Event
-	if err := json.Unmarshal(w.Body.Bytes(), &events); err != nil {
+	var resp map[string]interface{}
+	if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
 		t.Fatalf("failed to unmarshal response: %v", err)
 	}
 
-	if len(events) != 3 {
-		t.Fatalf("expected 3 events, got %d", len(events))
+	data, ok := resp["data"].([]interface{})
+	if !ok {
+		t.Fatalf("expected 'data' array in response: %s", w.Body.String())
+	}
+
+	if len(data) != 3 {
+		t.Fatalf("expected 3 events, got %d", len(data))
 	}
 
 	// Verify sorted by created_at desc (most recent first)
-	if events[0].Title != "Event 3" || events[1].Title != "Event 2" || events[2].Title != "Event 1" {
-		t.Fatalf("events not sorted correctly by created_at desc: %v", events)
+	first := data[0].(map[string]interface{})
+	second := data[1].(map[string]interface{})
+	third := data[2].(map[string]interface{})
+	if first["title"] != "Event 3" || second["title"] != "Event 2" || third["title"] != "Event 1" {
+		t.Fatalf("events not sorted correctly by created_at desc")
 	}
 }
 
@@ -550,3 +581,189 @@ func TestCreateEvent_WithoutImage_Optional(t *testing.T) {
 		t.Fatalf("expected image_url to be empty, got %q", created.ImageURL)
 	}
 }
+
+// Pagination Tests — Events
+
+func seedEvents(t *testing.T, count int) {
+	t.Helper()
+	for i := 1; i <= count; i++ {
+		evt := models.Event{
+			Title:    fmt.Sprintf("Event %d", i),
+			Date:     "2026-05-01",
+			Time:     "10:00",
+			Location: "Venue",
+			Author:   "user1",
+		}
+		if err := database.DB.Create(&evt).Error; err != nil {
+			t.Fatalf("seed event %d failed: %v", i, err)
+		}
+	}
+}
+
+func TestGetEvents_Pagination_DefaultParams(t *testing.T) {
+	setupControllerTestDB(t)
+	seedEvents(t, 15) // more than default limit of 10
+
+	r := gin.New()
+	r.GET("/api/events", GetEvents)
+
+	w := performJSONRequest(r, http.MethodGet, "/api/events", nil)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", w.Code, w.Body.String())
+	}
+
+	var resp map[string]interface{}
+	if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("failed to unmarshal: %v", err)
+	}
+
+	data := resp["data"].([]interface{})
+	if len(data) != 10 {
+		t.Fatalf("expected 10 events (default limit), got %d", len(data))
+	}
+	if int(resp["page"].(float64)) != 1 {
+		t.Fatalf("expected page 1, got %v", resp["page"])
+	}
+	if int(resp["total"].(float64)) != 15 {
+		t.Fatalf("expected total 15, got %v", resp["total"])
+	}
+	if int(resp["total_pages"].(float64)) != 2 {
+		t.Fatalf("expected total_pages 2, got %v", resp["total_pages"])
+	}
+}
+
+func TestGetEvents_Pagination_CustomPage(t *testing.T) {
+	setupControllerTestDB(t)
+	seedEvents(t, 5)
+
+	r := gin.New()
+	r.GET("/api/events", GetEvents)
+
+	w := performJSONRequest(r, http.MethodGet, "/api/events?page=2&limit=2", nil)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", w.Code, w.Body.String())
+	}
+
+	var resp map[string]interface{}
+	if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("failed to unmarshal: %v", err)
+	}
+
+	data := resp["data"].([]interface{})
+	if len(data) != 2 {
+		t.Fatalf("expected 2 events on page 2 with limit 2, got %d", len(data))
+	}
+	if int(resp["page"].(float64)) != 2 {
+		t.Fatalf("expected page 2, got %v", resp["page"])
+	}
+	if int(resp["total"].(float64)) != 5 {
+		t.Fatalf("expected total 5, got %v", resp["total"])
+	}
+	if int(resp["total_pages"].(float64)) != 3 {
+		t.Fatalf("expected total_pages 3, got %v", resp["total_pages"])
+	}
+}
+
+func TestGetEvents_Pagination_BeyondLastPage(t *testing.T) {
+	setupControllerTestDB(t)
+	seedEvents(t, 3)
+
+	r := gin.New()
+	r.GET("/api/events", GetEvents)
+
+	w := performJSONRequest(r, http.MethodGet, "/api/events?page=10&limit=5", nil)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", w.Code, w.Body.String())
+	}
+
+	var resp map[string]interface{}
+	if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("failed to unmarshal: %v", err)
+	}
+
+	data := resp["data"].([]interface{})
+	if len(data) != 0 {
+		t.Fatalf("expected 0 events beyond last page, got %d", len(data))
+	}
+	if int(resp["total"].(float64)) != 3 {
+		t.Fatalf("expected total 3, got %v", resp["total"])
+	}
+}
+
+// Pagination Tests — Announcements
+
+func seedAnnouncements(t *testing.T, count int) {
+	t.Helper()
+	for i := 1; i <= count; i++ {
+		ann := models.Announcement{
+			Title:   fmt.Sprintf("Announcement %d", i),
+			Content: fmt.Sprintf("Content %d", i),
+			Author:  "user1",
+		}
+		if err := database.DB.Create(&ann).Error; err != nil {
+			t.Fatalf("seed announcement %d failed: %v", i, err)
+		}
+	}
+}
+
+func TestGetAnnouncements_Pagination_DefaultParams(t *testing.T) {
+	setupControllerTestDB(t)
+	seedAnnouncements(t, 12)
+
+	r := gin.New()
+	r.GET("/api/announcements", GetAnnouncements)
+
+	w := performJSONRequest(r, http.MethodGet, "/api/announcements", nil)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", w.Code, w.Body.String())
+	}
+
+	var resp map[string]interface{}
+	if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("failed to unmarshal: %v", err)
+	}
+
+	data := resp["data"].([]interface{})
+	if len(data) != 10 {
+		t.Fatalf("expected 10 announcements (default limit), got %d", len(data))
+	}
+	if int(resp["total"].(float64)) != 12 {
+		t.Fatalf("expected total 12, got %v", resp["total"])
+	}
+	if int(resp["total_pages"].(float64)) != 2 {
+		t.Fatalf("expected total_pages 2, got %v", resp["total_pages"])
+	}
+}
+
+func TestGetAnnouncements_Pagination_CustomPage(t *testing.T) {
+	setupControllerTestDB(t)
+	seedAnnouncements(t, 7)
+
+	r := gin.New()
+	r.GET("/api/announcements", GetAnnouncements)
+
+	w := performJSONRequest(r, http.MethodGet, "/api/announcements?page=2&limit=3", nil)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", w.Code, w.Body.String())
+	}
+
+	var resp map[string]interface{}
+	if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("failed to unmarshal: %v", err)
+	}
+
+	data := resp["data"].([]interface{})
+	if len(data) != 3 {
+		t.Fatalf("expected 3 announcements on page 2 with limit 3, got %d", len(data))
+	}
+	if int(resp["page"].(float64)) != 2 {
+		t.Fatalf("expected page 2, got %v", resp["page"])
+	}
+	if int(resp["total"].(float64)) != 7 {
+		t.Fatalf("expected total 7, got %v", resp["total"])
+	}
+	if int(resp["total_pages"].(float64)) != 3 {
+		t.Fatalf("expected total_pages 3, got %v", resp["total_pages"])
+	}
+}
+

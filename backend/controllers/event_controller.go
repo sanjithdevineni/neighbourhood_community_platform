@@ -19,17 +19,22 @@ import (
 
 const MaxUploadSize = 5 * 1024 * 1024 // 5 MB
 
-// GetEvents returns all events ordered by newest first.
+// GetEvents returns a paginated list of events ordered by newest first.
+// Supports ?page=1&limit=10 query parameters.
 func GetEvents(c *gin.Context) {
+	params := utils.ParsePagination(c)
 	var events []models.Event
 
-	if err := database.DB.Order("created_at desc").Find(&events).Error; err != nil {
+	baseQuery := database.DB.Model(&models.Event{}).Order("created_at desc")
+
+	result, err := utils.Paginate(baseQuery, params, &events)
+	if err != nil {
 		utils.RespondWithError(c, utils.InternalServerError("Failed to fetch events"), "error", err)
 		return
 	}
 
-	slog.Info("Events fetched", "count", len(events))
-	c.JSON(http.StatusOK, events)
+	slog.Info("Events fetched", "count", len(events), "page", params.Page, "limit", params.Limit)
+	c.JSON(http.StatusOK, result)
 }
 
 // CreateEvent handles multipart/form-data to create an event with an optional image upload.
