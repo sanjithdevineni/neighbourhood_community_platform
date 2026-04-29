@@ -69,7 +69,7 @@ export class LoginComponent implements OnDestroy {
 
           this.redirectSub?.unsubscribe();
           this.redirectSub = timer(800).subscribe(() => {
-            void this.router.navigate(['/']);
+            void this.router.navigate(['/home']);
           });
         },
         error: (error: unknown) => {

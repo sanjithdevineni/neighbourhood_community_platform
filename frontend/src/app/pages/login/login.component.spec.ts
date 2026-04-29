@@ -5,6 +5,7 @@ import { Observable, of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { LoginComponent } from './login.component';
 import { AuthService, LoginResult } from '../../services/auth.service';
+import { ToastService } from '../../services/toast.service';
 
 describe('LoginComponent', () => {
   const loginResult: LoginResult = {
@@ -60,11 +61,13 @@ describe('LoginComponent', () => {
       const fixture = TestBed.createComponent(LoginComponent);
       const component = fixture.componentInstance;
       const router = TestBed.inject(Router);
+      const toastService = TestBed.inject(ToastService);
 
       const storeSpy = vi
         .spyOn(authServiceStub, 'storeAuthSession')
         .mockImplementation(() => undefined);
       const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+      const successToastSpy = vi.spyOn(toastService, 'success');
 
       component.loginForm.setValue({
         email: 'john@example.com',
@@ -73,12 +76,12 @@ describe('LoginComponent', () => {
       component.onSubmit();
 
       expect(storeSpy).toHaveBeenCalledWith(loginResult);
-      expect(component.successMessage).toContain('Login successful');
+      expect(successToastSpy).toHaveBeenCalledWith('Login successful. Redirecting to home...');
       expect(component.errorMessage).toBe('');
       expect(component.isSubmitting).toBe(false);
 
       vi.advanceTimersByTime(800);
-      expect(navigateSpy).toHaveBeenCalledWith(['/']);
+      expect(navigateSpy).toHaveBeenCalledWith(['/home']);
     } finally {
       vi.useRealTimers();
     }
@@ -96,6 +99,8 @@ describe('LoginComponent', () => {
 
     const fixture = TestBed.createComponent(LoginComponent);
     const component = fixture.componentInstance;
+    const toastService = TestBed.inject(ToastService);
+    const errorToastSpy = vi.spyOn(toastService, 'error');
 
     component.loginForm.setValue({
       email: 'john@example.com',
@@ -104,6 +109,6 @@ describe('LoginComponent', () => {
     component.onSubmit();
 
     expect(component.isSubmitting).toBe(false);
-    expect(component.errorMessage).toBe('Invalid email or password.');
+    expect(errorToastSpy).toHaveBeenCalledWith('Invalid email or password.');
   });
 });
