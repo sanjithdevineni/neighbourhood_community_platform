@@ -10,6 +10,7 @@ import { CommunityEvent, CreateEventPayload, EventService } from '../../services
 interface EventItem {
   id: number;
   title: string;
+  eventDate: string;
   date: string;
   month: string;
   time: string;
@@ -52,7 +53,6 @@ export class EventsComponent implements OnInit, OnDestroy {
   editImageFile: File | null = null;
   isUpdatingEvent = false;
   editErrorMessage = '';
-  deleteErrorMessage = '';
 
   newEvent = {
     title: '',
@@ -65,6 +65,7 @@ export class EventsComponent implements OnInit, OnDestroy {
 
   editEventData: Partial<EventItem> = {
     title: '',
+    eventDate: '',
     date: '',
     month: '',
     time: '',
@@ -124,11 +125,13 @@ export class EventsComponent implements OnInit, OnDestroy {
       .subscribe({
         next: () => {
           this.events = this.events.filter(event => String(event.id) !== String(id));
+          this.deleteEventError = '';
           this.toastService.success('Event deleted successfully');
         },
         error: (error: unknown) => {
           console.error(error);
-          this.toastService.error(this.getDeleteErrorMessage(error));
+          this.deleteEventError = this.getDeleteErrorMessage(error);
+          this.toastService.error(this.deleteEventError);
         }
       });
   }
@@ -164,14 +167,17 @@ export class EventsComponent implements OnInit, OnDestroy {
 
   get displayedEvents(): EventItem[] {
     if (this.showOnlyUserEvents) {
-      return this.events.filter((event) => event.createdByUser);
+      return this.events.filter((event) => this.isOwnedByCurrentUser(event.author));
     }
     return this.events;
   }
 
   openEditEvent(event: EventItem): void {
     this.editingEventId = event.id;
-    this.editEventData = { ...event };
+    this.editEventData = {
+      ...event,
+      eventDate: this.getDateInputValue(event.eventDate)
+    };
     
     this.showEditEventForm = true;
     this.imageError = '';
@@ -227,7 +233,7 @@ export class EventsComponent implements OnInit, OnDestroy {
     this.eventService.updateEvent({
       id: this.editingEventId,
       title: this.editEventData.title || '',
-      date: this.editEventData.date || '',
+      date: this.editEventData.eventDate || '',
       time: this.editEventData.time || '',
       location: this.editEventData.location || '',
       image: this.editImageFile
@@ -236,11 +242,16 @@ export class EventsComponent implements OnInit, OnDestroy {
       this.cdr.detectChanges();
     })).subscribe({
       next: (updatedEvent) => {
-        const mapped = this.mapToEventItem(updatedEvent);
-        mapped.createdByUser = true;
-        this.events = this.events.map(e => e.id === this.editingEventId ? mapped : e);
-        this.toastService.success('Event updated successfully');
+        const eventId = this.editingEventId;
         this.closeEditEvent();
+
+        if (!eventId) {
+          return;
+        }
+
+        const mapped = this.mapToEventItem(updatedEvent);
+        this.events = this.events.map((e) => (e.id === eventId ? mapped : e));
+        this.toastService.success('Event updated successfully');
       },
       error: (err) => {
         console.error('Update failed', err);
@@ -328,6 +339,7 @@ export class EventsComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (createdEvent) => {
           this.events = [this.mapToEventItem(createdEvent), ...this.events];
+          this.createEventError = '';
           this.toastService.success('Event created successfully');
           this.resetForm();
           eventForm.resetForm();
@@ -335,7 +347,8 @@ export class EventsComponent implements OnInit, OnDestroy {
         },
         error: (error: unknown) => {
           console.error(error);
-          this.toastService.error(this.getCreateErrorMessage(error));
+          this.createEventError = this.getCreateErrorMessage(error);
+          this.toastService.error(this.createEventError);
         }
       });
   }
@@ -359,18 +372,45 @@ export class EventsComponent implements OnInit, OnDestroy {
 
   private mapToEventItem(event: CommunityEvent): EventItem {
     const badge = this.getDateBadge(event.date);
+    const author = String(event.author ?? '');
     return {
       id: event.id,
       title: event.title,
+      eventDate: event.date,
       date: badge.day,
       month: badge.month,
       time: event.time,
       location: event.location,
       interested: 0,
       imageUrl: event.image_url,
-      author: event.author,
-      createdByUser: this.currentUserId !== '' && event.author === this.currentUserId
+      author,
+      createdByUser: this.isOwnedByCurrentUser(author)
     };
+  }
+
+  private getDateInputValue(dateValue: string): string {
+    const trimmed = (dateValue ?? '').trim();
+    if (!trimmed) {
+      return '';
+    }
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+      return trimmed;
+    }
+
+    const parsed = new Date(trimmed);
+    if (Number.isNaN(parsed.getTime())) {
+      return '';
+    }
+
+    const year = parsed.getFullYear();
+    const month = String(parsed.getMonth() + 1).padStart(2, '0');
+    const day = String(parsed.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  isOwnedByCurrentUser(author?: string): boolean {
+    return this.currentUserId !== '' && String(author ?? '') === this.currentUserId;
   }
 
   private getDateBadge(dateValue: string): { day: string; month: string } {

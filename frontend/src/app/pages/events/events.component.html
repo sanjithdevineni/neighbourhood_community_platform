@@ -6,10 +6,6 @@
       <p>Discover what's happening in your community</p>
     </div>
 
-    <div *ngIf="deleteErrorMessage" class="error-message" style="color: red; margin-bottom: 20px;">
-      {{ deleteErrorMessage }}
-    </div>
-
     <div class="header-actions">
       <button
         class="create-event-btn"
@@ -142,9 +138,8 @@
 
         <div class="form-group">
           <input
-            type="text"
-            placeholder="Date (e.g., 25)"
-            [(ngModel)]="editEventData.date"
+            type="date"
+            [(ngModel)]="editEventData.eventDate"
             name="date"
             #editDate="ngModel"
             required
@@ -257,7 +252,7 @@
             <button class="interest-btn">+ Interested?</button>
 
             <button
-              *ngIf="event.createdByUser"
+              *ngIf="isOwnedByCurrentUser(event.author)"
               type="button"
               class="edit-btn"
               (click)="openEditEvent(event)">
@@ -265,7 +260,7 @@
             </button>
 
             <button
-              *ngIf="event.createdByUser"
+              *ngIf="isOwnedByCurrentUser(event.author)"
               type="button"
               class="delete-btn"
               [disabled]="deletingEventIds.has(event.id)"

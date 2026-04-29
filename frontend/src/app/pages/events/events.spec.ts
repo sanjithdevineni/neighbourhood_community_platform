@@ -5,7 +5,7 @@ import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { EventsComponent } from './events.component';
 import { AuthService } from '../../services/auth.service';
-import { CommunityEvent, CreateEventPayload, EventService } from '../../services/event.service';
+import { CommunityEvent, CreateEventPayload, EventService, UpdateEventPayload } from '../../services/event.service';
 
 describe('EventsComponent', () => {
   let component: EventsComponent;
@@ -14,6 +14,7 @@ describe('EventsComponent', () => {
   const eventServiceStub: {
     getEvents: () => Observable<CommunityEvent[]>;
     createEvent: (payload: CreateEventPayload) => Observable<CommunityEvent>;
+    updateEvent: (payload: UpdateEventPayload) => Observable<CommunityEvent>;
     deleteEvent: (id: number) => Observable<void>;
   } = {
     getEvents: () => of([]),
@@ -24,6 +25,17 @@ describe('EventsComponent', () => {
         date: payload.date,
         time: payload.time,
         location: payload.location,
+        image_url: '',
+        author: '1',
+        created_at: '2026-04-10T14:23:15Z'
+      }),
+    updateEvent: (payload: UpdateEventPayload) =>
+      of({
+        id: payload.id,
+        title: payload.title ?? '',
+        date: payload.date ?? '',
+        time: payload.time ?? '',
+        location: payload.location ?? '',
         image_url: '',
         author: '1',
         created_at: '2026-04-10T14:23:15Z'
@@ -45,6 +57,17 @@ describe('EventsComponent', () => {
         date: payload.date,
         time: payload.time,
         location: payload.location,
+        image_url: '',
+        author: '1',
+        created_at: '2026-04-10T14:23:15Z'
+      });
+    eventServiceStub.updateEvent = (payload: UpdateEventPayload) =>
+      of({
+        id: payload.id,
+        title: payload.title ?? '',
+        date: payload.date ?? '',
+        time: payload.time ?? '',
+        location: payload.location ?? '',
         image_url: '',
         author: '1',
         created_at: '2026-04-10T14:23:15Z'
@@ -105,7 +128,7 @@ describe('EventsComponent', () => {
     fixture.detectChanges();
 
     expect(component.events.length).toBe(1);
-    expect(component.events[0].name).toBe('Community BBQ');
+    expect(component.events[0].title).toBe('Community BBQ');
     expect(component.events[0].date).toBe('20');
     expect(component.events[0].month).toBe('APR');
     expect(component.events[0].imageUrl).toBe('/uploads/1712345678_abc123.jpg');
@@ -309,8 +332,8 @@ describe('EventsComponent', () => {
     fixture.detectChanges();
 
     expect(component.events.length).toBe(2);
-    expect(component.events[0].name).toBe('Old Event');
-    expect(component.events[1].name).toBe('Upcoming Event');
+    expect(component.events[0].title).toBe('Old Event');
+    expect(component.events[1].title).toBe('Upcoming Event');
   });
 
   it('should keep form invalid when required fields are empty', () => {
@@ -348,7 +371,7 @@ describe('EventsComponent', () => {
     fixture.detectChanges();
     const initialEventCount = component.events.length;
     component.newEvent = {
-      name: 'Neighborhood Cleanup',
+      title: 'Neighborhood Cleanup',
       date: '2026-04-30',
       time: '10:00 AM',
       location: 'Depot Park',
@@ -368,7 +391,7 @@ describe('EventsComponent', () => {
     expect(component.events[0].createdByUser).toBe(true);
     expect(component.events[0].imageUrl).toBe('/uploads/new.jpg');
     expect(component.showCreateEventForm).toBe(false);
-    expect(component.newEvent.name).toBe('');
+    expect(component.newEvent.title).toBe('');
   });
 
   it('should show create error when API event creation fails', () => {
@@ -382,7 +405,7 @@ describe('EventsComponent', () => {
 
     fixture.detectChanges();
     component.newEvent = {
-      name: 'Neighborhood Cleanup',
+      title: 'Neighborhood Cleanup',
       date: '2026-04-30',
       time: '10:00 AM',
       location: 'Depot Park',
@@ -446,7 +469,8 @@ describe('EventsComponent', () => {
     component.events = [
       {
         id: 2001,
-        name: 'To Delete',
+        title: 'To Delete',
+        eventDate: '2099-04-20',
         date: '20',
         month: 'APR',
         time: '7:00 PM',
@@ -472,7 +496,8 @@ describe('EventsComponent', () => {
     component.events = [
       {
         id: 3001,
-        name: 'Keep Event',
+        title: 'Keep Event',
+        eventDate: '2099-04-21',
         date: '21',
         month: 'APR',
         time: '7:30 PM',
@@ -502,7 +527,8 @@ describe('EventsComponent', () => {
     component.events = [
       {
         id: 3002,
-        name: 'Protected Event',
+        title: 'Protected Event',
+        eventDate: '2099-04-22',
         date: '22',
         month: 'APR',
         time: '8:00 PM',
@@ -519,5 +545,80 @@ describe('EventsComponent', () => {
     expect(component.events.length).toBe(1);
     expect(component.deleteEventError).toBe('You can only delete events you created.');
     confirmSpy.mockRestore();
+  });
+
+  it('should show no user events or ownership actions when logged out', () => {
+    eventServiceStub.getEvents = () =>
+      of([
+        {
+          id: 1003,
+          title: 'Another User Event',
+          date: '2099-04-16',
+          time: '6:00 PM',
+          location: 'Downtown',
+          image_url: 'https://example.com/community-event.jpg',
+          author: '2',
+          created_at: '2026-04-10T14:23:16Z'
+        }
+      ]);
+
+    component.showOnlyUserEvents = true;
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const eventCards = compiled.querySelectorAll('.event-card:not(.host-card)');
+    const deleteButtons = compiled.querySelectorAll('.delete-btn');
+    const editButtons = compiled.querySelectorAll('.edit-btn');
+    const emptyNote = compiled.querySelector('.events-empty-note');
+
+    expect(eventCards.length).toBe(0);
+    expect(deleteButtons.length).toBe(0);
+    expect(editButtons.length).toBe(0);
+    expect(emptyNote?.textContent).toContain('No events created yet');
+  });
+
+  it('should close edit modal after successful save', () => {
+    authServiceStub.getStoredUser = () => ({
+      id: 1,
+      name: 'Jane Doe',
+      email: 'jane@example.com',
+      created_at: '2026-04-01T10:00:00Z'
+    });
+    eventServiceStub.getEvents = () =>
+      of([
+        {
+          id: 1001,
+          title: 'User Event',
+          date: '2099-04-15',
+          time: '5:00 PM',
+          location: 'UF Campus',
+          image_url: 'https://example.com/user-event.jpg',
+          author: '1',
+          created_at: '2026-04-10T14:23:15Z'
+        }
+      ]);
+    eventServiceStub.updateEvent = (payload: UpdateEventPayload) =>
+      of({
+        id: payload.id,
+        title: payload.title ?? 'Updated Event',
+        date: payload.date ?? '2099-04-16',
+        time: payload.time ?? '6:00 PM',
+        location: payload.location ?? 'Downtown',
+        image_url: '',
+        author: '1',
+        created_at: '2026-04-10T14:23:15Z'
+      });
+
+    fixture.detectChanges();
+    component.openEditEvent(component.events[0]);
+
+    const mockForm = {
+      invalid: false,
+      control: { markAllAsTouched: () => undefined }
+    };
+
+    component.saveEditEvent(mockForm as never);
+
+    expect(component.showEditEventForm).toBe(false);
   });
 });
