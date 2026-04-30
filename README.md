@@ -48,6 +48,7 @@ npm run start
 Frontend default URL: `http://localhost:4200`
 
 ## Authentication Flow
+- Open app using frontend URL: `http://localhost:4200`
 - App opens at `/login`
 - Unauthenticated users are redirected to `/login`
 - After successful login, user is navigated to `/home`
