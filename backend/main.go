@@ -32,7 +32,7 @@ func main() {
 	defer database.CloseDatabase()
 
 	// Auto migrate models
-	if err := database.DB.AutoMigrate(&models.User{}, &models.Announcement{}, &models.Event{}, &models.Alert{}); err != nil {
+	if err := database.DB.AutoMigrate(&models.User{}, &models.Announcement{}, &models.Event{}, &models.Alert{}, &models.EventInterest{}); err != nil {
 		log.Fatalf("AutoMigrate failed: %v", err)
 	}
 

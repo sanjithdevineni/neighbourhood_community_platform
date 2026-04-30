@@ -10,6 +10,7 @@ import { AccountComponent } from './pages/account/account.component';
 import { NeighborhoodComponent } from './pages/neighborhood/neighborhood.component';
 
 export const routes: Routes = [
+  { path: '', redirectTo: 'login', pathMatch: 'full' },
   { path: 'signup', component: SignupComponent },
   { path: 'login', component: LoginComponent },
   { path: 'account', component: AccountComponent, canActivate: [authGuard] },
@@ -18,11 +19,11 @@ export const routes: Routes = [
     component: LayoutComponent,
     canActivate: [authGuard],
     children: [
-      { path: '', component: HomeComponent },
+      { path: 'home', component: HomeComponent },
       { path: 'alerts', component: AlertsComponent },
       { path: 'events', component: EventsComponent },
       { path: 'neighborhood', component: NeighborhoodComponent }
     ]
   },
-  { path: '**', redirectTo: '' }
+  { path: '**', redirectTo: 'login' }
 ];

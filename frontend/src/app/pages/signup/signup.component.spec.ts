@@ -5,6 +5,7 @@ import { Observable, of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { SignupComponent } from './signup.component';
 import { AuthService, SignupUser } from '../../services/auth.service';
+import { ToastService } from '../../services/toast.service';
 
 describe('SignupComponent', () => {
   const createdUser: SignupUser = {
@@ -55,7 +56,9 @@ describe('SignupComponent', () => {
       const fixture = TestBed.createComponent(SignupComponent);
       const component = fixture.componentInstance;
       const router = TestBed.inject(Router);
+      const toastService = TestBed.inject(ToastService);
       const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+      const successToastSpy = vi.spyOn(toastService, 'success');
 
       component.signupForm.setValue({
         name: 'John Doe',
@@ -64,7 +67,7 @@ describe('SignupComponent', () => {
       });
       component.onSubmit();
 
-      expect(component.successMessage).toContain('Account created successfully');
+      expect(successToastSpy).toHaveBeenCalledWith('Account created successfully. Redirecting to login...');
       expect(component.errorMessage).toBe('');
       expect(component.isSubmitting).toBe(false);
       expect(component.signupForm.getRawValue()).toEqual({
@@ -92,6 +95,8 @@ describe('SignupComponent', () => {
 
     const fixture = TestBed.createComponent(SignupComponent);
     const component = fixture.componentInstance;
+    const toastService = TestBed.inject(ToastService);
+    const errorToastSpy = vi.spyOn(toastService, 'error');
 
     component.signupForm.setValue({
       name: 'John Doe',
@@ -101,7 +106,7 @@ describe('SignupComponent', () => {
     component.onSubmit();
 
     expect(component.isSubmitting).toBe(false);
-    expect(component.errorMessage).toBe(
+    expect(errorToastSpy).toHaveBeenCalledWith(
       'Email already registered. Try logging in or use a different email.'
     );
   });

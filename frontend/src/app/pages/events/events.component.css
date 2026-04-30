@@ -242,6 +242,15 @@
   transform: translateY(-1px);
 }
 
+.interest-btn.active {
+  background: #2e7d32;
+  color: white;
+}
+
+.interest-btn.active:hover {
+  background: #1b5e20;
+}
+
 /* Modal buttons */
 .modal-actions button {
   padding: 8px 18px;
@@ -318,6 +327,25 @@
   background: #fecaca;
 }
 
+.edit-btn {
+  padding: 10px 14px;
+  border: none;
+  border-radius: 12px;
+  background: #e0f2fe;
+  color: #0369a1;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.edit-btn:hover {
+  background: #bae6fd;
+}
+
+.delete-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
 @media (max-width: 1024px) {
   .events-grid {
     grid-template-columns: repeat(2, 1fr);

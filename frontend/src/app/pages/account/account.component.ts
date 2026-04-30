@@ -69,6 +69,6 @@ export class AccountComponent {
   }
 
   onBackToHome(): void {
-    void this.router.navigate(['/']);
+    void this.router.navigate(['/home']);
   }
 }

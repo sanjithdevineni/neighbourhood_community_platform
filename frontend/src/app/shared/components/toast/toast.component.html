@@ -1,0 +1,14 @@
+<div class="toast-container">
+  <div *ngFor="let toast of activeToasts" 
+       class="toast" 
+       [ngClass]="toast.type"
+       (click)="removeToast(toast.id)">
+    <div class="toast-content">
+      <span class="icon" *ngIf="toast.type === 'success'">✓</span>
+      <span class="icon" *ngIf="toast.type === 'error'">✕</span>
+      <span class="icon" *ngIf="toast.type === 'info'">ℹ</span>
+      <span class="message">{{ toast.message }}</span>
+    </div>
+    <div class="progress-bar" [style.animation-duration]="(toast.duration || 4000) + 'ms'"></div>
+  </div>
+</div>
